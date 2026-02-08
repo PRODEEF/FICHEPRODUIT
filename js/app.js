@@ -62,7 +62,7 @@ function runDemoAnalysis(rawInput) {
   return {
     url,
     cms: 'PrestaShop',
-    productCount: 1247,
+    productCount: products.length,
     categories: categories.length ? categories : ['Kitesurf', 'Planches', 'Ailes'],
     mainBrands: brands.length ? brands : ['F-One', 'Duotone', 'North', 'Core']
   };
@@ -162,8 +162,9 @@ async function startAnalysis() {
     overlay.classList.remove('active');
     const url = data.url || rawInput;
     const cms = data.cms || 'Inconnu';
-    const count = data.productCount || 0;
-    document.getElementById('site-info').innerHTML = `<span class="tag site-tag">🔗 ${url} — ${cms} — ${count} produits</span>`;
+    const brandCount = (data.mainBrands && data.mainBrands.length) || 0;
+    const productCount = data.productCount || 0;
+    document.getElementById('site-info').innerHTML = `<span class="tag site-tag">🔗 ${url} — ${cms} — ${brandCount} marques — ${productCount} produits</span>`;
     goToPage('search');
     initSearchPage();
   }, 500);
