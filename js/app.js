@@ -10,6 +10,7 @@ function checkGateCode() {
     document.getElementById('page-gate').classList.add('hidden');
     document.getElementById('app-content').style.display = '';
     errorEl.textContent = '';
+    loadCatalogFromApi();
   } else {
     errorEl.textContent = code ? 'Code incorrect.' : 'Veuillez saisir un code.';
   }
@@ -19,12 +20,33 @@ function initGate() {
   if (sessionStorage.getItem('ficheproduct_access')) {
     document.getElementById('page-gate').classList.add('hidden');
     document.getElementById('app-content').style.display = '';
+    loadCatalogFromApi();
     return;
   }
   document.getElementById('app-content').style.display = 'none';
   document.getElementById('gate-code').addEventListener('keydown', function (e) {
     if (e.key === 'Enter') checkGateCode();
   });
+}
+
+// ===== CATALOGUE ENRICHI (API) =====
+let catalogProducts = null;
+
+function getProducts() {
+  if (catalogProducts && catalogProducts.length > 0) return catalogProducts;
+  return typeof products !== 'undefined' ? products : [];
+}
+
+async function loadCatalogFromApi() {
+  if (!isApiAvailable()) return;
+  try {
+    const res = await fetch(getApiBase() + '/api/catalog?section=kitesurf');
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data.products && Array.isArray(data.products) && data.products.length > 0) {
+      catalogProducts = data.products;
+    }
+  } catch (_) {}
 }
 
 // ===== NAVIGATION =====
@@ -56,13 +78,14 @@ function runDemoAnalysis(rawInput) {
     const slug = s.replace(/\s+/g, '-').replace(/[^a-z0-9-]/gi, '') || 'exemple';
     url = 'https://www.' + slug + '.fr';
   }
-  const brands = [...new Set(products.map(p => p.brand))].slice(0, 8);
-  const categories = [...new Set(products.map(p => p.category))];
-  const subcategories = [...new Set(products.map(p => p.subcategory))];
+  const productList = getProducts();
+  const brands = [...new Set(productList.map(p => p.brand))].slice(0, 8);
+  const categories = [...new Set(productList.map(p => p.category))];
+  const subcategories = [...new Set(productList.map(p => p.subcategory))];
   return {
     url,
     cms: 'PrestaShop',
-    productCount: products.length,
+    productCount: productList.length,
     categories: categories.length ? categories : ['Kitesurf', 'Planches', 'Ailes'],
     mainBrands: brands.length ? brands : ['F-One', 'Duotone', 'North', 'Core']
   };
@@ -178,18 +201,19 @@ function initSearchPage() {
   const categorySelect = document.getElementById('filter-category');
   const subcategorySelect = document.getElementById('filter-subcategory');
 
+  const productList = getProducts();
   const brandsFromAnalysis = (analysisResult && analysisResult.mainBrands && analysisResult.mainBrands.length)
     ? analysisResult.mainBrands
-    : [...new Set(products.map(p => p.brand))].sort();
+    : [...new Set(productList.map(p => p.brand))].sort();
 
   brandsEl.innerHTML = brandsFromAnalysis.map(b => `
     <button type="button" class="chip" data-brand="${escapeAttr(b)}" onclick="selectMainBrand('${escapeAttr(b)}')">${escapeHtml(b)}</button>
   `).join('');
 
-  const allBrands = [...new Set(products.map(p => p.brand))].sort();
-  const allYears = [...new Set(products.map(p => p.year))].sort().reverse();
-  const allCategories = [...new Set(products.map(p => p.category))].sort();
-  const allSubcategories = [...new Set(products.map(p => p.subcategory))].sort();
+  const allBrands = [...new Set(productList.map(p => p.brand))].sort();
+  const allYears = [...new Set(productList.map(p => p.year))].sort().reverse();
+  const allCategories = [...new Set(productList.map(p => p.category))].sort();
+  const allSubcategories = [...new Set(productList.map(p => p.subcategory))].sort();
 
   fillSelect(brandSelect, allBrands);
   fillSelect(yearSelect, allYears);
@@ -255,7 +279,8 @@ function applyFilters() {
   const category = getSelectedCategory();
   const subcategory = getSelectedSubcategory();
 
-  let filtered = products.filter(p => {
+  const productList = getProducts();
+  let filtered = productList.filter(p => {
     if (brand && p.brand !== brand) return false;
     if (year && p.year !== year) return false;
     if (category && p.category !== category) return false;

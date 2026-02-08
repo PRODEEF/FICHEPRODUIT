@@ -1,0 +1,59 @@
+{
+  "sector": "kitesurf",
+  "updated": "",
+  "brands": [
+    {
+      "id": "f-one",
+      "name": "F-One",
+      "catalogUrls": [
+        "https://www.f-one.world/kite/kites/",
+        "https://www.f-one.world/kite/boards/",
+        "https://www.f-one.world/kite/kitefoil/"
+      ],
+      "type": "html",
+      "notes": "Pages listing produits ; extraction titre, lien, image."
+    },
+    {
+      "id": "duotone",
+      "name": "Duotone",
+      "catalogUrls": ["https://duotone.com/kitesurf/kites", "https://duotone.com/kitesurf/boards"],
+      "type": "html",
+      "notes": "À compléter avec vraies URLs catalogue si besoin."
+    },
+    {
+      "id": "north",
+      "name": "North",
+      "catalogUrls": [],
+      "type": "html",
+      "notes": "URLs catalogue à ajouter (API ou B2B si dispo)."
+    },
+    {
+      "id": "core",
+      "name": "Core",
+      "catalogUrls": [],
+      "type": "html",
+      "notes": "URLs catalogue à ajouter."
+    },
+    {
+      "id": "cabrinha",
+      "name": "Cabrinha",
+      "catalogUrls": [],
+      "type": "html",
+      "notes": "URLs catalogue à ajouter."
+    },
+    {
+      "id": "naish",
+      "name": "Naish",
+      "catalogUrls": [],
+      "type": "html",
+      "notes": "URLs catalogue à ajouter."
+    },
+    {
+      "id": "ozone",
+      "name": "Ozone",
+      "catalogUrls": [],
+      "type": "html",
+      "notes": "URLs catalogue à ajouter."
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "name": "ficheproduct",
+  "version": "1.0.0",
+  "description": "Enrichissement catalogues fabricants (kitesurf, vélo)",
+  "type": "module",
+  "scripts": {
+    "enrich:kitesurf": "node scripts/enrich-kitesurf.js"
+  },
+  "dependencies": {
+    "cheerio": "^1.0.0"
+  }
+}
