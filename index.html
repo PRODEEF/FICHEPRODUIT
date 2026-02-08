@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ficheproduct - Génère tes fiches produits</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="bg-glow">
+    <div class="orb"></div>
+    <div class="orb"></div>
+  </div>
+
+  <nav>
+    <div style="display:flex;align-items:center;">
+      <span class="logo" onclick="goToPage('landing')">ficheproduct</span>
+      <span class="badge-beta">BETA</span>
+    </div>
+    <button class="btn-nav">Se connecter</button>
+  </nav>
+
+  <div id="page-landing" class="page active">
+    <section class="hero">
+      <div class="gift-banner">🎁 10 crédits offerts à l'inscription</div>
+      <h1><span class="highlight">Génère tes fiches produits</span><br>en quelques secondes</h1>
+      <p class="hero-sub">Laisse-toi guider. Transforme ton catalogue en fiches produits optimisées SEO.</p>
+      <div class="search-container">
+        <input class="search-bar" id="site-input" placeholder="Indique moi ton site internet" />
+        <button class="search-btn" onclick="startAnalysis()">Analyser</button>
+      </div>
+      <p style="font-size:0.8rem;color:var(--text-muted);">Compatible PrestaShop & Shopify</p>
+    </section>
+  </div>
+
+  <div id="page-search" class="page">
+    <section class="hero" style="min-height:auto;padding-bottom:1.5rem;">
+      <h1 style="font-size:clamp(1.4rem,3vw,2rem);"><span class="highlight">Demande les fiches produits</span> de ton choix</h1>
+      <p class="hero-sub" style="margin-bottom:1rem;">Indique la marque, catégorie, année...</p>
+      <div class="search-container">
+        <input class="search-bar" id="product-input" value="Les produits de kitesurf de la marque F-One (spécifiquement les ailes et les planches de kitesurf F-One 2026)" />
+        <button class="search-btn" onclick="searchProducts()">Rechercher</button>
+      </div>
+      <div id="site-info"></div>
+    </section>
+    <section id="results-section" style="display:none;padding:0 1.5rem 2rem;max-width:1400px;margin:0 auto;">
+      <div class="results-header">
+        <div class="results-actions">
+          <button class="action-btn btn-select" onclick="toggleSelectAll()">☑️ TOUT COCHER</button>
+          <button class="action-btn btn-import" id="import-btn" onclick="importSelected()" disabled>📥 IMPORTER</button>
+          <button class="action-btn btn-delete" id="delete-btn" onclick="deleteSelected()" disabled>🗑️ SUPPRIMER</button>
+        </div>
+        <div class="results-count">
+          <span id="total-count">0</span> fiches — <span class="selected-count" id="selected-count">0</span> sélectionnées
+        </div>
+      </div>
+      <div class="table-container">
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>✓</th>
+                <th>Image</th>
+                <th>Année</th>
+                <th>Marque</th>
+                <th>Catégorie</th>
+                <th>Sous-cat.</th>
+                <th>Titre</th>
+                <th>Description</th>
+                <th>Desc. commerciale</th>
+                <th>Prix</th>
+              </tr>
+            </thead>
+            <tbody id="products-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+    <footer>© 2025 ficheproduct</footer>
+  </div>
+
+  <div class="analysis-overlay" id="analysis-overlay">
+    <div class="analysis-modal">
+      <div class="spinner"></div>
+      <h2 style="margin-bottom:0.5rem;">Analyse en cours...</h2>
+      <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:1rem;" id="analysis-url"></p>
+      <div id="steps"></div>
+    </div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
