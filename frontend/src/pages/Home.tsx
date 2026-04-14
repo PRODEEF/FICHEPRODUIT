@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react'
+import { AnalyzeSuccessModal } from '../components/landing/AnalyzeSuccessModal'
 import { BackgroundGlow } from '../components/layout/BackgroundGlow'
 import { fetchSuggestUrls } from '../lib/suggestUrls'
 import { parseAsSiteUrl } from '../lib/siteUrl'
@@ -10,28 +11,36 @@ export function Home() {
     )
     const [landingSuggestionsLoading, setLandingSuggestionsLoading] =
         useState(false)
+    const [analyzeModalOpen, setAnalyzeModalOpen] = useState(false)
+    const [analyzeModalUrl, setAnalyzeModalUrl] = useState<string | null>(null)
+    const [searchEmptyError, setSearchEmptyError] = useState(false)
 
     const setSiteInputAndClearSuggestions = useCallback((value: string) => {
         setSiteInput(value)
         setLandingSuggestedUrls([])
+        setSearchEmptyError(false)
+    }, [])
+
+    const closeAnalyzeModal = useCallback(() => {
+        setAnalyzeModalOpen(false)
+        setAnalyzeModalUrl(null)
     }, [])
 
     const onAnalyzeUrl = useCallback((url: string) => {
         const trimmed = url.trim()
         if (!trimmed) return
-        window.alert(
-            `Analyse à brancher (auth + API). URL retenue :\n${trimmed}`,
-        )
+        setAnalyzeModalUrl(trimmed)
+        setAnalyzeModalOpen(true)
     }, [])
 
     const handleLandingSubmitSearch = useCallback(async () => {
         const raw = siteInput.trim()
         if (!raw) {
-            window.alert(
-                'Indique le nom de ton site ou son adresse (ex. ultimate glisse)',
-            )
+            setSearchEmptyError(true)
             return
         }
+
+        setSearchEmptyError(false)
 
         const directUrl = parseAsSiteUrl(raw)
         if (directUrl) {
@@ -69,12 +78,17 @@ export function Home() {
 
     return (
         <>
+            <AnalyzeSuccessModal
+                open={analyzeModalOpen}
+                url={analyzeModalUrl}
+                onClose={closeAnalyzeModal}
+            />
             <BackgroundGlow />
             <div className="app-content">
                 <section className="hero">
-                    <div className="gift-banner">
+                    {/* <div className="gift-banner">
                         {'\u{1F381}'} 10 crédits offerts à l&apos;inscription
-                    </div>
+                    </div> */}
                     <h1>
                         <span className="highlight">Génère tes fiches produits</span>
                         <br />
@@ -100,6 +114,12 @@ export function Home() {
                             }
                             disabled={landingSuggestionsLoading}
                             aria-busy={landingSuggestionsLoading}
+                            aria-invalid={searchEmptyError}
+                            aria-describedby={
+                                searchEmptyError
+                                    ? 'landing-site-empty-error'
+                                    : undefined
+                            }
                         />
                         <button
                             type="submit"
@@ -109,6 +129,16 @@ export function Home() {
                             {landingSuggestionsLoading ? '…' : 'Analyser'}
                         </button>
                     </form>
+
+                    {searchEmptyError ? (
+                        <p
+                            id="landing-site-empty-error"
+                            className="landing-search-error"
+                            role="alert"
+                        >
+                            Veuillez entrer le nom ou l&apos;URL de votre site
+                        </p>
+                    ) : null}
 
                     {landingSuggestionsLoading ? (
                         <p className="landing-suggestions-hint">

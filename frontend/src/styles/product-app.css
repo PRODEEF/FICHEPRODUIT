@@ -291,6 +291,22 @@ a.nav-auth-link {
   background: var(--bg-main);
 }
 
+.search-bar[aria-invalid='true'] {
+  border-color: var(--red-500);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+}
+
+.landing-search-error {
+  width: 100%;
+  max-width: 620px;
+  margin: -0.5rem auto 1rem;
+  padding: 0 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--red-500);
+  text-align: left;
+}
+
 .landing-suggestions-hint {
   font-size: 0.9rem;
   color: var(--purple-600);
@@ -480,4 +496,84 @@ a.nav-auth-link {
 .btn-auth-primary:disabled {
   opacity: 0.65;
   cursor: not-allowed;
+}
+
+/* Analyze success modal (landing / hero visual language) */
+.analyze-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgba(17, 24, 39, 0.45);
+  backdrop-filter: blur(6px);
+}
+
+.analyze-modal-panel {
+  width: 100%;
+  max-width: 28rem;
+  background: var(--bg-white);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
+  text-align: center;
+}
+
+.analyze-modal-title {
+  font-size: clamp(1.35rem, 3.5vw, 1.75rem);
+  font-weight: 900;
+  line-height: 1.2;
+  margin: 0 0 0.75rem;
+  color: var(--text-primary);
+}
+
+.analyze-modal-title .highlight {
+  background: linear-gradient(135deg, var(--purple-600), var(--purple-400));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.analyze-modal-sub {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  margin: 0 0 1rem;
+  line-height: 1.5;
+}
+
+.analyze-modal-url {
+  margin: 0 0 1.5rem;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border-purple);
+  background: var(--purple-50);
+  color: var(--purple-600);
+  font-size: 0.9rem;
+  word-break: break-all;
+  text-align: left;
+}
+
+.analyze-modal-close {
+  width: 100%;
+  padding: 12px 20px;
+  border-radius: 12px;
+  border: none;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  color: #fff;
+  background: linear-gradient(135deg, var(--purple-600), var(--purple-500));
+}
+
+.analyze-modal-close:hover {
+  filter: brightness(1.05);
+}
+
+.analyze-modal-close:focus-visible {
+  outline: 2px solid var(--purple-400);
+  outline-offset: 2px;
 }
