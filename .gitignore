@@ -3,6 +3,8 @@
 node_modules/
 *.log
 .env
-.env.local
 .vercel
 npm-debug.log*
+dist/
+
+frontend-test/
