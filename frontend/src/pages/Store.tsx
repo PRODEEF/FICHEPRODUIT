@@ -1,10 +1,8 @@
 import { useEffect } from 'react'
-import { Link, useNavigate, useParams } from 'react-router'
-import { useAuth } from '../../auth/AuthContext'
-import { ProductSheetTab } from '../../components/analysis/ProductSheetTab'
+import { useNavigate } from 'react-router'
+import { useAuth } from '../auth/AuthContext'
 
-export function ProductSheet() {
-  const { analysisId } = useParams<{ analysisId: string }>()
+export function MyStore() {
   const navigate = useNavigate()
   const { user, loading: authLoading } = useAuth()
 
@@ -25,7 +23,7 @@ export function ProductSheet() {
     )
   }
 
-  if (!user || !analysisId) {
+  if (!user) {
     return null
   }
 
@@ -33,19 +31,13 @@ export function ProductSheet() {
     <div className="app-content analyses-page">
       <header className="analyses-header">
         <div>
-          <h1 className="analyses-title">Fiche produit type</h1>
+          <h1 className="analyses-title">Mon magasin</h1>
           <p className="analyses-subtitle">
-            Modèle pour le formatage des exports PrestaShop
+            Cette section sera bientôt disponible.
           </p>
         </div>
-        <Link
-          to={`/analyses/${analysisId}`}
-          className="analyses-back-link"
-        >
-          ← Retour au catalogue
-        </Link>
       </header>
-      <ProductSheetTab />
+      <p className="analyses-status">À venir</p>
     </div>
   )
 }

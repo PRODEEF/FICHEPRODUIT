@@ -24,6 +24,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/scrape-product": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Detect product fields from a product page URL
+         * @description Fetches HTML server-side, extracts schema.org JSON-LD (Product) and common PrestaShop feature tables. Returns a proposed field list for a product template.
+         */
+        post: operations["scrapeProduct"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/refine-template-fields": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Refine template fields with AI
+         * @description Uses OpenAI when OPENAI_API_KEY is set to improve field names, types (text, number, url, html, boolean, date), and required flags. Same request/response shape as product template fields; safe fallback returns input unchanged if the model is unavailable.
+         */
+        post: operations["refineTemplateFields"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/me": {
         parameters: {
             query?: never;
@@ -239,6 +279,85 @@ export interface components {
             error?: string;
         };
         /** @enum {string} */
+        ProductTemplateFieldType:
+          | "text"
+          | "long_text"
+          | "rich_text"
+          | "number"
+          | "price"
+          | "percentage"
+          | "boolean"
+          | "date"
+          | "datetime"
+          | "url"
+          | "email"
+          | "phone"
+          | "enum"
+          | "multi_enum"
+          | "reference"
+          | "image"
+          | "file"
+          | "color"
+          | "size"
+          | "weight"
+          | "dimension"
+          | "country"
+          | "currency"
+          | "json";
+        ProductTemplateField: {
+            /** @description Human-readable or CSV column field name */
+            name: string;
+            type: components["schemas"]["ProductTemplateFieldType"];
+            /** @default false */
+            required?: boolean;
+        };
+        ScrapeProductRequest: {
+            /**
+             * Format: uri
+             * @description Product page URL to analyze
+             * @example https://shop.example.com/product.html
+             */
+            url: string;
+        };
+        /** @enum {string} */
+        ScrapeProductWarningCode:
+            | "FETCH_FAILED"
+            | "NO_JSONLD"
+            | "NO_PRODUCT_IN_SCHEMA"
+            | "JSONLD_PARSE_ERROR"
+            | "NO_FEATURES_TABLE";
+        ScrapeProductWarning: {
+            code: components["schemas"]["ScrapeProductWarningCode"];
+            message: string;
+        };
+        ScrapeProductResponse: {
+            fields: components["schemas"]["ProductTemplateField"][];
+            warnings: components["schemas"]["ScrapeProductWarning"][];
+        };
+        /** @enum {string} */
+        RefineTemplateFieldsSource:
+            | "csv_import"
+            | "product_page"
+            | "manual";
+        RefineTemplateFieldsRequest: {
+            source: components["schemas"]["RefineTemplateFieldsSource"];
+            fields: components["schemas"]["ProductTemplateField"][];
+            /**
+             * @description Optional map of column name to a short sample value (e.g. first CSV data row) to improve type detection.
+             */
+            sampleValues?: {
+                [key: string]: string;
+            };
+        };
+        RefineTemplateFieldsResponse: {
+            fields: components["schemas"]["ProductTemplateField"][];
+            refinedWithAi: boolean;
+            /**
+             * @description Hint when fields were not changed or the model failed
+             */
+            message?: string;
+        };
+        /** @enum {string} */
         CmsType: "woocommerce" | "shopify" | "prestashop" | "unknown";
         /** @enum {string} */
         AnalysisStatus: "pending" | "in_progress" | "completed" | "failed";
@@ -360,6 +479,86 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HealthResponse"];
                 };
+            };
+        };
+    };
+    scrapeProduct: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ScrapeProductRequest"];
+            };
+        };
+        responses: {
+            /** @description Proposed fields (may be partial if JSON-LD or features are missing) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScrapeProductResponse"];
+                };
+            };
+            /** @description Invalid URL or blocked target (SSRF protection) */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    refineTemplateFields: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RefineTemplateFieldsRequest"];
+            };
+        };
+        responses: {
+            /** @description Refined or unchanged field list */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RefineTemplateFieldsResponse"];
+                };
+            };
+            /** @description Invalid body */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

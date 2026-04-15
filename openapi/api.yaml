@@ -78,6 +78,73 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /api/scrape-product:
+    post:
+      operationId: scrapeProduct
+      summary: Detect product fields from a product page URL
+      description: >-
+        Fetches HTML server-side, extracts schema.org JSON-LD (Product) and
+        common PrestaShop feature tables. Returns a proposed field list for a product template.
+      tags:
+        - Product templates
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ScrapeProductRequest"
+      responses:
+        "200":
+          description: Proposed fields (may be partial if JSON-LD or features are missing)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScrapeProductResponse"
+        "400":
+          description: Invalid URL or blocked target (SSRF protection)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+
+  /api/refine-template-fields:
+    post:
+      operationId: refineTemplateFields
+      summary: Refine template fields with AI
+      description: >-
+        Uses OpenAI when OPENAI_API_KEY is set to improve field names, types (text, number,
+        url, html, boolean, date), and required flags. Same request/response shape as product
+        template fields; safe fallback returns input unchanged if the model is unavailable.
+      tags:
+        - Product templates
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefineTemplateFieldsRequest"
+      responses:
+        "200":
+          description: Refined or unchanged field list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RefineTemplateFieldsResponse"
+        "400":
+          description: Invalid body
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+
   /auth/me:
     get:
       operationId: getAuthMe
@@ -286,6 +353,140 @@ components:
         error:
           type: string
           example: Bad Request
+
+    ProductTemplateFieldType:
+      type: string
+      description: >
+        Logical data type for import/mapping (PrestaShop CSV, scrapes, etc.).
+        Use `rich_text` for HTML; `long_text` for plain long copy; `price` / `weight` /
+        `percentage` when the column is clearly that quantity; `reference` for SKU/EAN;
+        `image` for image URLs or paths.
+      enum:
+        - text
+        - long_text
+        - rich_text
+        - number
+        - price
+        - percentage
+        - boolean
+        - date
+        - datetime
+        - url
+        - email
+        - phone
+        - enum
+        - multi_enum
+        - reference
+        - image
+        - file
+        - color
+        - size
+        - weight
+        - dimension
+        - country
+        - currency
+        - json
+
+    ProductTemplateField:
+      type: object
+      required:
+        - name
+        - type
+      properties:
+        name:
+          type: string
+          description: Human-readable or CSV column field name
+        type:
+          $ref: "#/components/schemas/ProductTemplateFieldType"
+        required:
+          type: boolean
+          default: false
+
+    ScrapeProductRequest:
+      type: object
+      required:
+        - url
+      properties:
+        url:
+          type: string
+          format: uri
+          description: Product page URL to analyze
+          example: "https://shop.example.com/product.html"
+
+    ScrapeProductWarning:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          enum:
+            - FETCH_FAILED
+            - NO_JSONLD
+            - NO_PRODUCT_IN_SCHEMA
+            - JSONLD_PARSE_ERROR
+            - NO_FEATURES_TABLE
+        message:
+          type: string
+
+    ScrapeProductResponse:
+      type: object
+      required:
+        - fields
+        - warnings
+      properties:
+        fields:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProductTemplateField"
+        warnings:
+          type: array
+          items:
+            $ref: "#/components/schemas/ScrapeProductWarning"
+
+    RefineTemplateFieldsSource:
+      type: string
+      enum:
+        - csv_import
+        - product_page
+        - manual
+
+    RefineTemplateFieldsRequest:
+      type: object
+      required:
+        - source
+        - fields
+      properties:
+        source:
+          $ref: "#/components/schemas/RefineTemplateFieldsSource"
+        fields:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProductTemplateField"
+        sampleValues:
+          type: object
+          additionalProperties:
+            type: string
+          description: >
+            Optional map of column name to a short sample value (e.g. first CSV data row)
+            to improve type detection.
+
+    RefineTemplateFieldsResponse:
+      type: object
+      required:
+        - fields
+        - refinedWithAi
+      properties:
+        fields:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProductTemplateField"
+        refinedWithAi:
+          type: boolean
+        message:
+          type: string
+          description: Hint when fields were not changed or the model failed
 
     SuggestUrlsRequest:
       type: object

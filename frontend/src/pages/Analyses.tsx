@@ -1,21 +1,39 @@
-import { useEffect, useLayoutEffect, useState } from 'react'
-import { Link, Navigate, useNavigate, useParams } from 'react-router'
-import { useAuth } from '../../auth/AuthContext'
-import { AnalyseResult } from '../../components/analysis/AnalyseResult'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import {
+  Link,
+  Navigate,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from 'react-router'
+import { useAuth } from '../auth/AuthContext'
+import {
+  AnalyseResult,
+  type ResultTab,
+} from '../components/analysis/AnalyseResult'
 import {
   getAnalysisProducts,
   getSiteAnalysis,
   type ProductListResponse,
   type SiteAnalysis,
-} from '../../lib/analysisApi'
+} from '../lib/analysisApi'
 import {
   getAnalysisDetailCache,
   setAnalysisDetailCache,
-} from '../../lib/analysisDetailCache'
+} from '../lib/analysisDetailCache'
+import { setLastAnalysisId } from '../lib/lastAnalysisIdStorage'
+
+function parseResultTab(searchParams: URLSearchParams): ResultTab {
+  const t = searchParams.get('tab')
+  if (t === 'template') return 'template'
+  return 'catalog'
+}
 
 export function Analyses() {
   const { analysisId } = useParams<{ analysisId: string }>()
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const prevRouteAnalysisIdRef = useRef<string | null>(null)
   const { user, loading: authLoading } = useAuth()
 
   const [detailLoading, setDetailLoading] = useState(() => Boolean(analysisId))
@@ -36,6 +54,27 @@ export function Analyses() {
       void navigate('/login', { replace: true })
     }
   }, [authLoading, user, navigate])
+
+  useEffect(() => {
+    if (!analysisId) return
+    setLastAnalysisId(analysisId)
+  }, [analysisId])
+
+  useEffect(() => {
+    if (!analysisId) return
+    const prev = prevRouteAnalysisIdRef.current
+    if (prev !== null && prev !== analysisId) {
+      setSearchParams(
+        (p) => {
+          const next = new URLSearchParams(p)
+          next.delete('tab')
+          return next
+        },
+        { replace: true },
+      )
+    }
+    prevRouteAnalysisIdRef.current = analysisId
+  }, [analysisId, setSearchParams])
 
   useLayoutEffect(() => {
     if (!analysisId || !user?.id) return
@@ -108,6 +147,22 @@ export function Analyses() {
     return <Navigate to="/" replace />
   }
 
+  const resultTab = parseResultTab(searchParams)
+  const setResultTab = (tab: ResultTab) => {
+    setSearchParams(
+      (p) => {
+        const next = new URLSearchParams(p)
+        if (tab === 'catalog') {
+          next.delete('tab')
+        } else {
+          next.set('tab', 'template')
+        }
+        return next
+      },
+      { replace: true },
+    )
+  }
+
   return (
     <div className="app-content analyses-page">
       <header className="analyses-header">
@@ -119,9 +174,6 @@ export function Analyses() {
             </p>
           ) : null}
         </div>
-        <Link to="/" className="analyses-back-link">
-          ← Accueil
-        </Link>
       </header>
 
       <AnalyseResult
@@ -129,6 +181,8 @@ export function Analyses() {
         error={detailError}
         analysis={analysis}
         productPayload={productPayload}
+        activeTab={resultTab}
+        onActiveTabChange={setResultTab}
       />
     </div>
   )

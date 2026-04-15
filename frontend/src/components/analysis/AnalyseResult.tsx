@@ -5,8 +5,6 @@ import type {
   ProductListResponse,
   SiteAnalysis,
 } from '../../lib/analysisApi'
-import { ProductSheetTab } from './ProductSheetTab'
-
 const STATUS_LABELS: Record<SiteAnalysis['status'], string> = {
   pending: 'En attente',
   in_progress: 'En cours',
@@ -41,22 +39,25 @@ function uniqueSorted(values: Iterable<string>): string[] {
   return [...s].sort((a, b) => a.localeCompare(b, 'fr'))
 }
 
+export type ResultTab = 'catalog' | 'template'
+
 export type AnalyseResultProps = {
   loading: boolean
   error: string | null
   analysis: SiteAnalysis | null
   productPayload: ProductListResponse | null
+  activeTab: ResultTab
+  onActiveTabChange: (tab: ResultTab) => void
 }
-
-type ResultTab = 'catalog' | 'template'
 
 export function AnalyseResult({
   loading,
   error,
   analysis,
   productPayload,
+  activeTab,
+  onActiveTabChange,
 }: AnalyseResultProps) {
-  const [activeTab, setActiveTab] = useState<ResultTab>('catalog')
   const [searchQuery, setSearchQuery] = useState('')
   const [filterBrand, setFilterBrand] = useState('')
   const [filterCategory, setFilterCategory] = useState('')
@@ -74,7 +75,6 @@ export function AnalyseResult({
     setFilterYear('')
     setSelectedIds(new Set())
     setRemovedIds(new Set())
-    setActiveTab('catalog')
   }, [analysis?.id])
 
   useEffect(() => {
@@ -277,7 +277,7 @@ export function AnalyseResult({
               aria-selected={activeTab === 'catalog'}
               aria-controls="panel-catalog"
               className={`analyses-tab-btn${activeTab === 'catalog' ? ' analyses-tab-btn--active' : ''}`}
-              onClick={() => setActiveTab('catalog')}
+              onClick={() => onActiveTabChange('catalog')}
             >
               Recherche &amp; catalogue
             </button>
@@ -288,14 +288,11 @@ export function AnalyseResult({
               aria-selected={activeTab === 'template'}
               aria-controls="panel-template"
               className={`analyses-tab-btn${activeTab === 'template' ? ' analyses-tab-btn--active' : ''}`}
-              onClick={() => setActiveTab('template')}
+              onClick={() => onActiveTabChange('template')}
             >
               Ma fiche produit
             </button>
-            <Link
-              to={`/analyses/${analysis.id}/product-sheet`}
-              className="analyses-tab-link"
-            >
+            <Link to="/product-sheet" className="analyses-tab-link">
               Ouvrir la fiche type en pleine page →
             </Link>
           </div>
@@ -569,7 +566,13 @@ export function AnalyseResult({
             hidden={activeTab !== 'template'}
             className="analyses-tab-panel"
           >
-            <ProductSheetTab />
+            <p className="product-sheet-intro">
+              Configure la structure des champs (fiches type PrestaShop) sur la
+              page dédiée.
+            </p>
+            <Link to="/product-sheet" className="product-sheet-save-btn">
+              Ouvrir la fiche produit type
+            </Link>
           </div>
         </>
       ) : analysis.status !== 'failed' ? (
