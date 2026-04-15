@@ -1,14 +1,19 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router'
-import { BackgroundGlow } from '../components/layout/BackgroundGlow'
-import { useAuth } from '../auth/AuthContext'
-import { authErrorMessage } from '../lib/authErrorMessage'
-import { getSupabaseClient } from '../lib/supabase'
+import { PasswordField } from '../../components/auth/PasswordField'
+import { useAuth } from '../../auth/AuthContext'
+import { authErrorMessage } from '../../lib/authErrorMessage'
+import { getSupabaseClient } from '../../lib/supabase'
+import { parseAsSiteUrl } from '../../lib/siteUrl'
+import { authMetadataForDisplayName } from '../../lib/authUserDisplay'
+import { normalizeUsername, validateUsernameInput } from '../../lib/username'
 
 export function Signup() {
   const navigate = useNavigate()
   const { userEmail, loading: authLoading, configError } = useAuth()
   const [email, setEmail] = useState('')
+  const [username, setUsername] = useState('')
+  const [websiteUrl, setWebsiteUrl] = useState('')
   const [password, setPassword] = useState('')
   const [passwordConfirm, setPasswordConfirm] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -34,6 +39,26 @@ export function Signup() {
       return
     }
 
+    const normalizedUsername = normalizeUsername(username)
+    const usernameErr = validateUsernameInput(normalizedUsername)
+    if (usernameErr) {
+      setError(usernameErr)
+      return
+    }
+
+    const siteRaw = websiteUrl.trim()
+    let website_url = ''
+    if (siteRaw) {
+      const parsed = parseAsSiteUrl(siteRaw)
+      if (!parsed) {
+        setError(
+          'URL du site invalide. Indique une adresse complète (https://…) ou un domaine (ex. monsite.fr).',
+        )
+        return
+      }
+      website_url = parsed
+    }
+
     const supabase = getSupabaseClient()
     if (!supabase) {
       setError(
@@ -48,7 +73,13 @@ export function Signup() {
       const { data, error: signError } = await supabase.auth.signUp({
         email: email.trim(),
         password,
-        options: { emailRedirectTo },
+        options: {
+          emailRedirectTo,
+          data: {
+            ...authMetadataForDisplayName(normalizedUsername),
+            website_url,
+          },
+        },
       })
       if (signError) {
         setError(authErrorMessage(signError))
@@ -70,27 +101,22 @@ export function Signup() {
 
   if (configError) {
     return (
-      <>
-        <BackgroundGlow />
-        <div className="auth-page">
-          <div className="auth-card">
-            <h1>Inscription</h1>
-            <p className="auth-banner auth-banner--error">
-              Variables d’environnement Supabase manquantes. Copie{' '}
-              <code className="auth-code">frontend/.env.example</code> vers{' '}
-              <code className="auth-code">frontend/.env</code> et renseigne
-              l’URL ainsi que la clé anonyme.
-            </p>
-          </div>
+      <div className="auth-page">
+        <div className="auth-card">
+          <h1>Inscription</h1>
+          <p className="auth-banner auth-banner--error">
+            Variables d’environnement Supabase manquantes. Copie{' '}
+            <code className="auth-code">frontend/.env.example</code> vers{' '}
+            <code className="auth-code">frontend/.env</code> et renseigne
+            l’URL ainsi que la clé anonyme.
+          </p>
         </div>
-      </>
+      </div>
     )
   }
 
   return (
-    <>
-      <BackgroundGlow />
-      <div className="auth-page">
+    <div className="auth-page">
         <div className="auth-card">
           <h1>Inscription</h1>
           <p className="auth-intro">
@@ -120,35 +146,58 @@ export function Signup() {
                 />
               </div>
               <div className="auth-field">
-                <label htmlFor="signup-password">Mot de passe</label>
+                <label htmlFor="signup-username">Nom d’utilisateur</label>
                 <input
-                  id="signup-password"
-                  name="password"
-                  type="password"
-                  autoComplete="new-password"
+                  id="signup-username"
+                  name="username"
+                  type="text"
+                  autoComplete="username"
                   required
-                  minLength={8}
-                  value={password}
-                  onChange={(ev) => setPassword(ev.target.value)}
+                  minLength={3}
+                  maxLength={30}
+                  value={username}
+                  onChange={(ev) => setUsername(ev.target.value)}
                   disabled={submitting || authLoading}
                 />
               </div>
               <div className="auth-field">
-                <label htmlFor="signup-password-confirm">
-                  Confirmer le mot de passe
+                <label htmlFor="signup-website">
+                  URL de votre site web{' '}
+                  <span className="auth-optional">(facultatif)</span>
                 </label>
                 <input
-                  id="signup-password-confirm"
-                  name="passwordConfirm"
-                  type="password"
-                  autoComplete="new-password"
-                  required
-                  minLength={8}
-                  value={passwordConfirm}
-                  onChange={(ev) => setPasswordConfirm(ev.target.value)}
+                  id="signup-website"
+                  name="websiteUrl"
+                  type="url"
+                  inputMode="url"
+                  placeholder="https://exemple.fr"
+                  value={websiteUrl}
+                  onChange={(ev) => setWebsiteUrl(ev.target.value)}
                   disabled={submitting || authLoading}
                 />
               </div>
+              <PasswordField
+                id="signup-password"
+                label="Mot de passe"
+                name="password"
+                autoComplete="new-password"
+                required
+                minLength={8}
+                value={password}
+                onChange={(ev) => setPassword(ev.target.value)}
+                disabled={submitting || authLoading}
+              />
+              <PasswordField
+                id="signup-password-confirm"
+                label="Confirmer le mot de passe"
+                name="passwordConfirm"
+                autoComplete="new-password"
+                required
+                minLength={8}
+                value={passwordConfirm}
+                onChange={(ev) => setPasswordConfirm(ev.target.value)}
+                disabled={submitting || authLoading}
+              />
               {error ? (
                 <p className="auth-error" role="alert">
                   {error}
@@ -164,7 +213,6 @@ export function Signup() {
             </form>
           )}
         </div>
-      </div>
-    </>
+    </div>
   )
 }

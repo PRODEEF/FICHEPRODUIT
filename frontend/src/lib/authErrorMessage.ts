@@ -20,6 +20,8 @@ export function authErrorMessage(error: AuthError | null): string {
   const code = error.code?.toLowerCase() ?? ''
   if (code && KNOWN[code]) return KNOWN[code]
   const msg = error.message?.trim()
-  if (msg) return msg
+  if (msg) {
+    return msg
+  }
   return 'Une erreur est survenue. Réessaie.'
 }

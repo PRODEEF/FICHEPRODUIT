@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import configuration from './config/configuration';
 import { AuthModule } from './auth/auth.module';
 import { HealthModule } from './feature/health';
+import { SiteAnalysisModule } from './feature/site-analysis';
 import { SuggestUrlsModule } from './feature/suggest-urls';
 
 @Module({
@@ -14,6 +15,7 @@ import { SuggestUrlsModule } from './feature/suggest-urls';
     AuthModule,
     HealthModule,
     SuggestUrlsModule,
+    SiteAnalysisModule,
   ],
 })
 export class AppModule {}

@@ -1,9 +1,9 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router'
-import { BackgroundGlow } from '../components/layout/BackgroundGlow'
-import { useAuth } from '../auth/AuthContext'
-import { authErrorMessage } from '../lib/authErrorMessage'
-import { getSupabaseClient } from '../lib/supabase'
+import { PasswordField } from '../../components/auth/PasswordField'
+import { useAuth } from '../../auth/AuthContext'
+import { authErrorMessage } from '../../lib/authErrorMessage'
+import { getSupabaseClient } from '../../lib/supabase'
 
 export function Login() {
   const navigate = useNavigate()
@@ -46,28 +46,23 @@ export function Login() {
 
   if (configError) {
     return (
-      <>
-        <BackgroundGlow />
-        <div className="auth-page">
-          <div className="auth-card">
-            <h1>Connexion</h1>
-            <p className="auth-banner auth-banner--error">
-              Variables d’environnement Supabase manquantes. Copie{' '}
-              <code className="auth-code">frontend/.env.example</code> vers{' '}
-              <code className="auth-code">frontend/.env</code> et renseigne
-              l’URL ainsi que la clé anonyme.
-            </p>
-          </div>
+      <div className="auth-page">
+        <div className="auth-card">
+          <h1>Connexion</h1>
+          <p className="auth-banner auth-banner--error">
+            Variables d’environnement Supabase manquantes. Copie{' '}
+            <code className="auth-code">frontend/.env.example</code> vers{' '}
+            <code className="auth-code">frontend/.env</code> et renseigne
+            l’URL ainsi que la clé anonyme.
+          </p>
         </div>
-      </>
+      </div>
     )
   }
 
   return (
-    <>
-      <BackgroundGlow />
-      <div className="auth-page">
-        <div className="auth-card">
+    <div className="auth-page">
+      <div className="auth-card">
           <h1>Connexion</h1>
           <p className="auth-intro">
             Pas encore de compte ?{' '}
@@ -89,19 +84,16 @@ export function Login() {
                 disabled={submitting || authLoading}
               />
             </div>
-            <div className="auth-field">
-              <label htmlFor="login-password">Mot de passe</label>
-              <input
-                id="login-password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                value={password}
-                onChange={(ev) => setPassword(ev.target.value)}
-                disabled={submitting || authLoading}
-              />
-            </div>
+            <PasswordField
+              id="login-password"
+              label="Mot de passe"
+              name="password"
+              autoComplete="current-password"
+              required
+              value={password}
+              onChange={(ev) => setPassword(ev.target.value)}
+              disabled={submitting || authLoading}
+            />
             {error ? (
               <p className="auth-error" role="alert">
                 {error}
@@ -120,8 +112,7 @@ export function Login() {
               Mot de passe oublié ?
             </Link>
           </p>
-        </div>
       </div>
-    </>
+    </div>
   )
 }

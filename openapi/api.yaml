@@ -28,7 +28,7 @@ paths:
     get:
       operationId: suggestUrlsGet
       summary: Suggest ecommerce URLs (query)
-      description: Returns likely homepage URLs from a free-text hint (store name, etc.). Uses OpenAI when configured, otherwise heuristics.
+      description: Returns URLs from a free-text hint via Tavily Search (first 6 results, social networks excluded). Falls back to heuristics when Tavily is not configured.
       tags:
         - Suggest URLs
       parameters:
@@ -55,7 +55,7 @@ paths:
     post:
       operationId: suggestUrlsPost
       summary: Suggest ecommerce URLs (JSON body)
-      description: Same as GET but passes q in the request body.
+      description: Same as GET (Tavily Search + heuristic fallback).
       tags:
         - Suggest URLs
       requestBody:
@@ -96,6 +96,137 @@ paths:
                 $ref: "#/components/schemas/UserProfile"
         "401":
           description: Unauthorized
+
+  /analyses:
+    get:
+      operationId: listAnalyses
+      summary: List user analyses
+      description: Returns all analyses for the authenticated user.
+      tags:
+        - Analyses
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of analyses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SiteAnalysis"
+        "401":
+          description: Unauthorized
+    post:
+      operationId: createAnalysis
+      summary: Start a new site analysis
+      description: Initiates an asynchronous analysis of the given URL to extract product data.
+      tags:
+        - Analyses
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAnalysisRequest"
+      responses:
+        "201":
+          description: Analysis created and started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SiteAnalysis"
+        "400":
+          description: Invalid URL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+
+  /analyses/{id}:
+    get:
+      operationId: getAnalysis
+      summary: Get analysis status
+      description: Returns the current status and metadata of an analysis. Used for polling progress.
+      tags:
+        - Analyses
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Analysis details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SiteAnalysis"
+        "401":
+          description: Unauthorized
+        "404":
+          description: Analysis not found
+
+  /analyses/{id}/products:
+    get:
+      operationId: getAnalysisProducts
+      summary: Get products from an analysis
+      description: Returns the extracted products for a completed analysis with optional filters.
+      tags:
+        - Analyses
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: brand
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: year
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: category
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: subCategory
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of products
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductListResponse"
+        "401":
+          description: Unauthorized
+        "404":
+          description: Analysis not found
 
 components:
   securitySchemes:
@@ -242,6 +373,17 @@ components:
           type: array
           items:
             type: string
+        verticalSummary:
+          type: string
+          description: Short French phrase describing what the shop sells (for UI).
+          example: "des produits de kitesurf"
+        catalogMatchCategories:
+          type: array
+          items:
+            type: string
+          description: >-
+            Catalog category labels aligned with the local taxonomy when inferrable (multiple when the shop spans several verticals).
+          example: ["Kitesurf", "Wing foil"]
         createdAt:
           type: string
           format: date-time

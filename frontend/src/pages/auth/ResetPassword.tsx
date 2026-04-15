@@ -1,8 +1,8 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router'
-import { BackgroundGlow } from '../components/layout/BackgroundGlow'
-import { authErrorMessage } from '../lib/authErrorMessage'
-import { getSupabaseClient } from '../lib/supabase'
+import { PasswordField } from '../../components/auth/PasswordField'
+import { authErrorMessage } from '../../lib/authErrorMessage'
+import { getSupabaseClient } from '../../lib/supabase'
 
 type GateState = 'loading' | 'ready' | 'invalid'
 
@@ -92,10 +92,8 @@ export function ResetPassword() {
   }
 
   return (
-    <>
-      <BackgroundGlow />
-      <div className="auth-page">
-        <div className="auth-card">
+    <div className="auth-page">
+      <div className="auth-card">
           <h1>Nouveau mot de passe</h1>
           {gate === 'loading' ? (
             <p className="auth-intro" aria-busy="true">
@@ -121,36 +119,28 @@ export function ResetPassword() {
           ) : null}
           {gate === 'ready' ? (
             <form className="auth-form" onSubmit={(e) => void handleSubmit(e)}>
-              <div className="auth-field">
-                <label htmlFor="reset-password">Nouveau mot de passe</label>
-                <input
-                  id="reset-password"
-                  name="password"
-                  type="password"
-                  autoComplete="new-password"
-                  required
-                  minLength={8}
-                  value={password}
-                  onChange={(ev) => setPassword(ev.target.value)}
-                  disabled={submitting}
-                />
-              </div>
-              <div className="auth-field">
-                <label htmlFor="reset-password-confirm">
-                  Confirmer le mot de passe
-                </label>
-                <input
-                  id="reset-password-confirm"
-                  name="passwordConfirm"
-                  type="password"
-                  autoComplete="new-password"
-                  required
-                  minLength={8}
-                  value={passwordConfirm}
-                  onChange={(ev) => setPasswordConfirm(ev.target.value)}
-                  disabled={submitting}
-                />
-              </div>
+              <PasswordField
+                id="reset-password"
+                label="Nouveau mot de passe"
+                name="password"
+                autoComplete="new-password"
+                required
+                minLength={8}
+                value={password}
+                onChange={(ev) => setPassword(ev.target.value)}
+                disabled={submitting}
+              />
+              <PasswordField
+                id="reset-password-confirm"
+                label="Confirmer le mot de passe"
+                name="passwordConfirm"
+                autoComplete="new-password"
+                required
+                minLength={8}
+                value={passwordConfirm}
+                onChange={(ev) => setPasswordConfirm(ev.target.value)}
+                disabled={submitting}
+              />
               {error ? (
                 <p className="auth-error" role="alert">
                   {error}
@@ -167,6 +157,5 @@ export function ResetPassword() {
           ) : null}
         </div>
       </div>
-    </>
   )
 }

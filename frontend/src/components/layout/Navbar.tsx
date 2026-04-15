@@ -3,6 +3,8 @@ import type { ReactNode } from 'react'
 
 export type NavbarProps = {
   userEmail: string | null
+  /** Shown in the nav when authenticated (e.g. username). */
+  userLabel: string | null
   loading?: boolean
   onLogoClick: () => void
   onLogout: () => void | Promise<void>
@@ -11,18 +13,20 @@ export type NavbarProps = {
 
 export function Navbar({
   userEmail,
+  userLabel,
   loading = false,
   onLogoClick,
   onLogout,
   center,
 }: NavbarProps) {
   const authed = Boolean(userEmail)
+  const navTitle = userLabel ?? userEmail ?? undefined
 
   return (
     <nav className="app-nav" aria-label="Main">
       <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
         <button type="button" className="logo" onClick={onLogoClick}>
-          ficheproduct
+          FicheProduct
         </button>
         <span className="badge-beta">BETA</span>
       </div>
@@ -34,9 +38,13 @@ export function Navbar({
           </span>
         ) : authed ? (
           <>
-            <span className="nav-user-email" title={userEmail ?? undefined}>
-              {userEmail}
-            </span>
+            <Link
+              to="/profile"
+              className="nav-user-email nav-user-profile-link"
+              title={userEmail ?? undefined}
+            >
+              {navTitle}
+            </Link>
             <button
               type="button"
               className="btn-nav"

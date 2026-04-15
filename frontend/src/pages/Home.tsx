@@ -1,36 +1,32 @@
 import { useCallback, useState } from 'react'
-import { AnalyzeSuccessModal } from '../components/landing/AnalyzeSuccessModal'
-import { BackgroundGlow } from '../components/layout/BackgroundGlow'
+import { useNavigate } from 'react-router'
+import { useAuth } from '../auth/AuthContext'
+import { AnalysisProgress } from '../components/analysis/AnalysisProgress'
+import { useSiteAnalysis } from '../hooks/useSiteAnalysis'
 import { fetchSuggestUrls } from '../lib/suggestUrls'
 import { parseAsSiteUrl } from '../lib/siteUrl'
 
 export function Home() {
+    const navigate = useNavigate()
+    const { user, loading: authLoading } = useAuth()
     const [siteInput, setSiteInput] = useState('')
     const [landingSuggestedUrls, setLandingSuggestedUrls] = useState<string[]>(
         [],
     )
     const [landingSuggestionsLoading, setLandingSuggestionsLoading] =
         useState(false)
-    const [analyzeModalOpen, setAnalyzeModalOpen] = useState(false)
-    const [analyzeModalUrl, setAnalyzeModalUrl] = useState<string | null>(null)
     const [searchEmptyError, setSearchEmptyError] = useState(false)
+    const { runAnalysis, analysisOpen, siteAnalysis, dismissError } =
+        useSiteAnalysis({
+            onSuccess: (summary) => {
+                navigate(`/analyses/${summary.id}`)
+            },
+        })
 
     const setSiteInputAndClearSuggestions = useCallback((value: string) => {
         setSiteInput(value)
         setLandingSuggestedUrls([])
         setSearchEmptyError(false)
-    }, [])
-
-    const closeAnalyzeModal = useCallback(() => {
-        setAnalyzeModalOpen(false)
-        setAnalyzeModalUrl(null)
-    }, [])
-
-    const onAnalyzeUrl = useCallback((url: string) => {
-        const trimmed = url.trim()
-        if (!trimmed) return
-        setAnalyzeModalUrl(trimmed)
-        setAnalyzeModalOpen(true)
     }, [])
 
     const handleLandingSubmitSearch = useCallback(async () => {
@@ -40,12 +36,19 @@ export function Home() {
             return
         }
 
-        setSearchEmptyError(false)
+        if (!authLoading && !user) {
+            window.alert(
+                'Connecte-toi pour lancer l’analyse de ton site (API sécurisée).',
+            )
+            navigate('/login')
+            return
+        }
 
+        setSearchEmptyError(false)
         const directUrl = parseAsSiteUrl(raw)
         if (directUrl) {
             setLandingSuggestedUrls([])
-            onAnalyzeUrl(directUrl)
+            await runAnalysis(directUrl)
             return
         }
 
@@ -65,30 +68,34 @@ export function Home() {
         } finally {
             setLandingSuggestionsLoading(false)
         }
-    }, [siteInput, onAnalyzeUrl])
+    }, [authLoading, user, siteInput, runAnalysis, navigate])
 
     const handlePickLandingSuggestion = useCallback(
-        (url: string) => {
+        async (url: string) => {
+            if (!authLoading && !user) {
+                window.alert(
+                    'Connecte-toi pour lancer l’analyse de ton site (API sécurisée).',
+                )
+                navigate('/login')
+                return
+            }
             setLandingSuggestedUrls([])
             setSiteInput(url)
-            onAnalyzeUrl(url)
+            await runAnalysis(url)
         },
-        [onAnalyzeUrl],
+        [authLoading, user, runAnalysis, navigate],
     )
 
     return (
         <>
-            <AnalyzeSuccessModal
-                open={analyzeModalOpen}
-                url={analyzeModalUrl}
-                onClose={closeAnalyzeModal}
-            />
-            <BackgroundGlow />
+            {analysisOpen && siteAnalysis ? (
+                <AnalysisProgress
+                    analysis={siteAnalysis}
+                    onDismiss={dismissError}
+                />
+            ) : null}
             <div className="app-content">
                 <section className="hero">
-                    {/* <div className="gift-banner">
-                        {'\u{1F381}'} 10 crédits offerts à l&apos;inscription
-                    </div> */}
                     <h1>
                         <span className="highlight">Génère tes fiches produits</span>
                         <br />
@@ -161,7 +168,9 @@ export function Home() {
                                         <button
                                             type="button"
                                             className="landing-suggestion-btn"
-                                            onClick={() => handlePickLandingSuggestion(url)}
+                                            onClick={() =>
+                                                void handlePickLandingSuggestion(url)
+                                            }
                                         >
                                             {url}
                                         </button>
