@@ -4,9 +4,22 @@
   "description": "Enrichissement catalogues fabricants (kitesurf, vélo)",
   "type": "module",
   "scripts": {
-    "enrich:kitesurf": "node scripts/enrich-kitesurf.js"
+    "dev": "npx vercel dev",
+    "enrich:kitesurf": "node scripts/enrich-kitesurf.js",
+    "devTest": "npm run dev:backend & npm run dev:frontend",
+    "dev:backend": "npm run start:dev --prefix backend",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "build": "npm run generate:types && npm run build:backend && npm run build:frontend",
+    "build:backend": "npm run build --prefix backend",
+    "build:frontend": "npm run build --prefix frontend",
+    "generate:types": "openapi-typescript openapi/api.yaml -o backend/src/generated/api.ts && openapi-typescript openapi/api.yaml -o frontend/src/generated/api.ts && openapi-typescript openapi/api.yaml -o frontend-test/src/generated/api.ts",
+    "install:all": "npm install && npm install --prefix backend && npm install --prefix frontend",
+    "lint": "npm run lint --prefix backend && npm run lint --prefix frontend",
+    "test": "npm run test --prefix backend",
+    "test:e2e": "npm run test:e2e --prefix backend"
   },
   "dependencies": {
-    "cheerio": "^1.0.0"
+    "cheerio": "^1.0.0",
+    "openapi-typescript": "^7.0.0"
   }
 }
