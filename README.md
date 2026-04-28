@@ -1,6 +1,6 @@
 # ficheproduct
 
-**Génère tes fiches produits** en quelques secondes. MVP compatible PrestaShop & Shopify.
+**Génère tes fiches produits grace à l'IA** en quelques secondes. MVP compatible PrestaShop & Shopify.
 
 ## Structure
 
