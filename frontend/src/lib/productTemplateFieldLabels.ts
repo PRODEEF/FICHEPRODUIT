@@ -1,4 +1,4 @@
-import type { ProductTemplateFieldType } from './productTemplateTypes'
+import type { ProductTemplateFieldType } from './productTemplateTypes';
 
 const LABELS: Record<ProductTemplateFieldType, string> = {
   text: 'Texte court',
@@ -25,12 +25,12 @@ const LABELS: Record<ProductTemplateFieldType, string> = {
   country: 'Pays',
   currency: 'Devise',
   json: 'JSON',
-}
+};
 
-/** Order used in the field type dropdown. */
+/** Ordre d’affichage dans la liste déroulante du type de champ. */
 export const PRODUCT_TEMPLATE_FIELD_TYPE_OPTIONS: {
-  value: ProductTemplateFieldType
-  label: string
+  value: ProductTemplateFieldType;
+  label: string;
 }[] = (
   [
     'text',
@@ -58,22 +58,18 @@ export const PRODUCT_TEMPLATE_FIELD_TYPE_OPTIONS: {
     'file',
     'json',
   ] as const satisfies readonly ProductTemplateFieldType[]
-).map((value) => ({ value, label: LABELS[value] }))
+).map((value) => ({ value, label: LABELS[value] }));
 
-export function productTemplateFieldTypeLabel(
-  t: ProductTemplateFieldType,
-): string {
-  return LABELS[t]
+export function productTemplateFieldTypeLabel(t: ProductTemplateFieldType): string {
+  return LABELS[t];
 }
 
-/** Maps legacy DB/API values to current ProductTemplateFieldType. */
-export function normalizeProductTemplateFieldType(
-  raw: string,
-): ProductTemplateFieldType {
-  if (raw === 'html') return 'rich_text'
-  const options = PRODUCT_TEMPLATE_FIELD_TYPE_OPTIONS.map((o) => o.value)
+/** Convertit une valeur legacy BD/API vers le `ProductTemplateFieldType` courant (ex. `html` → `rich_text`). */
+export function normalizeProductTemplateFieldType(raw: string): ProductTemplateFieldType {
+  if (raw === 'html') return 'rich_text';
+  const options = PRODUCT_TEMPLATE_FIELD_TYPE_OPTIONS.map((o) => o.value);
   if (options.includes(raw as ProductTemplateFieldType)) {
-    return raw as ProductTemplateFieldType
+    return raw as ProductTemplateFieldType;
   }
-  return 'text'
+  return 'text';
 }

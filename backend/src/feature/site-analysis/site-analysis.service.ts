@@ -8,6 +8,7 @@ import { ConfigService } from '@nestjs/config';
 import { load } from 'cheerio';
 import type { components } from '../../generated/api';
 import { SupabaseService } from '../../auth/supabase.service';
+import { GUEST_SITE_ANALYSIS_USER_ID } from './guest-site-analysis.constants';
 import { buildProductListResponse } from './mock-related-products';
 
 type SiteAnalysis = components['schemas']['SiteAnalysis'];
@@ -155,6 +156,22 @@ export class SiteAnalysisService {
     return buildProductListResponse(id, analysis);
   }
 
+  /**
+   * Détail d’analyse pour un visiteur non connecté : uniquement les analyses invitées encore en mémoire serveur.
+   */
+  async getForGuest(id: string): Promise<SiteAnalysis> {
+    const mem = this.ephemeral.get(id);
+    if (!mem || mem.userId !== GUEST_SITE_ANALYSIS_USER_ID) {
+      throw new NotFoundException('Analysis not found');
+    }
+    return { ...mem };
+  }
+
+  async getProductsForGuest(id: string): Promise<ProductListResponse> {
+    const analysis = await this.getForGuest(id);
+    return buildProductListResponse(id, analysis);
+  }
+
   private rowToAnalysis(row: SiteAnalysisRow): SiteAnalysis {
     const catalogMatchCategories = row.catalog_match_categories?.length
       ? [...row.catalog_match_categories]
@@ -208,6 +225,9 @@ export class SiteAnalysisService {
     snapshot: SiteAnalysis,
     accessToken: string,
   ): Promise<void> {
+    if (!accessToken.trim()) {
+      return;
+    }
     if (snapshot.status !== 'completed' && snapshot.status !== 'failed') {
       return;
     }
@@ -251,7 +271,9 @@ export class SiteAnalysisService {
       if (!snap) return;
       try {
         await this.persistAnalysisToDb(snap, accessToken);
-        this.ephemeral.delete(id);
+        if (accessToken.trim()) {
+          this.ephemeral.delete(id);
+        }
       } catch {
         /* Keep ephemeral so the client still sees the failure if DB insert fails. */
       }
@@ -312,7 +334,9 @@ export class SiteAnalysisService {
       if (!snap) return;
       try {
         await this.persistAnalysisToDb(snap, accessToken);
-        this.ephemeral.delete(id);
+        if (accessToken.trim()) {
+          this.ephemeral.delete(id);
+        }
       } catch {
         /* Keep ephemeral with completed data if insert fails. */
       }

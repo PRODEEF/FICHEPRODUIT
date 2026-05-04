@@ -1,23 +1,23 @@
-import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router'
-import { useAuth } from '../auth/AuthContext'
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router';
+import { useAuth } from '../features/auth/useAuth';
 import {
   ProductTemplatesWorkspace,
   type ProductSheetMainTab,
-} from '../components/product-templates/ProductTemplatesWorkspace'
+} from '../components/product-templates/ProductTemplatesWorkspace';
 
 export function ProductSheet() {
-  const navigate = useNavigate()
-  const { user, loading: authLoading } = useAuth()
-  const [sheetTab, setSheetTab] = useState<ProductSheetMainTab>('mes-fiches')
-  const [editMode, setEditMode] = useState(false)
+  const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
+  const [sheetTab, setSheetTab] = useState<ProductSheetMainTab>('mes-fiches');
+  const [editMode, setEditMode] = useState(false);
 
   useEffect(() => {
-    if (authLoading) return
+    if (authLoading) return;
     if (!user) {
-      void navigate('/login', { replace: true })
+      void navigate('/login', { replace: true });
     }
-  }, [authLoading, user, navigate])
+  }, [authLoading, user, navigate]);
 
   if (authLoading) {
     return (
@@ -26,7 +26,7 @@ export function ProductSheet() {
           Chargement…
         </p>
       </div>
-    )
+    );
   }
 
   return (
@@ -40,11 +40,7 @@ export function ProductSheet() {
         </div>
       </header>
       {!editMode ? (
-        <div
-          className="product-sheet-tablist"
-          role="tablist"
-          aria-label="Fiches type"
-        >
+        <div className="product-sheet-tablist" role="tablist" aria-label="Fiches type">
           <button
             type="button"
             role="tab"
@@ -75,5 +71,5 @@ export function ProductSheet() {
         onEditModeChange={setEditMode}
       />
     </div>
-  )
+  );
 }

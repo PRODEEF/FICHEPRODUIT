@@ -1,9 +1,9 @@
-/** Summary passed to the UI after a completed site analysis. */
+/** Résumé transmis à l’interface après une analyse de site terminée avec succès. */
 export type SiteAnalysisSummary = {
-  id: string
-  url: string
-  cms?: string
-  verticalSummary?: string
-  catalogMatchCategories?: string[]
-  mainBrands?: string[]
-}
+  id: string;
+  url: string;
+  cms?: string;
+  verticalSummary?: string;
+  catalogMatchCategories?: string[];
+  mainBrands?: string[];
+};

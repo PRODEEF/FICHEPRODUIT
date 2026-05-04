@@ -1,21 +1,21 @@
-import { Link } from 'react-router'
-import type { ReactNode } from 'react'
+import { AlignStartVertical } from 'lucide-react';
+import { Link } from 'react-router';
+import type { ReactNode } from 'react';
 
-const DISABLED_ANALYSIS_HINT =
-  'Lance une analyse depuis l’accueil pour activer ce lien.'
+const DISABLED_ANALYSIS_HINT = 'Lance une analyse depuis l’accueil pour activer ce lien.';
 
 export type NavbarProps = {
-  userEmail: string | null
-  /** Shown in the nav when authenticated (e.g. username). */
-  userLabel: string | null
-  loading?: boolean
-  lastAnalysisId: string | null
-  drawerOpen: boolean
-  onDrawerToggle: () => void
-  onLogoClick: () => void
-  onLogout: () => void | Promise<void>
-  center?: ReactNode
-}
+  userEmail: string | null;
+  /** Libellé affiché dans la barre lorsque l’utilisateur est connecté (ex. nom d’utilisateur). */
+  userLabel: string | null;
+  loading?: boolean;
+  lastAnalysisId: string | null;
+  drawerOpen: boolean;
+  onDrawerToggle: () => void;
+  onLogoClick: () => void;
+  onLogout: () => void | Promise<void>;
+  center?: ReactNode;
+};
 
 export function Navbar({
   userEmail,
@@ -28,9 +28,9 @@ export function Navbar({
   onLogout,
   center,
 }: NavbarProps) {
-  const authed = Boolean(userEmail)
-  const navTitle = userLabel ?? userEmail ?? undefined
-  const drawerId = 'nav-user-drawer'
+  const authed = Boolean(userEmail);
+  const navTitle = userLabel ?? userEmail ?? undefined;
+  const drawerId = 'nav-user-drawer';
 
   return (
     <>
@@ -40,14 +40,17 @@ export function Navbar({
             <button
               type="button"
               className="nav-burger"
+              aria-label="Menu"
               aria-expanded={drawerOpen}
               aria-controls={drawerId}
               onClick={onDrawerToggle}
             >
-              <span className="nav-burger-bar" aria-hidden />
-              <span className="nav-burger-bar" aria-hidden />
-              <span className="nav-burger-bar" aria-hidden />
-              <span className="nav-burger-label">Menu</span>
+              <AlignStartVertical
+                aria-hidden
+                className="nav-burger-icon"
+                size={22}
+                strokeWidth={2}
+              />
             </button>
           ) : null}
           <button type="button" className="logo" onClick={onLogoClick}>
@@ -86,20 +89,8 @@ export function Navbar({
         >
           <nav className="nav-drawer-inner" aria-label="Account">
             <div className="nav-drawer-links">
-              <Link to="/profile" className="nav-drawer-link">
-                Mon profil
-              </Link>
-              <Link to="/my-store" className="nav-drawer-link">
-                Mon magasin
-              </Link>
-              <Link to="/product-sheet" className="nav-drawer-link">
-                Ma fiche produit
-              </Link>
               {lastAnalysisId ? (
-                <Link
-                  to={`/analyses/${lastAnalysisId}?tab=catalog`}
-                  className="nav-drawer-link"
-                >
+                <Link to={`/analyses/${lastAnalysisId}?tab=catalog`} className="nav-drawer-link">
                   Mon catalogue
                 </Link>
               ) : (
@@ -110,13 +101,18 @@ export function Navbar({
                   Mon catalogue
                 </span>
               )}
+              <Link to="/product-sheet" className="nav-drawer-link">
+                Ma fiche produit
+              </Link>
+              <Link to="/my-store" className="nav-drawer-link">
+                Mon magasin
+              </Link>
+              <Link to="/profile" className="nav-drawer-link">
+                Mon profil
+              </Link>
             </div>
             <div className="nav-drawer-footer">
-              <button
-                type="button"
-                className="nav-drawer-logout"
-                onClick={() => void onLogout()}
-              >
+              <button type="button" className="nav-drawer-logout" onClick={() => void onLogout()}>
                 Déconnexion
               </button>
             </div>
@@ -124,5 +120,5 @@ export function Navbar({
         </aside>
       ) : null}
     </>
-  )
+  );
 }

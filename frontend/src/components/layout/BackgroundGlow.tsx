@@ -4,5 +4,5 @@ export function BackgroundGlow() {
       <div className="orb" />
       <div className="orb" />
     </div>
-  )
+  );
 }
