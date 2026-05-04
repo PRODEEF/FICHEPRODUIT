@@ -1,6 +1,7 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { useAuth } from '../auth/AuthContext'
+import { clearSignupAutoAnalyzeLoginFlag } from '../lib/clearSignupAutoAnalyzeFlag'
 import { AnalysisProgress } from '../components/analysis/AnalysisProgress'
 import { useSiteAnalysis } from '../hooks/useSiteAnalysis'
 import { fetchSuggestUrls } from '../lib/suggestUrls'
@@ -9,6 +10,7 @@ import { parseAsSiteUrl } from '../lib/siteUrl'
 export function Home() {
     const navigate = useNavigate()
     const { user, loading: authLoading } = useAuth()
+    const signupAutoTriggeredRef = useRef(false)
     const [siteInput, setSiteInput] = useState('')
     const [landingSuggestedUrls, setLandingSuggestedUrls] = useState<string[]>(
         [],
@@ -22,6 +24,27 @@ export function Home() {
                 navigate(`/analyses/${summary.id}`)
             },
         })
+
+    useEffect(() => {
+        if (authLoading || !user || signupAutoTriggeredRef.current) return
+        const meta = user.user_metadata as Record<string, unknown> | undefined
+        if (meta?.auto_analyze_on_login !== true) return
+
+        const rawUrl =
+            typeof meta.website_url === 'string' ? meta.website_url.trim() : ''
+
+        signupAutoTriggeredRef.current = true
+
+        if (!rawUrl) {
+            void clearSignupAutoAnalyzeLoginFlag()
+            return
+        }
+
+        void (async () => {
+            await clearSignupAutoAnalyzeLoginFlag()
+            await runAnalysis(rawUrl)
+        })()
+    }, [authLoading, user, runAnalysis])
 
     const setSiteInputAndClearSuggestions = useCallback((value: string) => {
         setSiteInput(value)

@@ -1,3 +1,4 @@
+import { AlignStartVertical } from 'lucide-react'
 import { Link } from 'react-router'
 import type { ReactNode } from 'react'
 
@@ -40,14 +41,17 @@ export function Navbar({
             <button
               type="button"
               className="nav-burger"
+              aria-label="Menu"
               aria-expanded={drawerOpen}
               aria-controls={drawerId}
               onClick={onDrawerToggle}
             >
-              <span className="nav-burger-bar" aria-hidden />
-              <span className="nav-burger-bar" aria-hidden />
-              <span className="nav-burger-bar" aria-hidden />
-              <span className="nav-burger-label">Menu</span>
+              <AlignStartVertical
+                aria-hidden
+                className="nav-burger-icon"
+                size={22}
+                strokeWidth={2}
+              />
             </button>
           ) : null}
           <button type="button" className="logo" onClick={onLogoClick}>
@@ -86,15 +90,6 @@ export function Navbar({
         >
           <nav className="nav-drawer-inner" aria-label="Account">
             <div className="nav-drawer-links">
-              <Link to="/profile" className="nav-drawer-link">
-                Mon profil
-              </Link>
-              <Link to="/my-store" className="nav-drawer-link">
-                Mon magasin
-              </Link>
-              <Link to="/product-sheet" className="nav-drawer-link">
-                Ma fiche produit
-              </Link>
               {lastAnalysisId ? (
                 <Link
                   to={`/analyses/${lastAnalysisId}?tab=catalog`}
@@ -110,6 +105,15 @@ export function Navbar({
                   Mon catalogue
                 </span>
               )}
+              <Link to="/product-sheet" className="nav-drawer-link">
+                Ma fiche produit
+              </Link>
+              <Link to="/my-store" className="nav-drawer-link">
+                Mon magasin
+              </Link>
+              <Link to="/profile" className="nav-drawer-link">
+                Mon profil
+              </Link>
             </div>
             <div className="nav-drawer-footer">
               <button

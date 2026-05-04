@@ -10,6 +10,8 @@
   --purple-600: #7c3aed;
   --purple-700: #6d28d9;
 
+  --primary: var(--purple-600);
+
   --bg-main: #f3f4f6;
   --bg-white: #fff;
   --border-color: #e5e7eb;
@@ -173,9 +175,8 @@ a.nav-user-profile-link:hover {
 .nav-burger {
   position: relative;
   display: inline-flex;
-  flex-direction: column;
+  align-items: center;
   justify-content: center;
-  gap: 5px;
   width: 44px;
   height: 44px;
   padding: 10px;
@@ -196,23 +197,9 @@ a.nav-user-profile-link:hover {
   box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.15);
 }
 
-.nav-burger-bar {
-  display: block;
-  height: 2px;
-  border-radius: 1px;
-  background: var(--text-primary);
-}
-
-.nav-burger-label {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
+.nav-burger-icon {
+  flex-shrink: 0;
+  color: var(--primary);
 }
 
 .nav-drawer {
