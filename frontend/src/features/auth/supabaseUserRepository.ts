@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+
 import type { UserProfile } from './types';
 import type { UserRepository } from './userRepository';
 

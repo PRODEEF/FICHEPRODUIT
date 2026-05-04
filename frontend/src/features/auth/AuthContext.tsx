@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
-import { getSupabaseClient } from '../../lib/supabase';
+
+import { getSupabaseClient } from '@lib/supabase';
+
+import { AuthContext } from './auth-context';
 import { applyPendingSignupFromStorage } from './lib/pendingSignupStorage';
 import { createSupabaseUserRepository } from './supabaseUserRepository';
-import { AuthContext } from './auth-context';
 import type { UserProfile } from './types';
 
 export function AuthProvider({ children }: { children: ReactNode }) {

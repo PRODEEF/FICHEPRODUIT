@@ -1,7 +1,11 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router';
+
+import { getSupabaseClient } from '@lib/supabase';
+import { parseZodFieldErrors } from '@lib/parseZodErrors';
+
 import { useAuth } from '../useAuth';
-import { getSupabaseClient } from '../../../lib/supabase';
+import { profileSchema } from '../lib/authSchemas';
 import { saveUserProfile } from '../lib/userProfile';
 import { createSupabaseUserRepository } from '../supabaseUserRepository';
 
@@ -40,6 +44,14 @@ export function Profile() {
 
     if (!user) return;
 
+    const parsed = profileSchema.safeParse({ username, websiteUrl });
+    if (!parsed.success) {
+      setError(
+        Object.values(parseZodFieldErrors(parsed.error))[0] ?? 'Erreur de validation.',
+      );
+      return;
+    }
+
     const supabase = getSupabaseClient();
     if (!supabase) {
       setError('Configuration Supabase manquante. Vérifie le fichier .env du frontend.');
@@ -49,10 +61,7 @@ export function Profile() {
     setSubmitting(true);
     try {
       const repo = createSupabaseUserRepository(supabase);
-      const result = await saveUserProfile(repo, user, {
-        usernameRaw: username,
-        websiteUrlRaw: websiteUrl,
-      });
+      const result = await saveUserProfile(repo, user, parsed.data);
       if (result.ok === false) {
         setError(result.message);
         return;

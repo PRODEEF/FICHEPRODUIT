@@ -1,9 +1,14 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router';
+
+import { getSupabaseClient } from '@lib/supabase';
+import { parseZodFieldErrors } from '@lib/parseZodErrors';
+
 import { PasswordField } from '../components/PasswordField';
 import { useAuth } from '../useAuth';
-import { getSupabaseClient } from '../../../lib/supabase';
+import { loginSchema } from '../lib/authSchemas';
 import { signInWithEmailPassword } from '../lib/credentialsAuth';
+import type { LoginFieldErrors, LoginFieldKey } from '../types';
 
 export function Login() {
   const navigate = useNavigate();
@@ -11,7 +16,10 @@ export function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<LoginFieldErrors>({});
+  const [formError, setFormError] = useState<string | null>(null);
+
+  const emailErrorId = 'login-email-error';
 
   useEffect(() => {
     if (authLoading || configError) return;
@@ -20,23 +28,58 @@ export function Login() {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    setError(null);
+    setFormError(null);
+
+    const result = loginSchema.safeParse({ email, password });
+    if (!result.success) {
+      setFieldErrors(parseZodFieldErrors<LoginFieldKey>(result.error));
+      return;
+    }
+
+    const { email: emailTrim, password: passwordVal } = result.data;
+
     const supabase = getSupabaseClient();
     if (!supabase) {
-      setError('Configuration Supabase manquante. Vérifie le fichier .env du frontend.');
+      setFormError('Configuration Supabase manquante. Vérifie le fichier .env du frontend.');
       return;
     }
     setSubmitting(true);
     try {
-      const result = await signInWithEmailPassword(supabase, email, password);
-      if (result.ok === false) {
-        setError(result.message);
+      const authResult = await signInWithEmailPassword(supabase, emailTrim, passwordVal);
+      if (authResult.ok === false) {
+        const code = authResult.code?.toLowerCase() ?? '';
+        if (code === 'email_not_confirmed') {
+          setFieldErrors({ email: authResult.message });
+        } else if (code === 'invalid_credentials' || code === 'invalid_grant') {
+          setFieldErrors({ password: authResult.message });
+        } else {
+          setFieldErrors({});
+          setFormError(authResult.message);
+        }
         return;
       }
       navigate('/', { replace: true });
     } finally {
       setSubmitting(false);
     }
+  }
+
+  function clearEmailError() {
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      delete next.email;
+      return next;
+    });
+    setFormError(null);
+  }
+
+  function clearPasswordError() {
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      delete next.password;
+      return next;
+    });
+    setFormError(null);
   }
 
   if (configError) {
@@ -55,6 +98,9 @@ export function Login() {
     );
   }
 
+  const emailErr = fieldErrors.email;
+  const passwordErr = fieldErrors.password;
+
   return (
     <div className="auth-page">
       <div className="auth-card">
@@ -65,7 +111,7 @@ export function Login() {
             Créer un compte
           </Link>
         </p>
-        <form className="auth-form" onSubmit={(e) => void handleSubmit(e)}>
+        <form className="auth-form" noValidate onSubmit={(e) => void handleSubmit(e)}>
           <div className="auth-field">
             <label htmlFor="login-email">E-mail</label>
             <input
@@ -74,26 +120,39 @@ export function Login() {
               type="email"
               autoComplete="email"
               placeholder="vous@exemple.fr"
-              required
+              aria-required="true"
+              aria-invalid={Boolean(emailErr)}
+              aria-describedby={emailErr ? emailErrorId : undefined}
               value={email}
-              onChange={(ev) => setEmail(ev.target.value)}
+              onChange={(ev) => {
+                setEmail(ev.target.value);
+                clearEmailError();
+              }}
               disabled={submitting || authLoading}
             />
+            {emailErr ? (
+              <p id={emailErrorId} className="auth-error" role="alert">
+                {emailErr}
+              </p>
+            ) : null}
           </div>
           <PasswordField
             id="login-password"
             label="Mot de passe"
             name="password"
             autoComplete="current-password"
-            required
             placeholder="••••••••"
             value={password}
-            onChange={(ev) => setPassword(ev.target.value)}
+            error={passwordErr}
+            onChange={(ev) => {
+              setPassword(ev.target.value);
+              clearPasswordError();
+            }}
             disabled={submitting || authLoading}
           />
-          {error ? (
+          {formError ? (
             <p className="auth-error" role="alert">
-              {error}
+              {formError}
             </p>
           ) : null}
           <button type="submit" className="btn-auth-primary" disabled={submitting || authLoading}>

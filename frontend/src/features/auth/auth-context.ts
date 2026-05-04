@@ -1,5 +1,6 @@
 import { createContext } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
+
 import type { UserProfile } from './types';
 
 export type AuthContextValue = {

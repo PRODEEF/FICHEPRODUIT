@@ -1,9 +1,11 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router';
+
+import { getSupabaseClient } from '@lib/supabase';
+
 import { PasswordField } from '../components/PasswordField';
-import { getSupabaseClient } from '../../../lib/supabase';
-import { validatePasswordMatch, validatePasswordMinLength } from '../lib/signupFieldValidation';
 import { updatePasswordAndSignOut } from '../lib/passwordAuth';
+import { validatePasswordMatch, validatePasswordMinLength } from '../lib/signupFieldValidation';
 import type { PasswordRecoveryGateState } from '../types';
 
 export function ResetPassword() {

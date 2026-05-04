@@ -22,3 +22,22 @@ export function parseAsSiteUrl(raw: string): string | null {
 
   return null;
 }
+
+/**
+ * Comme une URL complète avec schéma obligatoire : la saisie doit commencer par `http://` ou `https://`.
+ * Un domaine seul (« monsite.fr ») est refusé. Utile pour les formulaires qui exigent une vraie URL.
+ */
+export function parseAsFullSiteUrl(raw: string): string | null {
+  const trimmed = String(raw).trim();
+  if (!trimmed) return null;
+
+  if (!/^https?:\/\//i.test(trimmed)) return null;
+
+  const u = trimmed.replace(/^https?:\/\//i, 'https://').replace(/\/+$/, '');
+  try {
+    new URL(u);
+    return u;
+  } catch {
+    return null;
+  }
+}

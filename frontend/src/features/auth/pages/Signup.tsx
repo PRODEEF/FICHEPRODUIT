@@ -1,20 +1,19 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router';
+
+import { getSupabaseClient } from '@lib/supabase';
+
 import { AnalysisProgress } from '../../../components/analysis/AnalysisProgress';
+import { useSiteAnalysis } from '../../../hooks/useSiteAnalysis';
+
 import { PasswordField } from '../components/PasswordField';
 import { useAuth } from '../useAuth';
 import { authErrorMessage } from '../lib/authErrorMessage';
 import { writePendingSignup } from '../lib/pendingSignupStorage';
+import { collectSignupFieldErrors } from '../lib/signupFieldValidation';
 import { clearPendingAutoAnalyzeForUser } from '../lib/userProfile';
-import { useSiteAnalysis } from '../../../hooks/useSiteAnalysis';
-import { getSupabaseClient } from '../../../lib/supabase';
 import { createSupabaseUserRepository } from '../supabaseUserRepository';
-import {
-  validatePasswordMatch,
-  validatePasswordMinLength,
-  validateUsernameForAuth,
-  parseOptionalWebsiteUrl,
-} from '../lib/signupFieldValidation';
+import type { SignupFieldErrors, SignupFieldKey } from '../types';
 
 export function Signup() {
   const navigate = useNavigate();
@@ -36,8 +35,13 @@ export function Signup() {
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<SignupFieldErrors>({});
+  const [formError, setFormError] = useState<string | null>(null);
   const [verifyEmailSent, setVerifyEmailSent] = useState(false);
+
+  const emailErrorId = 'signup-email-error';
+  const usernameErrorId = 'signup-username-error';
+  const websiteErrorId = 'signup-website-error';
 
   useEffect(() => {
     if (authLoading || configError) return;
@@ -46,66 +50,74 @@ export function Signup() {
     navigate('/', { replace: true });
   }, [authLoading, configError, userEmail, signupUrlAnalysisActive, analysisOpen, navigate]);
 
+  function clearFieldError(key: SignupFieldKey) {
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+    setFormError(null);
+  }
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    setError(null);
+    setFormError(null);
     setVerifyEmailSent(false);
 
-    const pwdMatch = validatePasswordMatch(password, passwordConfirm);
-    if (pwdMatch) {
-      setError(pwdMatch);
+    const validation = collectSignupFieldErrors({
+      email,
+      username,
+      websiteUrl,
+      password,
+      passwordConfirm,
+    });
+    if (validation.ok === false) {
+      setFieldErrors(validation.fieldErrors);
       return;
     }
 
-    const pwdLen = validatePasswordMinLength(password);
-    if (pwdLen) {
-      setError(pwdLen);
-      return;
-    }
-
-    const userResult = validateUsernameForAuth(username);
-    if (userResult.ok === false) {
-      setError(userResult.message);
-      return;
-    }
-
-    const siteRaw = websiteUrl.trim();
-    let website_url = '';
-    if (siteRaw) {
-      const parsed = parseOptionalWebsiteUrl(
-        siteRaw,
-        'URL du site invalide. Indique une adresse complète (https://…) ou un domaine (ex. monsite.fr).',
-      );
-      if (parsed.ok === false) {
-        setError(parsed.message);
-        return;
-      }
-      website_url = parsed.website_url;
-    }
+    const { emailTrim, normalizedUsername, website_url } = validation.payload;
 
     const supabase = getSupabaseClient();
     if (!supabase) {
-      setError('Configuration Supabase manquante.');
+      setFormError('Configuration Supabase manquante.');
       return;
     }
+
+    setFieldErrors({});
 
     setSubmitting(true);
     try {
       const emailRedirectTo = `${window.location.origin}/`;
       const { data, error: signError } = await supabase.auth.signUp({
-        email: email.trim(),
+        email: emailTrim,
         password,
-        options: { emailRedirectTo },
+        options: {
+          emailRedirectTo,
+          // Visible dans le dashboard Supabase (user_metadata / « Display name » selon les vues).
+          data: {
+            display_name: normalizedUsername,
+            full_name: normalizedUsername,
+          },
+        },
       });
       if (signError) {
-        setError(authErrorMessage(signError));
+        const message = authErrorMessage(signError);
+        const code = signError.code?.toLowerCase() ?? '';
+        if (code === 'user_already_registered') {
+          setFieldErrors({ email: message });
+        } else if (code === 'weak_password' || code === 'same_password') {
+          setFieldErrors({ password: message });
+        } else {
+          setFormError(message);
+        }
         return;
       }
       if (data.session?.user) {
         const userId = data.session.user.id;
         const repo = createSupabaseUserRepository(supabase);
         await repo.updateProfile(userId, {
-          username: userResult.normalized,
+          username: normalizedUsername,
           website_url: website_url === '' ? null : website_url,
           pending_auto_analyze: website_url !== '',
         });
@@ -129,17 +141,17 @@ export function Signup() {
 
       if (data.user) {
         writePendingSignup({
-          email: email.trim(),
-          username: userResult.normalized,
+          email: emailTrim,
+          username: normalizedUsername,
           websiteUrl: website_url,
           pendingAutoAnalyze: website_url !== '',
         });
         setVerifyEmailSent(true);
         return;
       }
-      setError('Inscription impossible pour le moment. Réessaie plus tard.');
+      setFormError('Inscription impossible pour le moment. Réessaie plus tard.');
     } catch (err) {
-      setError(
+      setFormError(
         err instanceof Error && err.message
           ? err.message
           : 'Inscription impossible pour le moment. Réessaie plus tard.',
@@ -165,6 +177,12 @@ export function Signup() {
     );
   }
 
+  const emailErr = fieldErrors.email;
+  const usernameErr = fieldErrors.username;
+  const websiteErr = fieldErrors.websiteUrl;
+  const passwordErr = fieldErrors.password;
+  const passwordConfirmErr = fieldErrors.passwordConfirm;
+
   return (
     <div className="auth-page">
       {analysisOpen && siteAnalysis ? (
@@ -187,7 +205,7 @@ export function Signup() {
             ) : null}
           </p>
         ) : (
-          <form className="auth-form" onSubmit={(e) => void handleSubmit(e)}>
+          <form className="auth-form" noValidate onSubmit={(e) => void handleSubmit(e)}>
             <div className="auth-field">
               <label htmlFor="signup-email">E-mail</label>
               <input
@@ -196,11 +214,21 @@ export function Signup() {
                 type="email"
                 autoComplete="email"
                 placeholder="vous@exemple.fr"
-                required
+                aria-required="true"
+                aria-invalid={Boolean(emailErr)}
+                aria-describedby={emailErr ? emailErrorId : undefined}
                 value={email}
-                onChange={(ev) => setEmail(ev.target.value)}
+                onChange={(ev) => {
+                  setEmail(ev.target.value);
+                  clearFieldError('email');
+                }}
                 disabled={submitting || authLoading || signupUrlAnalysisActive}
               />
+              {emailErr ? (
+                <p id={emailErrorId} className="auth-error" role="alert">
+                  {emailErr}
+                </p>
+              ) : null}
             </div>
             <div className="auth-field">
               <label htmlFor="signup-username">Nom d’utilisateur</label>
@@ -210,13 +238,22 @@ export function Signup() {
                 type="text"
                 autoComplete="username"
                 placeholder="Marie Dupont"
-                required
-                minLength={3}
+                aria-required="true"
+                aria-invalid={Boolean(usernameErr)}
+                aria-describedby={usernameErr ? usernameErrorId : undefined}
                 maxLength={30}
                 value={username}
-                onChange={(ev) => setUsername(ev.target.value)}
+                onChange={(ev) => {
+                  setUsername(ev.target.value);
+                  clearFieldError('username');
+                }}
                 disabled={submitting || authLoading || signupUrlAnalysisActive}
               />
+              {usernameErr ? (
+                <p id={usernameErrorId} className="auth-error" role="alert">
+                  {usernameErr}
+                </p>
+              ) : null}
             </div>
             <div className="auth-field">
               <label htmlFor="signup-website">
@@ -228,21 +265,35 @@ export function Signup() {
                 type="url"
                 inputMode="url"
                 placeholder="https://exemple.fr"
+                aria-invalid={Boolean(websiteErr)}
+                aria-describedby={websiteErr ? websiteErrorId : undefined}
                 value={websiteUrl}
-                onChange={(ev) => setWebsiteUrl(ev.target.value)}
+                onChange={(ev) => {
+                  setWebsiteUrl(ev.target.value);
+                  clearFieldError('websiteUrl');
+                }}
                 disabled={submitting || authLoading || signupUrlAnalysisActive}
               />
+              {websiteErr ? (
+                <p id={websiteErrorId} className="auth-error" role="alert">
+                  {websiteErr}
+                </p>
+              ) : null}
             </div>
             <PasswordField
               id="signup-password"
               label="Mot de passe"
               name="password"
               autoComplete="new-password"
+              placeholder="Veuillez entrer un mot de passe"
               required
-              minLength={8}
-              placeholder="Au moins 8 caractères"
               value={password}
-              onChange={(ev) => setPassword(ev.target.value)}
+              error={passwordErr}
+              showStrengthMeter
+              onChange={(ev) => {
+                setPassword(ev.target.value);
+                clearFieldError('password');
+              }}
               disabled={submitting || authLoading || signupUrlAnalysisActive}
             />
             <PasswordField
@@ -250,16 +301,18 @@ export function Signup() {
               label="Confirmer le mot de passe"
               name="passwordConfirm"
               autoComplete="new-password"
-              required
-              minLength={8}
               placeholder="Saisis le même mot de passe"
               value={passwordConfirm}
-              onChange={(ev) => setPasswordConfirm(ev.target.value)}
+              error={passwordConfirmErr}
+              onChange={(ev) => {
+                setPasswordConfirm(ev.target.value);
+                clearFieldError('passwordConfirm');
+              }}
               disabled={submitting || authLoading || signupUrlAnalysisActive}
             />
-            {error ? (
+            {formError ? (
               <p className="auth-error" role="alert">
-                {error}
+                {formError}
               </p>
             ) : null}
             <button

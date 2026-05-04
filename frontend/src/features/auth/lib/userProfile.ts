@@ -1,40 +1,27 @@
 import type { User } from '@supabase/supabase-js';
-import { getSupabaseClient } from '../../../lib/supabase';
+
+import { getSupabaseClient } from '@lib/supabase';
+
+import type { ProfilePayload } from './authSchemas';
 import { createSupabaseUserRepository } from '../supabaseUserRepository';
 import type { UserRepository } from '../userRepository';
-import { validateUsernameForAuth, parseOptionalWebsiteUrl } from './signupFieldValidation';
 
-export type ProfileFormInput = {
-  usernameRaw: string;
-  websiteUrlRaw: string;
-};
-
-export type SaveProfileResult =
-  | { ok: true }
-  | { ok: false; message: string };
-
-const WEBSITE_ERROR =
-  'URL du site invalide. Indique une adresse complète (https://…) ou un domaine (ex. monsite.fr).';
+export type SaveProfileResult = { ok: true } | { ok: false; message: string };
 
 /**
  * Persists profile fields via `profiles` only (no Supabase Auth metadata).
+ * `form` must already match `profileSchema` (validated in the UI).
  */
 export async function saveUserProfile(
   repo: UserRepository,
   user: User,
-  form: ProfileFormInput,
+  form: ProfilePayload,
 ): Promise<SaveProfileResult> {
-  const userCheck = validateUsernameForAuth(form.usernameRaw);
-  if (userCheck.ok == false) return { ok: false, message: userCheck.message };
-
-  const site = parseOptionalWebsiteUrl(form.websiteUrlRaw, WEBSITE_ERROR);
-  if (site.ok == false) return { ok: false, message: site.message };
-
-  const website_url = site.website_url === '' ? null : site.website_url;
+  const website_url = form.websiteUrl === '' ? null : form.websiteUrl;
 
   try {
     await repo.updateProfile(user.id, {
-      username: userCheck.normalized,
+      username: form.username,
       website_url,
     });
   } catch (err) {

@@ -1,4 +1,5 @@
 import type { User } from '@supabase/supabase-js';
+
 import type { UserRepository } from '../userRepository';
 
 export const PENDING_SIGNUP_STORAGE_KEY = 'ficheproduct:pendingSignup:v1';

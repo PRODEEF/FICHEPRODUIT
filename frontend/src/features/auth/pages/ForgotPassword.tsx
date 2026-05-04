@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router';
-import { getSupabaseClient } from '../../../lib/supabase';
+
+import { getSupabaseClient } from '@lib/supabase';
+
 import { getPasswordResetRedirectUrl, requestPasswordResetEmail } from '../lib/passwordAuth';
 
 export function ForgotPassword() {

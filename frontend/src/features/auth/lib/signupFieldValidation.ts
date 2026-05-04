@@ -1,48 +1,45 @@
-import { parseAsSiteUrl } from '../../../lib/siteUrl';
-import { normalizeUsername, validateUsernameInput } from '../../../lib/username';
+import { parseZodFieldErrors } from '@lib/parseZodErrors';
 
-export const MIN_PASSWORD_LENGTH = 8;
+import { signupSchema } from './authSchemas';
+import type { SignupFieldErrors, SignupFieldKey, SignupValidatedPayload } from '../types';
+
+export type { SignupFieldKey, SignupFieldErrors, SignupValidatedPayload } from '../types';
+export { signupSchema } from './authSchemas';
+
+export { MIN_PASSWORD_LENGTH, validatePasswordMinLength } from './authSchemas';
+
+export function collectSignupFieldErrors(input: {
+  email: string;
+  username: string;
+  websiteUrl: string;
+  password: string;
+  passwordConfirm: string;
+}):
+  | { ok: false; fieldErrors: SignupFieldErrors }
+  | { ok: true; payload: SignupValidatedPayload } {
+  const result = signupSchema.safeParse(input);
+  if (!result.success) {
+    return {
+      ok: false,
+      fieldErrors: parseZodFieldErrors<SignupFieldKey>(result.error),
+    };
+  }
+
+  const { email, username, websiteUrl } = result.data;
+
+  return {
+    ok: true,
+    payload: {
+      emailTrim: email,
+      normalizedUsername: username,
+      website_url: websiteUrl,
+    },
+  };
+}
 
 export function validatePasswordMatch(password: string, confirm: string): string | null {
   if (password !== confirm) {
     return 'Les mots de passe ne correspondent pas.';
   }
   return null;
-}
-
-export function validatePasswordMinLength(
-  password: string,
-  minLength = MIN_PASSWORD_LENGTH,
-): string | null {
-  if (password.length < minLength) {
-    return `Le mot de passe doit contenir au moins ${minLength} caractères.`;
-  }
-  return null;
-}
-
-export type ValidatedUsername = { ok: true; normalized: string } | { ok: false; message: string };
-
-export function validateUsernameForAuth(usernameRaw: string): ValidatedUsername {
-  const normalized = normalizeUsername(usernameRaw);
-  const err = validateUsernameInput(normalized);
-  if (err) return { ok: false, message: err };
-  return { ok: true, normalized };
-}
-
-export type OptionalWebsiteResult =
-  | { ok: true; website_url: string }
-  | { ok: false; message: string };
-
-/**
- * Saisie vide → URL optionnelle conservée comme chaîne vide. Toute saisie non vide doit être une URL de site valide.
- */
-export function parseOptionalWebsiteUrl(
-  siteRaw: string,
-  invalidMessage: string,
-): OptionalWebsiteResult {
-  const trimmed = siteRaw.trim();
-  if (!trimmed) return { ok: true, website_url: '' };
-  const parsed = parseAsSiteUrl(trimmed);
-  if (!parsed) return { ok: false, message: invalidMessage };
-  return { ok: true, website_url: parsed };
 }

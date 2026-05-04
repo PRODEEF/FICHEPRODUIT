@@ -13,7 +13,7 @@ const KNOWN: Record<string, string> = {
   over_request_rate_limit: 'Trop de tentatives. Réessaie dans quelques minutes.',
 };
 
-/** Maps a Supabase Auth error to a short UI message. */
+/** Message court pour l’interface à partir d’une erreur Auth Supabase. */
 export function authErrorMessage(error: AuthError | null): string {
   if (!error || !error.code) return 'Une erreur inconnue est survenue. Réessaie.';
 
