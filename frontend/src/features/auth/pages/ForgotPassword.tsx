@@ -1,40 +1,36 @@
-import { useState, type FormEvent } from 'react'
-import { Link } from 'react-router'
-import { authErrorMessage } from '../../lib/authErrorMessage'
-import {
-  getPasswordResetRedirectUrl,
-  getSupabaseClient,
-} from '../../lib/supabase'
+import { useState, type FormEvent } from 'react';
+import { Link } from 'react-router';
+import { getSupabaseClient } from '../../../lib/supabase';
+import { getPasswordResetRedirectUrl, requestPasswordResetEmail } from '../lib/passwordAuth';
 
 export function ForgotPassword() {
-  const [email, setEmail] = useState('')
-  const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [done, setDone] = useState(false)
+  const [email, setEmail] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [done, setDone] = useState(false);
 
   async function handleSubmit(e: FormEvent) {
-    e.preventDefault()
-    setError(null)
-    const supabase = getSupabaseClient()
+    e.preventDefault();
+    setError(null);
+    const supabase = getSupabaseClient();
     if (!supabase) {
-      setError(
-        'Configuration Supabase manquante. Vérifie le fichier .env du frontend.',
-      )
-      return
+      setError('Configuration Supabase manquante. Vérifie le fichier .env du frontend.');
+      return;
     }
-    setSubmitting(true)
+    setSubmitting(true);
     try {
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(
-        email.trim(),
-        { redirectTo: getPasswordResetRedirectUrl() },
-      )
-      if (resetError) {
-        setError(authErrorMessage(resetError))
-        return
+      const result = await requestPasswordResetEmail(
+        supabase,
+        email,
+        getPasswordResetRedirectUrl(),
+      );
+      if (result.ok === false) {
+        setError(result.message);
+        return;
       }
-      setDone(true)
+      setDone(true);
     } finally {
-      setSubmitting(false)
+      setSubmitting(false);
     }
   }
 
@@ -49,8 +45,8 @@ export function ForgotPassword() {
         </p>
         {done ? (
           <p className="auth-banner auth-banner--success" role="status">
-            Si cette adresse est associée à un compte, tu recevras un e-mail
-            avec un lien pour choisir un nouveau mot de passe.
+            Si cette adresse est associée à un compte, tu recevras un e-mail avec un lien pour
+            choisir un nouveau mot de passe.
           </p>
         ) : (
           <form className="auth-form" onSubmit={(e) => void handleSubmit(e)}>
@@ -72,16 +68,12 @@ export function ForgotPassword() {
                 {error}
               </p>
             ) : null}
-            <button
-              type="submit"
-              className="btn-auth-primary"
-              disabled={submitting}
-            >
+            <button type="submit" className="btn-auth-primary" disabled={submitting}>
               {submitting ? 'Envoi…' : 'Envoyer le lien'}
             </button>
           </form>
         )}
       </div>
     </div>
-  )
+  );
 }

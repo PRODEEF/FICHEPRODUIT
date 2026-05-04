@@ -1,21 +1,24 @@
-import type { ProductListResponse, SiteAnalysis } from './analysisApi'
+/**
+ * Cache mémoire volatile : détail d’analyse et charge utile « liste produits » pour éviter un double fetch à la navigation.
+ */
+import type { ProductListResponse, SiteAnalysis } from './analysisApi';
 
 export type AnalysisDetailCacheEntry = {
-  analysis: SiteAnalysis
-  productPayload: ProductListResponse
-}
+  analysis: SiteAnalysis;
+  productPayload: ProductListResponse;
+};
 
-const store = new Map<string, AnalysisDetailCacheEntry>()
+const store = new Map<string, AnalysisDetailCacheEntry>();
 
 function cacheKey(userId: string, analysisId: string): string {
-  return `${userId}:${analysisId}`
+  return `${userId}:${analysisId}`;
 }
 
 export function getAnalysisDetailCache(
   userId: string,
   analysisId: string,
 ): AnalysisDetailCacheEntry | undefined {
-  return store.get(cacheKey(userId, analysisId))
+  return store.get(cacheKey(userId, analysisId));
 }
 
 export function setAnalysisDetailCache(
@@ -23,5 +26,5 @@ export function setAnalysisDetailCache(
   analysisId: string,
   entry: AnalysisDetailCacheEntry,
 ): void {
-  store.set(cacheKey(userId, analysisId), entry)
+  store.set(cacheKey(userId, analysisId), entry);
 }

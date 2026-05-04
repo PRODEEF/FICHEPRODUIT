@@ -1,6 +1,6 @@
-import type { components } from '../../generated/api'
+import type { components } from '../../generated/api';
 
-type SiteAnalysis = components['schemas']['SiteAnalysis']
+type SiteAnalysis = components['schemas']['SiteAnalysis'];
 
 const STEPS = [
   'Résolution du site',
@@ -9,12 +9,12 @@ const STEPS = [
   'Analyse du catalogue',
   'Extraction des catégories',
   'Finalisation',
-] as const
+] as const;
 
 type AnalysisProgressProps = {
-  analysis: SiteAnalysis
-  onDismiss?: () => void
-}
+  analysis: SiteAnalysis;
+  onDismiss?: () => void;
+};
 
 function CheckIcon({ className }: { className?: string }) {
   return (
@@ -33,7 +33,7 @@ function CheckIcon({ className }: { className?: string }) {
         clipRule="evenodd"
       />
     </svg>
-  )
+  );
 }
 
 function XIcon({ className }: { className?: string }) {
@@ -53,21 +53,15 @@ function XIcon({ className }: { className?: string }) {
         clipRule="evenodd"
       />
     </svg>
-  )
+  );
 }
 
-export function AnalysisProgress({
-  analysis,
-  onDismiss,
-}: AnalysisProgressProps) {
-  const { currentStep, status, url, errorMessage } = analysis
-  const isFailed = status === 'failed'
+export function AnalysisProgress({ analysis, onDismiss }: AnalysisProgressProps) {
+  const { currentStep, status, url, errorMessage } = analysis;
+  const isFailed = status === 'failed';
 
   return (
-    <div
-      className="analyze-modal-backdrop analysis-progress-backdrop"
-      role="presentation"
-    >
+    <div className="analyze-modal-backdrop analysis-progress-backdrop" role="presentation">
       <div
         className="analyze-modal-panel analysis-progress-panel"
         role="dialog"
@@ -82,10 +76,7 @@ export function AnalysisProgress({
               <XIcon className="analysis-progress-icon-svg" />
             </div>
           ) : (
-            <div
-              className="analysis-progress-spinner"
-              aria-hidden
-            />
+            <div className="analysis-progress-spinner" aria-hidden />
           )}
         </div>
 
@@ -111,23 +102,23 @@ export function AnalysisProgress({
 
         <ol className="analysis-progress-steps">
           {STEPS.map((label, index) => {
-            const stepNumber = index + 1
-            const isCompleted = currentStep > stepNumber
-            const isCurrent = currentStep === stepNumber && !isFailed
-            const isPending = currentStep < stepNumber
-            const isFailedStep = isFailed && currentStep === stepNumber
+            const stepNumber = index + 1;
+            const isCompleted = currentStep > stepNumber;
+            const isCurrent = currentStep === stepNumber && !isFailed;
+            const isPending = currentStep < stepNumber;
+            const isFailedStep = isFailed && currentStep === stepNumber;
 
-            let circleClass = 'analysis-progress-circle'
-            if (isCompleted) circleClass += ' analysis-progress-circle--done'
-            else if (isCurrent) circleClass += ' analysis-progress-circle--active'
-            else if (isFailedStep) circleClass += ' analysis-progress-circle--failed'
-            else if (isPending) circleClass += ' analysis-progress-circle--pending'
+            let circleClass = 'analysis-progress-circle';
+            if (isCompleted) circleClass += ' analysis-progress-circle--done';
+            else if (isCurrent) circleClass += ' analysis-progress-circle--active';
+            else if (isFailedStep) circleClass += ' analysis-progress-circle--failed';
+            else if (isPending) circleClass += ' analysis-progress-circle--pending';
 
-            let labelClass = 'analysis-progress-label'
-            if (isCompleted) labelClass += ' analysis-progress-label--done'
-            else if (isCurrent) labelClass += ' analysis-progress-label--active'
-            else if (isFailedStep) labelClass += ' analysis-progress-label--failed'
-            else labelClass += ' analysis-progress-label--pending'
+            let labelClass = 'analysis-progress-label';
+            if (isCompleted) labelClass += ' analysis-progress-label--done';
+            else if (isCurrent) labelClass += ' analysis-progress-label--active';
+            else if (isFailedStep) labelClass += ' analysis-progress-label--failed';
+            else labelClass += ' analysis-progress-label--pending';
 
             return (
               <li key={stepNumber} className="analysis-progress-step">
@@ -145,7 +136,7 @@ export function AnalysisProgress({
                   {isCurrent ? '…' : ''}
                 </span>
               </li>
-            )
+            );
           })}
         </ol>
 
@@ -160,5 +151,5 @@ export function AnalysisProgress({
         ) : null}
       </div>
     </div>
-  )
+  );
 }

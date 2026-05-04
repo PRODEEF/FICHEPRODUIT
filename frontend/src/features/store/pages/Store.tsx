@@ -1,17 +1,17 @@
-import { useEffect } from 'react'
-import { useNavigate } from 'react-router'
-import { useAuth } from '../auth/AuthContext'
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router';
+import { useAuth } from '../../auth/useAuth';
 
 export function MyStore() {
-  const navigate = useNavigate()
-  const { user, loading: authLoading } = useAuth()
+  const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
 
   useEffect(() => {
-    if (authLoading) return
+    if (authLoading) return;
     if (!user) {
-      void navigate('/login', { replace: true })
+      void navigate('/login', { replace: true });
     }
-  }, [authLoading, user, navigate])
+  }, [authLoading, user, navigate]);
 
   if (authLoading) {
     return (
@@ -20,11 +20,11 @@ export function MyStore() {
           Chargement…
         </p>
       </div>
-    )
+    );
   }
 
   if (!user) {
-    return null
+    return null;
   }
 
   return (
@@ -32,12 +32,10 @@ export function MyStore() {
       <header className="analyses-header">
         <div>
           <h1 className="analyses-title">Mon magasin</h1>
-          <p className="analyses-subtitle">
-            Cette section sera bientôt disponible.
-          </p>
+          <p className="analyses-subtitle">Cette section sera bientôt disponible.</p>
         </div>
       </header>
       <p className="analyses-status">À venir</p>
     </div>
-  )
+  );
 }

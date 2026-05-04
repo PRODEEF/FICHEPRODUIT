@@ -1,23 +1,24 @@
-import { Eye, EyeOff } from 'lucide-react'
-import { useState, type ChangeEvent } from 'react'
+import { Eye, EyeOff } from 'lucide-react';
+import { useState, type ChangeEvent } from 'react';
 
 const passwordToggleIconProps = {
   'aria-hidden': true as const,
   size: 20,
   strokeWidth: 1.5,
-}
+};
 
 export type PasswordFieldProps = {
-  id: string
-  label: string
-  name: string
-  autoComplete: string
-  required?: boolean
-  minLength?: number
-  value: string
-  onChange: (ev: ChangeEvent<HTMLInputElement>) => void
-  disabled?: boolean
-}
+  id: string;
+  label: string;
+  name: string;
+  autoComplete: string;
+  required?: boolean;
+  minLength?: number;
+  placeholder?: string;
+  value: string;
+  onChange: (ev: ChangeEvent<HTMLInputElement>) => void;
+  disabled?: boolean;
+};
 
 export function PasswordField({
   id,
@@ -26,11 +27,12 @@ export function PasswordField({
   autoComplete,
   required,
   minLength,
+  placeholder,
   value,
   onChange,
   disabled,
 }: PasswordFieldProps) {
-  const [visible, setVisible] = useState(false)
+  const [visible, setVisible] = useState(false);
 
   return (
     <div className="auth-field">
@@ -43,6 +45,7 @@ export function PasswordField({
           autoComplete={autoComplete}
           required={required}
           minLength={minLength}
+          placeholder={placeholder}
           value={value}
           onChange={onChange}
           disabled={disabled}
@@ -52,18 +55,12 @@ export function PasswordField({
           className="auth-password-toggle"
           onClick={() => setVisible((v) => !v)}
           disabled={disabled}
-          aria-label={
-            visible ? 'Masquer le mot de passe' : 'Afficher le mot de passe'
-          }
+          aria-label={visible ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
           aria-pressed={visible}
         >
-          {visible ? (
-            <EyeOff {...passwordToggleIconProps} />
-          ) : (
-            <Eye {...passwordToggleIconProps} />
-          )}
+          {visible ? <EyeOff {...passwordToggleIconProps} /> : <Eye {...passwordToggleIconProps} />}
         </button>
       </div>
     </div>
-  )
+  );
 }

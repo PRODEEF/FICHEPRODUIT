@@ -133,7 +133,8 @@ body {
   font-family: inherit;
 }
 
-a.nav-auth-link {
+a.nav-auth-link,
+button.nav-auth-link {
   text-decoration: none;
   color: #fff;
   display: inline-block;
@@ -1053,7 +1054,9 @@ a.nav-user-profile-link:hover {
   background: var(--bg-white);
   text-decoration: none;
   color: inherit;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .analyses-history-link:hover {
@@ -1546,7 +1549,9 @@ a.product-sheet-save-btn {
   border: 1px solid var(--border-color);
   background: var(--bg-white);
   cursor: pointer;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .product-templates-option-card:hover {
