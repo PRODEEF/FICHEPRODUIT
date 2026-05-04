@@ -5,7 +5,7 @@ import { BackgroundGlow } from '../components/layout/BackgroundGlow';
 import { Navbar } from '../components/layout/Navbar';
 import { Analyses } from '../pages/Analyses';
 import { ProductSheet } from '../pages/ProductSheet';
-import { Home } from '../pages/Home';
+import { Home } from '../features/home/pages/Home';
 import { MyStore } from '../features/store/pages/Store';
 import { getLastAnalysisId } from '../lib/lastAnalysisIdStorage';
 import { ForgotPassword } from '../features/auth/pages/ForgotPassword';

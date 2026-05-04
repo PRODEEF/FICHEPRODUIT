@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
-import type { SiteAnalysis } from '../lib/analysisApi';
-import { runSiteAnalysisWorkflow } from '../lib/runSiteAnalysisWorkflow';
-import type { SiteAnalysisSummary } from '../types/siteAnalysis';
+import type { SiteAnalysis } from '@lib/analysisApi';
+import { runSiteAnalysisWorkflow } from '@lib/runSiteAnalysisWorkflow';
+import type { SiteAnalysisSummary } from '../../types/siteAnalysis';
 
 export type RunAnalysisOutcome = 'success' | 'error_alert' | 'error_modal';
 

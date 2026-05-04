@@ -1,4 +1,5 @@
-import { getApiBaseUrl } from './apiBase';
+// frontend/src/features/home/lib/suggestUrls.ts
+import { getApiBaseUrl } from '@lib/apiBase';
 
 function trimTrailingSlashes(s: string): string {
   return s.replace(/\/+$/, '');

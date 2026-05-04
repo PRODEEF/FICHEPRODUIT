@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router';
+import { Link, useNavigate, useSearchParams } from 'react-router';
 
 import { getSupabaseClient } from '@lib/supabase';
+import { parseAsFullSiteUrl } from '@lib/siteUrl';
+import { useSiteAnalysis } from '@shared/hooks/useSiteAnalysis';
 
-import { AnalysisProgress } from '../../../components/analysis/AnalysisProgress';
-import { useSiteAnalysis } from '../../../hooks/useSiteAnalysis';
+import { AnalysisProgress } from '../../home/components/AnalysisProgress';
 
 import { PasswordField } from '../components/PasswordField';
 import { useAuth } from '../useAuth';
@@ -17,6 +18,7 @@ import type { SignupFieldErrors, SignupFieldKey } from '../types';
 
 export function Signup() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { userEmail, loading: authLoading, configError, refreshProfile } = useAuth();
   const [signupUrlAnalysisActive, setSignupUrlAnalysisActive] = useState(false);
   const { runAnalysis, analysisOpen, siteAnalysis, dismissError } = useSiteAnalysis({
@@ -38,6 +40,14 @@ export function Signup() {
   const [fieldErrors, setFieldErrors] = useState<SignupFieldErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [verifyEmailSent, setVerifyEmailSent] = useState(false);
+
+  const urlFromQuery = searchParams.get('url');
+
+  useEffect(() => {
+    if (!urlFromQuery) return;
+    const normalized = parseAsFullSiteUrl(urlFromQuery.trim());
+    if (normalized) setWebsiteUrl(normalized);
+  }, [urlFromQuery]);
 
   const emailErrorId = 'signup-email-error';
   const usernameErrorId = 'signup-username-error';

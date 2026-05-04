@@ -131,9 +131,9 @@ function errorMessageFromBody(parsed: unknown, fallback: string): string {
 }
 
 /**
- * Lance une analyse de site (session Supabase authentifiée requise pour l’API).
+ * Lance une analyse de site. Sans session : analyse invitée (non persistée côté compte).
  *
- * @throws {Error} réseau, JSON invalide, 401 ou corps de réponse inattendu.
+ * @throws {Error} réseau, JSON invalide, 401 (Bearer présent mais invalide) ou corps inattendu.
  */
 export async function postSiteAnalysis(url: string): Promise<SiteAnalysis> {
   const res = await fetch(`${getApiBaseUrl()}/analyses`, {
@@ -164,9 +164,9 @@ export async function postSiteAnalysis(url: string): Promise<SiteAnalysis> {
 }
 
 /**
- * Lit l’état courant d’une analyse (session Supabase authentifiée requise).
+ * Lit l’état courant d’une analyse. Sans session : uniquement une analyse invitée encore disponible sur l’API.
  *
- * @throws {Error} réseau, JSON invalide, 401, 404 ou corps inattendu.
+ * @throws {Error} réseau, JSON invalide, 401 (Bearer invalide), 404 ou corps inattendu.
  */
 export async function getSiteAnalysis(id: string): Promise<SiteAnalysis> {
   const res = await fetch(`${getApiBaseUrl()}/analyses/${encodeURIComponent(id)}`, {
@@ -237,9 +237,9 @@ export async function listSiteAnalyses(): Promise<SiteAnalysis[]> {
 }
 
 /**
- * Charge les produits d’une analyse (session Supabase authentifiée requise).
+ * Charge les produits d’une analyse (même règle d’accès que {@link getSiteAnalysis} pour le mode invité).
  *
- * @throws {Error} réseau, JSON invalide, 401, 404 ou erreur métier renvoyée par l’API.
+ * @throws {Error} réseau, JSON invalide, 401 (Bearer invalide), 404 ou erreur métier renvoyée par l’API.
  */
 export async function getAnalysisProducts(
   analysisId: string,

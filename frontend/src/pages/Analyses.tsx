@@ -1,7 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router';
+import { Navigate, useParams, useSearchParams } from 'react-router';
 import { useAuth } from '../features/auth/useAuth';
 import { AnalyseResult, type ResultTab } from '../components/analysis/AnalyseResult';
+import { GuestAnalysisSignupCta } from '../components/analysis/GuestAnalysisSignupCta';
 import {
   getAnalysisProducts,
   getSiteAnalysis,
@@ -11,6 +12,9 @@ import {
 import { getAnalysisDetailCache, setAnalysisDetailCache } from '../lib/analysisDetailCache';
 import { setLastAnalysisId } from '../lib/lastAnalysisIdStorage';
 
+/** Clé de cache hors session pour le détail d’analyse après un flux invité. */
+const ANALYSIS_DETAIL_CACHE_USER_GUEST = 'guest';
+
 function parseResultTab(searchParams: URLSearchParams): ResultTab {
   const t = searchParams.get('tab');
   if (t === 'template') return 'template';
@@ -19,28 +23,22 @@ function parseResultTab(searchParams: URLSearchParams): ResultTab {
 
 export function Analyses() {
   const { analysisId } = useParams<{ analysisId: string }>();
-  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const prevRouteAnalysisIdRef = useRef<string | null>(null);
   const { user, loading: authLoading } = useAuth();
 
   const [detailLoading, setDetailLoading] = useState(() => Boolean(analysisId));
   const [analysis, setAnalysis] = useState<SiteAnalysis | null>(() => {
-    if (!user?.id || !analysisId) return null;
-    return getAnalysisDetailCache(user.id, analysisId)?.analysis ?? null;
+    if (!analysisId) return null;
+    const cacheUserId = user?.id ?? ANALYSIS_DETAIL_CACHE_USER_GUEST;
+    return getAnalysisDetailCache(cacheUserId, analysisId)?.analysis ?? null;
   });
   const [productPayload, setProductPayload] = useState<ProductListResponse | null>(() => {
-    if (!user?.id || !analysisId) return null;
-    return getAnalysisDetailCache(user.id, analysisId)?.productPayload ?? null;
+    if (!analysisId) return null;
+    const cacheUserId = user?.id ?? ANALYSIS_DETAIL_CACHE_USER_GUEST;
+    return getAnalysisDetailCache(cacheUserId, analysisId)?.productPayload ?? null;
   });
   const [detailError, setDetailError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (authLoading) return;
-    if (!user) {
-      void navigate('/login', { replace: true });
-    }
-  }, [authLoading, user, navigate]);
 
   useEffect(() => {
     if (!analysisId) return;
@@ -64,9 +62,10 @@ export function Analyses() {
   }, [analysisId, setSearchParams]);
 
   useLayoutEffect(() => {
-    if (!analysisId || !user?.id) return;
+    if (!analysisId || authLoading) return;
     setDetailError(null);
-    const cached = getAnalysisDetailCache(user.id, analysisId);
+    const cacheUserId = user?.id ?? ANALYSIS_DETAIL_CACHE_USER_GUEST;
+    const cached = getAnalysisDetailCache(cacheUserId, analysisId);
     if (cached) {
       setAnalysis(cached.analysis);
       setProductPayload(cached.productPayload);
@@ -76,10 +75,11 @@ export function Analyses() {
       setProductPayload(null);
       setDetailLoading(true);
     }
-  }, [analysisId, user?.id]);
+  }, [analysisId, authLoading, user?.id]);
 
   useEffect(() => {
-    if (!user || !analysisId) return;
+    if (!analysisId || authLoading) return;
+    const cacheUserId = user?.id ?? ANALYSIS_DETAIL_CACHE_USER_GUEST;
     let cancelled = false;
 
     void (async () => {
@@ -90,7 +90,7 @@ export function Analyses() {
         if (cancelled) return;
         setAnalysis(a);
         setProductPayload(pl);
-        setAnalysisDetailCache(user.id, analysisId, {
+        setAnalysisDetailCache(cacheUserId, analysisId, {
           analysis: a,
           productPayload: pl,
         });
@@ -98,7 +98,7 @@ export function Analyses() {
       } catch (e) {
         if (!cancelled) {
           setDetailError(e instanceof Error ? e.message : 'Erreur de chargement.');
-          const cached = getAnalysisDetailCache(user.id, analysisId);
+          const cached = getAnalysisDetailCache(cacheUserId, analysisId);
           if (!cached) {
             setAnalysis(null);
             setProductPayload(null);
@@ -112,7 +112,7 @@ export function Analyses() {
     return () => {
       cancelled = true;
     };
-  }, [user, analysisId]);
+  }, [user?.id, analysisId, authLoading]);
 
   if (authLoading) {
     return (
@@ -122,10 +122,6 @@ export function Analyses() {
         </p>
       </div>
     );
-  }
-
-  if (!user) {
-    return null;
   }
 
   if (!analysisId) {
@@ -151,15 +147,12 @@ export function Analyses() {
   return (
     <div className="app-content analyses-page">
       <header className="analyses-header">
-        <div>
-          <h1 className="analyses-title">Résultat de l&apos;analyse</h1>
-          {analysis?.url ? (
-            <p className="analyses-subtitle" title={analysis.url}>
-              {analysis.url}
-            </p>
-          ) : null}
-        </div>
+        <h1 className="analyses-title">Résultat de l&apos;analyse</h1>
       </header>
+
+      {!user && !detailLoading && !detailError && analysis?.status === 'completed' ? (
+        <GuestAnalysisSignupCta websiteUrl={analysis.url} />
+      ) : null}
 
       <AnalyseResult
         loading={detailLoading}

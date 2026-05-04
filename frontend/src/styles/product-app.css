@@ -1107,6 +1107,39 @@ a.nav-user-profile-link:hover {
   background: #fef2f2;
 }
 
+.analyses-guest-save-cta {
+  margin-bottom: 1.25rem;
+}
+
+.analyses-guest-save-cta-title {
+  margin: 0 0 0.5rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.analyses-guest-save-cta-text {
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+
+.analyses-guest-save-cta-text strong {
+  color: var(--purple-700);
+}
+
+.analyses-guest-save-cta-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.25rem;
+}
+
+.analyses-guest-save-cta-login {
+  font-weight: 600;
+}
+
 .analyses-empty {
   color: var(--text-secondary);
   margin: 1rem 0;
