@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { motion } from 'motion/react';
 import { Link } from 'react-router';
 
 type ButtonProps = {
@@ -7,6 +8,7 @@ type ButtonProps = {
   onClick?: () => void;
   variant?: 'primary' | 'secondary' | 'ghost';
   size?: 'sm' | 'md' | 'lg';
+  glow?: boolean;
 };
 
 const variantClasses: Record<NonNullable<ButtonProps['variant']>, string> = {
@@ -27,20 +29,42 @@ export function Button({
   onClick,
   variant = 'primary',
   size = 'md',
+  glow = false,
 }: ButtonProps) {
+  const prefersReduced =
+    typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const shouldGlow = glow && (variant === 'primary' || variant === 'secondary');
   const className = `${variantClasses[variant]} ${sizeClasses[size]} transition-colors duration-200`;
 
-  if (href) {
-    return (
-      <Link to={href} className={className}>
-        {children}
-      </Link>
-    );
-  }
-
-  return (
+  const buttonContent = href ? (
+    <Link to={href} className={className}>
+      {children}
+    </Link>
+  ) : (
     <button type="button" onClick={onClick} className={className}>
       {children}
     </button>
+  );
+
+  if (!shouldGlow) return buttonContent;
+
+  return (
+    <motion.div
+      animate={
+        prefersReduced
+          ? undefined
+          : {
+              boxShadow: [
+                '0 0 30px rgba(124,58,237,0.3)',
+                '0 0 70px rgba(124,58,237,0.6)',
+                '0 0 30px rgba(124,58,237,0.3)',
+              ],
+            }
+      }
+      transition={{ duration: prefersReduced ? 0 : 2.5, repeat: Infinity, ease: 'easeInOut' }}
+      className="rounded-xl inline-block"
+    >
+      {buttonContent}
+    </motion.div>
   );
 }

@@ -1,65 +1,60 @@
-const universes = [
-  {
-    emoji: '🏄',
-    name: 'Surf',
-    example: "Planche shortboard Lost 5'10, rocker prononcé, idéale vagues creuses...",
-  },
-  {
-    emoji: '🪁',
-    name: 'Kitesurf',
-    example: 'Aile Duotone Evo 12m², allwind, parfaite riders intermédiaires...',
-  },
-  {
-    emoji: '🚵',
-    name: 'Vélo',
-    example: 'Cadre carbone Trek Madone SL, geometry race, 1 050g, taille 56cm...',
-  },
-  {
-    emoji: '👗',
-    name: 'Mode',
-    example: 'Robe lin Sézane col V, coupe loose, coloris terracotta, tailles XS-XL...',
-  },
-  {
-    emoji: '🏕️',
-    name: 'Outdoor',
-    example: 'Tente MSR Hubba NX 2P, 1,3kg, résistante 3 saisons, montage rapide...',
-  },
-  {
-    emoji: '🎿',
-    name: 'Ski',
-    example: 'Skis Salomon QST 98, rocker mixte, polyvalent hors-piste, 178cm...',
-  },
-  {
-    emoji: '🐾',
-    name: 'Animalerie',
-    example: 'Croquettes Royal Canin Medium Adult 15kg, poulet & riz, 1-7 ans...',
-  },
-  {
-    emoji: '🏠',
-    name: 'Maison',
-    example: 'Canapé tissu bouclette 3 places, structure chêne massif, L.220cm...',
-  },
-];
+import { motion } from 'motion/react';
+import { cardReveal, staggerContainer, titleReveal } from '@lib/motionVariants';
+
+import { universes } from '../types';
+
+import { useScrollReveal } from '../../../hooks/useScrollReveal';
 
 export function ExpertiseGrid() {
+  const { ref: titleRef, inView: titleInView } = useScrollReveal<HTMLHeadingElement>(0.5);
+  const { ref, inView } = useScrollReveal(0.2);
+
   return (
-    <section className="py-20 px-4 max-w-5xl mx-auto">
-      <h2 className="text-3xl font-extrabold text-gray-900 mb-4 text-center">ficheproduct connaît ton univers</h2>
-      <p className="text-gray-500 mb-12 text-center">
+    <motion.section
+      className="py-20 px-4 max-w-5xl mx-auto"
+      variants={cardReveal}
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, amount: 0.15 }}
+    >
+      <motion.h2
+        ref={titleRef}
+        variants={titleReveal}
+        initial="hidden"
+        animate={titleInView ? 'visible' : 'hidden'}
+        className="text-3xl font-extrabold text-gray-900 mb-4 text-center"
+      >
+        ficheproduct connaît ton univers
+      </motion.h2>
+      <motion.p
+        className="text-gray-500 mb-12 text-center"
+        variants={titleReveal}
+        initial="hidden"
+        animate={titleInView ? 'visible' : 'hidden'}
+      >
         Notre moteur adapte le ton, la technicité et les arguments selon ta niche e-commerce.
-      </p>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {universes.map((item) => (
-          <article
-            key={item.name}
-            className="bg-white border border-gray-200 rounded-2xl p-5 hover:border-purple-300 hover:shadow-md transition-all duration-200"
+      </motion.p>
+      <motion.div
+        ref={ref}
+        variants={staggerContainer}
+        initial="hidden"
+        animate={inView ? 'visible' : 'hidden'}
+        className="grid grid-cols-2 md:grid-cols-3 gap-4"
+      >
+        {universes.slice(0, 6).map((item) => (
+          <motion.article
+            key={item.label}
+            variants={cardReveal}
+            whileHover={{ y: -6, scale: 1.01 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+            className="bg-white border border-gray-200 rounded-2xl p-5 transition-all duration-200 cursor-default"
           >
-            <p className="text-3xl mb-3">{item.emoji}</p>
-            <h3 className="font-bold text-gray-900 text-sm mb-2">{item.name}</h3>
+            <item.icon size={28} className={`mb-3 ${item.color}`} strokeWidth={2} />
+            <h3 className="font-bold text-gray-900 text-sm mb-2">{item.label}</h3>
             <p className="text-xs text-gray-400 italic leading-relaxed">{item.example}</p>
-          </article>
+          </motion.article>
         ))}
-      </div>
-    </section>
+      </motion.div>
+    </motion.section>
   );
 }

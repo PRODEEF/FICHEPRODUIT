@@ -18,9 +18,10 @@ import { bootCrisp } from '../lib/crisp';
 type AppHeaderProps = {
   drawerOpen: boolean;
   onDrawerToggle: () => void;
+  onHomeClick: () => void;
 };
 
-function AppHeader({ drawerOpen, onDrawerToggle }: AppHeaderProps) {
+function AppHeader({ drawerOpen, onDrawerToggle, onHomeClick }: AppHeaderProps) {
   const navigate = useNavigate();
   const { userEmail, displayLabel, loading, signOut } = useAuth();
   const lastAnalysisId = getLastAnalysisId();
@@ -33,7 +34,7 @@ function AppHeader({ drawerOpen, onDrawerToggle }: AppHeaderProps) {
       lastAnalysisId={lastAnalysisId}
       drawerOpen={drawerOpen}
       onDrawerToggle={onDrawerToggle}
-      onLogoClick={() => navigate('/')}
+      onLogoClick={onHomeClick}
       onLogout={async () => {
         await signOut();
         navigate('/');
@@ -43,12 +44,20 @@ function AppHeader({ drawerOpen, onDrawerToggle }: AppHeaderProps) {
 }
 
 function AppShellLayout({ userEmail }: { userEmail: string | null }) {
+  const navigate = useNavigate();
   const [drawerOpen, setDrawerOpen] = useState(true);
 
   return (
     <div className="app-shell" data-drawer-open={drawerOpen && userEmail ? 'true' : undefined}>
       <BackgroundGlow />
-      <AppHeader drawerOpen={drawerOpen} onDrawerToggle={() => setDrawerOpen((o) => !o)} />
+      <AppHeader
+        drawerOpen={drawerOpen}
+        onDrawerToggle={() => setDrawerOpen((o) => !o)}
+        onHomeClick={() => {
+          setDrawerOpen(false);
+          navigate('/');
+        }}
+      />
       <main className="app-main">
         <Outlet />
       </main>

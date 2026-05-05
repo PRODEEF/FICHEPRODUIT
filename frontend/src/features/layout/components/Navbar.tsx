@@ -1,4 +1,4 @@
-import { AlignStartVertical } from 'lucide-react';
+import { TableOfContents } from 'lucide-react';
 import { Link } from 'react-router';
 import type { ReactNode } from 'react';
 
@@ -45,12 +45,7 @@ export function Navbar({
               aria-controls={drawerId}
               onClick={onDrawerToggle}
             >
-              <AlignStartVertical
-                aria-hidden
-                className="nav-burger-icon"
-                size={22}
-                strokeWidth={2}
-              />
+              <TableOfContents aria-hidden className="nav-burger-icon" size={22} strokeWidth={2} />
             </button>
           ) : null}
           <button type="button" className="logo" onClick={onLogoClick}>
