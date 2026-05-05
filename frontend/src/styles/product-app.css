@@ -1057,20 +1057,21 @@ a.nav-user-profile-link:hover {
   color: var(--purple-700);
 }
 
-.analyses-page {
-  padding: 34px 1.5rem 3rem;
-  max-width: 72rem;
-  margin: 0 auto;
+.dashboard-content {
+  padding: 34px 50px 3rem;
+  width: 100%;
+  max-width: none;
+  margin: 0;
 }
 
 .analyses-header {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 1rem;
   margin-bottom: 1.25rem;
-  text-align: center;
+  text-align: left;
 }
 
 .analyses-title {
@@ -1078,6 +1079,11 @@ a.nav-user-profile-link:hover {
   font-size: 1.75rem;
   font-weight: 800;
   color: var(--text-primary);
+  text-align: left;
+}
+
+.analyses-title--primary {
+  color: var(--primary);
 }
 
 .analyses-subtitle {
@@ -1088,8 +1094,9 @@ a.nav-user-profile-link:hover {
 }
 
 .analyses-empty-catalog {
-  max-width: 52rem;
-  margin: 1.25rem auto 0;
+  width: 100%;
+  max-width: none;
+  margin: 1.25rem 0 0;
 }
 
 .analyses-back-link {
@@ -1254,6 +1261,7 @@ a.nav-user-profile-link:hover {
   font-size: 1.15rem;
   font-weight: 700;
   color: var(--text-primary);
+  text-align: left;
 }
 
 .analyses-filters {
@@ -1933,21 +1941,21 @@ a.product-sheet-save-btn {
 }
 
 /* Same usable width as "Mes fiches" (tables): drop intro/search caps in this flow */
-.analyses-page .product-sheet-tab-panel .product-sheet-intro {
+.dashboard-content .product-sheet-tab-panel .product-sheet-intro {
   max-width: none;
 }
 
-.analyses-page .product-templates-new-fiche-toolbar .search-container.product-templates-url-search {
+.dashboard-content .product-templates-new-fiche-toolbar .search-container.product-templates-url-search {
   max-width: none;
   width: 100%;
 }
 
-.analyses-page .product-templates-new-fiche .product-templates-url-search {
+.dashboard-content .product-templates-new-fiche .product-templates-url-search {
   flex: 1 1 auto;
   min-width: 0;
 }
 
-.analyses-page .product-sheet-tab-panel .template-fields-editor {
+.dashboard-content .product-sheet-tab-panel .template-fields-editor {
   max-width: none;
 }
 

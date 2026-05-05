@@ -21,7 +21,7 @@ export function ProductSheet() {
 
   if (authLoading) {
     return (
-      <div className="app-content analyses-page">
+      <div className="app-content dashboard-content">
         <p className="analyses-status" aria-busy="true">
           Chargement…
         </p>
@@ -30,7 +30,7 @@ export function ProductSheet() {
   }
 
   return (
-    <div className="app-content analyses-page">
+    <div className="app-content dashboard-content">
       <header className="analyses-header">
         <div>
           <h1 className="analyses-title">Fiche produit type</h1>

@@ -7,7 +7,7 @@ import { Catalog } from '../features/catalog/pages/Catalog';
 import { ProductSheet } from '../pages/ProductSheet';
 import { Home } from '../features/landing/pages/Home';
 import { MyStore } from '../features/store/pages/Store';
-import { getLastAnalysisId } from '../lib/lastAnalysisIdStorage';
+import { clearLastAnalysisId, getLastAnalysisId } from '../lib/lastAnalysisIdStorage';
 import { ForgotPassword } from '../features/auth/pages/ForgotPassword';
 import { Login } from '../features/auth/pages/Login';
 import { ResetPassword } from '../features/auth/pages/ResetPassword';
@@ -36,7 +36,11 @@ function AppHeader({ drawerOpen, onDrawerToggle, onHomeClick }: AppHeaderProps) 
       onDrawerToggle={onDrawerToggle}
       onLogoClick={onHomeClick}
       onLogout={async () => {
-        await signOut();
+        try {
+          await signOut();
+        } finally {
+          clearLastAnalysisId();
+        }
         navigate('/');
       }}
     />

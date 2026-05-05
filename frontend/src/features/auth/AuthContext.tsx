@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react
 import type { Session, User } from '@supabase/supabase-js';
 
 import { getSupabaseClient } from '@lib/supabase';
+import { clearLastAnalysisId } from '@lib/lastAnalysisIdStorage';
 
 import { AuthContext } from './auth-context';
 import { applyPendingSignupFromStorage } from './lib/pendingSignupStorage';
@@ -36,6 +37,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, next) => {
+      if (!next) {
+        clearLastAnalysisId();
+      }
       setSession(next);
       setUser(next?.user ?? null);
     });

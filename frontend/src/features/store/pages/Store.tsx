@@ -15,7 +15,7 @@ export function MyStore() {
 
   if (authLoading) {
     return (
-      <div className="app-content analyses-page">
+      <div className="app-content dashboard-content">
         <p className="analyses-status" aria-busy="true">
           Chargement…
         </p>
@@ -28,7 +28,7 @@ export function MyStore() {
   }
 
   return (
-    <div className="app-content analyses-page">
+    <div className="app-content dashboard-content">
       <header className="analyses-header">
         <div>
           <h1 className="analyses-title">Mon magasin</h1>
