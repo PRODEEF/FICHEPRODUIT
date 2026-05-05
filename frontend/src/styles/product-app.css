@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+@import "tailwindcss";
 
 /* Product shell + landing (aligned with frontend-test index.css) */
 :root {
@@ -133,7 +133,8 @@ body {
   font-family: inherit;
 }
 
-a.nav-auth-link {
+a.nav-auth-link,
+button.nav-auth-link {
   text-decoration: none;
   color: #fff;
   display: inline-block;
@@ -506,11 +507,28 @@ a.nav-user-profile-link:hover {
   background: var(--purple-50);
 }
 
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 35s linear infinite;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
 /* Auth pages */
 .auth-page {
   position: relative;
   z-index: 1;
-  padding: 6rem 1.5rem 2rem;
+  padding: 2rem 1.5rem 1.5rem;
   margin: 0 auto;
   width: 100%;
   max-width: 100%;
@@ -583,6 +601,16 @@ a.nav-user-profile-link:hover {
   box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
 }
 
+.auth-field input[aria-invalid='true'] {
+  border-color: var(--red-500);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
+}
+
+.auth-field input[aria-invalid='true']:focus {
+  border-color: var(--red-500);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.18);
+}
+
 .auth-field input:disabled {
   opacity: 0.7;
   cursor: not-allowed;
@@ -642,6 +670,84 @@ a.nav-user-profile-link:hover {
   margin: 0;
   font-size: 0.875rem;
   color: var(--red-500);
+}
+
+.auth-password-strength {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.auth-password-strength__bar {
+  display: flex;
+  gap: 4px;
+  width: 100%;
+}
+
+.auth-password-strength__segment {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border-color);
+  transition:
+    background 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.auth-password-strength__segment--weak {
+  background: rgba(239, 68, 68, 0.55);
+}
+
+.auth-password-strength__segment--medium {
+  background: rgba(217, 119, 6, 0.7);
+}
+
+.auth-password-strength__segment--strong {
+  background: var(--purple-500);
+}
+
+.auth-password-strength__label {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.auth-password-strength__criteria {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.auth-password-strength__criterion {
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  padding-left: 1rem;
+  position: relative;
+}
+
+.auth-password-strength__criterion::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.35rem;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--border-color);
+}
+
+.auth-password-strength__criterion--ok {
+  color: var(--text-secondary);
+}
+
+.auth-password-strength__criterion--ok::before {
+  background: var(--purple-500);
 }
 
 .auth-banner {
@@ -1018,6 +1124,39 @@ a.nav-user-profile-link:hover {
   background: #fef2f2;
 }
 
+.analyses-guest-save-cta {
+  margin-bottom: 1.25rem;
+}
+
+.analyses-guest-save-cta-title {
+  margin: 0 0 0.5rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.analyses-guest-save-cta-text {
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+
+.analyses-guest-save-cta-text strong {
+  color: var(--purple-700);
+}
+
+.analyses-guest-save-cta-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.25rem;
+}
+
+.analyses-guest-save-cta-login {
+  font-weight: 600;
+}
+
 .analyses-empty {
   color: var(--text-secondary);
   margin: 1rem 0;
@@ -1053,7 +1192,9 @@ a.nav-user-profile-link:hover {
   background: var(--bg-white);
   text-decoration: none;
   color: inherit;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .analyses-history-link:hover {
@@ -1546,7 +1687,9 @@ a.product-sheet-save-btn {
   border: 1px solid var(--border-color);
   background: var(--bg-white);
   cursor: pointer;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .product-templates-option-card:hover {
@@ -1973,4 +2116,10 @@ a.product-sheet-save-btn {
   flex-wrap: wrap;
   gap: 0.75rem;
   margin-top: 1.25rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee {
+    animation: none;
+  }
 }
