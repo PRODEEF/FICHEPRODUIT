@@ -1,5 +1,5 @@
 import { TableOfContents } from 'lucide-react';
-import { Link } from 'react-router';
+import { Link, NavLink } from 'react-router';
 import type { ReactNode } from 'react';
 
 export type NavbarProps = {
@@ -28,6 +28,8 @@ export function Navbar({
   const authed = Boolean(userEmail);
   const navTitle = userLabel ?? userEmail ?? undefined;
   const drawerId = 'nav-user-drawer';
+  const drawerItemBaseClass =
+    'block px-3.5 py-2.5 rounded-lg text-sm font-semibold text-text-primary no-underline transition-[background,color] duration-150 hover:bg-purple-50 hover:text-purple-700';
 
   return (
     <>
@@ -109,34 +111,42 @@ export function Navbar({
         >
           <nav className="flex flex-col h-full py-4 box-border" aria-label="Account">
             <div className="flex flex-col gap-0.5 px-3">
-              <Link
+              <NavLink
                 to={
                   lastAnalysisId
                     ? `/catalog/${lastAnalysisId}?tab=catalog`
                     : '/catalog?tab=catalog'
                 }
-                className="block px-3.5 py-2.5 rounded-lg text-sm font-semibold text-text-primary no-underline transition-[background,color] duration-150 hover:bg-purple-50 hover:text-purple-700"
+                className={({ isActive }) =>
+                  `${drawerItemBaseClass} ${isActive ? 'bg-purple-50 text-black' : ''}`
+                }
               >
                 Mon catalogue
-              </Link>
-              <Link
+              </NavLink>
+              <NavLink
                 to="/product-sheet"
-                className="block px-3.5 py-2.5 rounded-lg text-sm font-semibold text-text-primary no-underline transition-[background,color] duration-150 hover:bg-purple-50 hover:text-purple-700"
+                className={({ isActive }) =>
+                  `${drawerItemBaseClass} ${isActive ? 'bg-purple-50 text-black' : ''}`
+                }
               >
                 Ma fiche produit
-              </Link>
-              <Link
+              </NavLink>
+              <NavLink
                 to="/my-store"
-                className="block px-3.5 py-2.5 rounded-lg text-sm font-semibold text-text-primary no-underline transition-[background,color] duration-150 hover:bg-purple-50 hover:text-purple-700"
+                className={({ isActive }) =>
+                  `${drawerItemBaseClass} ${isActive ? 'bg-purple-50 text-black' : ''}`
+                }
               >
                 Mon magasin
-              </Link>
-              <Link
+              </NavLink>
+              <NavLink
                 to="/profile"
-                className="block px-3.5 py-2.5 rounded-lg text-sm font-semibold text-text-primary no-underline transition-[background,color] duration-150 hover:bg-purple-50 hover:text-purple-700"
+                className={({ isActive }) =>
+                  `${drawerItemBaseClass} ${isActive ? 'bg-purple-50 text-black' : ''}`
+                }
               >
                 Mon profil
-              </Link>
+              </NavLink>
             </div>
             <div className="mt-auto pt-4 px-3 border-t border-border">
               <button

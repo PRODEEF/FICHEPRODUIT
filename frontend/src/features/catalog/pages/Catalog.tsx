@@ -5,7 +5,11 @@ import { AnalyseResult } from '../../../components/analysis/AnalyseResult';
 import { GuestAnalysisSignupCta } from '../../../components/analysis/GuestAnalysisSignupCta';
 import { AnalysisProgress } from '../../landing/components/AnalysisProgress';
 import { EmptyAnalysis } from '../components/EmptyAnalysis';
-import { isValidAnalysisId, setLastAnalysisId } from '../../../lib/lastAnalysisIdStorage';
+import {
+  clearLastAnalysisId,
+  isValidAnalysisId,
+  setLastAnalysisId,
+} from '../../../lib/lastAnalysisIdStorage';
 import { useSiteAnalysis } from '../../../shared/hooks/useSiteAnalysis';
 import { useLandingSearch } from '../../landing/hooks/useLandingSearch';
 import { useAnalysisDetail } from '../hooks/useAnalysisDetail';
@@ -30,6 +34,7 @@ export function Catalog() {
     productPayload,
     loading: detailLoading,
     error: detailError,
+    analysisNotFound,
   } = useAnalysisDetail(analysisId, user?.id, authLoading);
 
   const { tab: resultTab, setTab: setResultTab } = useResultTab();
@@ -38,6 +43,12 @@ export function Catalog() {
     if (!analysisId || !hasValidAnalysisId) return;
     setLastAnalysisId(analysisId);
   }, [analysisId, hasValidAnalysisId]);
+
+  useEffect(() => {
+    if (!analysisId || !hasValidAnalysisId || !analysisNotFound) return;
+    clearLastAnalysisId();
+    navigate('/catalog?tab=catalog', { replace: true });
+  }, [analysisId, hasValidAnalysisId, analysisNotFound, navigate]);
 
   // Reset tab quand on navigue vers une autre analyse
   useEffect(() => {
@@ -58,7 +69,7 @@ export function Catalog() {
 
   if (authLoading) {
     return (
-      <div className="app-content analyses-page">
+      <div className="app-content dashboard-content">
         <p className="analyses-status" aria-busy="true">
           Chargement…
         </p>
@@ -77,7 +88,7 @@ export function Catalog() {
         {analysisOpen && siteAnalysis ? (
           <AnalysisProgress analysis={siteAnalysis} onDismiss={dismissError} />
         ) : null}
-        <div className="app-content analyses-page">
+        <div className="app-content dashboard-content">
           <header className="analyses-header">
             <h1 className="analyses-title">Mon catalogue</h1>
           </header>
@@ -96,7 +107,7 @@ export function Catalog() {
   }
 
   return (
-    <div className="app-content analyses-page">
+    <div className="app-content dashboard-content">
       <header className="analyses-header">
         <h1 className="analyses-title">Mon catalogue</h1>
       </header>

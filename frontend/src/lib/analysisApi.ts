@@ -184,12 +184,13 @@ export async function getSiteAnalysis(id: string): Promise<SiteAnalysis> {
     if (res.status === 401) {
       throw new Error('Session expirée ou non autorisée. Reconnecte-toi.');
     }
+    if (res.status === 404) {
+      throw new Error('Analyse introuvable.');
+    }
     throw new Error(
       errorMessageFromBody(
         parsed,
-        res.status === 404
-          ? 'Analyse introuvable.'
-          : `Erreur lors de la lecture de l’analyse (${res.status}).`,
+        `Erreur lors de la lecture de l’analyse (${res.status}).`,
       ),
     );
   }
@@ -269,12 +270,13 @@ export async function getAnalysisProducts(
     if (res.status === 401) {
       throw new Error('Session expirée ou non autorisée. Reconnecte-toi.');
     }
+    if (res.status === 404) {
+      throw new Error('Analyse introuvable.');
+    }
     throw new Error(
       errorMessageFromBody(
         parsed,
-        res.status === 404
-          ? 'Analyse introuvable.'
-          : `Impossible de charger les produits (${res.status}).`,
+        `Impossible de charger les produits (${res.status}).`,
       ),
     );
   }

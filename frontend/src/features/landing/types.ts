@@ -27,13 +27,13 @@ export type Universe = {
 
 export const universes: Universe[] = [
   {
-    label: 'Surf',
+    label: 'Nautisme',
     icon: Waves,
     color: 'text-cyan-400',
     example: 'Combinaisons néoprène, planches, accessoires',
   },
   {
-    label: 'Kitesurf',
+    label: 'Glisse',
     icon: Wind,
     color: 'text-sky-400',
     example: 'Ailes, barres, harnais, sécurité',

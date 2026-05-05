@@ -232,34 +232,6 @@ function AnalyseResultInner({
             {sellsLine ? <p className="analyses-site-tag-sub">{sellsLine}</p> : null}
           </div>
 
-          <div className="analyses-tabs" role="tablist" aria-label="Sections">
-            <button
-              type="button"
-              role="tab"
-              id="tab-catalog"
-              aria-selected={activeTab === 'catalog'}
-              aria-controls="panel-catalog"
-              className={`analyses-tab-btn${activeTab === 'catalog' ? ' analyses-tab-btn--active' : ''}`}
-              onClick={() => onActiveTabChange('catalog')}
-            >
-              Recherche &amp; catalogue
-            </button>
-            <button
-              type="button"
-              role="tab"
-              id="tab-template"
-              aria-selected={activeTab === 'template'}
-              aria-controls="panel-template"
-              className={`analyses-tab-btn${activeTab === 'template' ? ' analyses-tab-btn--active' : ''}`}
-              onClick={() => onActiveTabChange('template')}
-            >
-              Ma fiche produit
-            </button>
-            <Link to="/product-sheet" className="analyses-tab-link">
-              Ouvrir la fiche type en pleine page →
-            </Link>
-          </div>
-
           <div
             role="tabpanel"
             id="panel-catalog"

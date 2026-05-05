@@ -20,7 +20,7 @@ import { useSignupAutoAnalyze } from '../hooks/useSignupAutoAnalyze';
 export function Home() {
   const navigate = useNavigate();
   const { runAnalysis, analysisOpen, siteAnalysis, dismissError } = useSiteAnalysis({
-    onSuccess: (summary) => navigate(`/analyses/${summary.id}`),
+    onSuccess: (summary) => navigate(`/catalog/${summary.id}`),
   });
 
   useSignupAutoAnalyze({ runAnalysis });
@@ -41,7 +41,7 @@ export function Home() {
             animate="visible"
             className="gift-banner"
           >
-            ✦ Nouveau - Export Shopify en 1 clic
+            ✦ Nouveau - Export Shopify et Prestashop en 1 clic
           </motion.div>
           <motion.h1 variants={titleReveal} initial="hidden" animate="visible">
             <span className="highlight">Génère tes fiches produits</span>

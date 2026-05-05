@@ -15,6 +15,7 @@ type UseAnalysisDetailResult = {
   productPayload: ProductListResponse | null;
   loading: boolean;
   error: string | null;
+  analysisNotFound: boolean;
 };
 
 export function useAnalysisDetail(
@@ -34,6 +35,7 @@ export function useAnalysisDetail(
     return getAnalysisDetailCache(cacheUserId, analysisId)?.productPayload ?? null;
   });
   const [error, setError] = useState<string | null>(null);
+  const [analysisNotFound, setAnalysisNotFound] = useState(false);
 
   // Persiste le lastAnalysisId
   useEffect(() => {
@@ -44,6 +46,7 @@ export function useAnalysisDetail(
   useEffect(() => {
     if (!analysisId || authLoading) return;
     setError(null);
+    setAnalysisNotFound(false);
     const cached = getAnalysisDetailCache(cacheUserId, analysisId);
     if (cached) {
       setAnalysis(cached.analysis);
@@ -73,7 +76,10 @@ export function useAnalysisDetail(
         setError(null);
       } catch (e) {
         if (!cancelled) {
-          setError(e instanceof Error ? e.message : 'Erreur de chargement.');
+          const message = e instanceof Error ? e.message : 'Erreur de chargement.';
+          const lowered = message.toLowerCase();
+          setAnalysisNotFound(lowered.includes('introuvable') || lowered.includes('not found'));
+          setError(message);
           const cached = getAnalysisDetailCache(cacheUserId, analysisId);
           if (!cached) {
             setAnalysis(null);
@@ -90,5 +96,5 @@ export function useAnalysisDetail(
     };
   }, [userId, analysisId, authLoading, cacheUserId]);
 
-  return { analysis, productPayload, loading, error };
+  return { analysis, productPayload, loading, error, analysisNotFound };
 }

@@ -24,3 +24,11 @@ export function setLastAnalysisId(analysisId: string): void {
     /* quota sessionStorage ou mode privé : ignorer silencieusement */
   }
 }
+
+export function clearLastAnalysisId(): void {
+  try {
+    sessionStorage.removeItem(STORAGE_KEY);
+  } catch {
+    /* quota sessionStorage ou mode privé : ignorer silencieusement */
+  }
+}
