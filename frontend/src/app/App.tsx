@@ -3,7 +3,7 @@ import { BrowserRouter, Outlet, Route, Routes, useNavigate } from 'react-router'
 import { AuthProvider, useAuth } from '../features/auth/useAuth';
 import { BackgroundGlow } from '../features/layout/components/BackgroundGlow';
 import { Navbar } from '../features/layout/components/Navbar';
-import { Analyses } from '../pages/Analyses';
+import { Catalog } from '../features/catalog/pages/Catalog';
 import { ProductSheet } from '../pages/ProductSheet';
 import { Home } from '../features/landing/pages/Home';
 import { MyStore } from '../features/store/pages/Store';
@@ -81,8 +81,8 @@ export function App() {
         <Routes>
           <Route element={<AppShell />}>
             <Route path="/" element={<Home />} />
-            <Route path="/analyses" element={<Analyses />} />
-            <Route path="/analyses/:analysisId" element={<Analyses />} />
+            <Route path="/catalog" element={<Catalog />} />
+            <Route path="/catalog/:analysisId" element={<Catalog />} />
             <Route path="/product-sheet" element={<ProductSheet />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/my-store" element={<MyStore />} />

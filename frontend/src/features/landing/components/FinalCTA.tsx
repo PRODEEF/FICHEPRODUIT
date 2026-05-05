@@ -2,7 +2,7 @@ import { Button } from '@shared/ui/Button';
 import { motion } from 'motion/react';
 
 import { titleReveal } from '@lib/motionVariants';
-import { useScrollReveal } from '../../../hooks/useScrollReveal';
+import { useScrollReveal } from '../hooks/useScrollReveal';
 
 export function FinalCTA() {
   const { ref: titleRef, inView: titleInView } = useScrollReveal<HTMLHeadingElement>(0.5);

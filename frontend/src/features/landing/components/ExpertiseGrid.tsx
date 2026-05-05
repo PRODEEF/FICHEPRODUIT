@@ -3,7 +3,7 @@ import { cardReveal, staggerContainer, titleReveal } from '@lib/motionVariants';
 
 import { universes } from '../types';
 
-import { useScrollReveal } from '../../../hooks/useScrollReveal';
+import { useScrollReveal } from '../hooks/useScrollReveal';
 
 export function ExpertiseGrid() {
   const { ref: titleRef, inView: titleInView } = useScrollReveal<HTMLHeadingElement>(0.5);
