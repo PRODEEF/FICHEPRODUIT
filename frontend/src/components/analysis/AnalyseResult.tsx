@@ -57,7 +57,6 @@ function AnalyseResultInner({
   analysis,
   productPayload,
   activeTab,
-  onActiveTabChange,
 }: AnalyseResultProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterBrand, setFilterBrand] = useState('');
