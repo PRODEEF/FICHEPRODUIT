@@ -73,8 +73,11 @@ export function Navbar({
               <Link to="/login" className="btn-nav nav-auth-link">
                 Se connecter
               </Link>
-              <Link to="/signup" className="btn-nav nav-auth-link">
-                {"S'inscrire"}
+              <Link
+                to="/signup"
+                className="ml-2 bg-purple-600 text-white text-sm font-bold px-5 py-2 rounded-xl hover:bg-purple-700 transition-colors duration-200"
+              >
+                S'inscrire gratuitement
               </Link>
             </>
           )}

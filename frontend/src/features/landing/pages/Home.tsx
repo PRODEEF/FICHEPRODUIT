@@ -3,8 +3,15 @@ import { useNavigate } from 'react-router';
 import { useSiteAnalysis } from '@shared/hooks/useSiteAnalysis';
 
 import { AnalysisProgress } from '../components/AnalysisProgress';
+import { ExpertiseGrid } from '../components/ExpertiseGrid';
+import { FinalCTA } from '../components/FinalCTA';
 import { HeroSearchForm } from '../components/HeroSearchForm';
+import { HowItWorks } from '../components/HowItWorks';
+import { LandingFooter } from '../components/LandingFooter';
 import { LandingSuggestions } from '../components/LandingSuggestions';
+import { SellingPoints } from '../components/SellingPoints';
+import { SocialProofBar } from '../components/SocialProofBar';
+import { Testimonials } from '../components/Testimonials';
 import { useLandingSearch } from '../hooks/useLandingSearch';
 import { useSignupAutoAnalyze } from '../hooks/useSignupAutoAnalyze';
 
@@ -47,6 +54,13 @@ export function Home() {
             Compatible PrestaShop & Shopify
           </p>
         </section>
+        <SocialProofBar />
+        <HowItWorks />
+        <SellingPoints />
+        <Testimonials />
+        <ExpertiseGrid />
+        <FinalCTA />
+        <LandingFooter />
       </div>
     </>
   );

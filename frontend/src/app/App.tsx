@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { BrowserRouter, Outlet, Route, Routes, useNavigate } from 'react-router';
 import { AuthProvider, useAuth } from '../features/auth/useAuth';
-import { BackgroundGlow } from '../components/layout/BackgroundGlow';
-import { Navbar } from '../components/layout/Navbar';
+import { BackgroundGlow } from '../features/layout/components/BackgroundGlow';
+import { Navbar } from '../features/layout/components/Navbar';
 import { Analyses } from '../pages/Analyses';
 import { ProductSheet } from '../pages/ProductSheet';
-import { Home } from '../features/home/pages/Home';
+import { Home } from '../features/landing/pages/Home';
 import { MyStore } from '../features/store/pages/Store';
 import { getLastAnalysisId } from '../lib/lastAnalysisIdStorage';
 import { ForgotPassword } from '../features/auth/pages/ForgotPassword';
@@ -13,6 +13,7 @@ import { Login } from '../features/auth/pages/Login';
 import { ResetPassword } from '../features/auth/pages/ResetPassword';
 import { Signup } from '../features/auth/pages/Signup';
 import { Profile } from '../features/auth/pages/Profile';
+import { bootCrisp } from '../lib/crisp';
 
 type AppHeaderProps = {
   drawerOpen: boolean;
@@ -61,6 +62,10 @@ function AppShell() {
 }
 
 export function App() {
+  useEffect(() => {
+    bootCrisp();
+  }, []);
+
   return (
     <AuthProvider>
       <BrowserRouter>

@@ -5,7 +5,7 @@ import { getSupabaseClient } from '@lib/supabase';
 import { parseAsFullSiteUrl } from '@lib/siteUrl';
 import { useSiteAnalysis } from '@shared/hooks/useSiteAnalysis';
 
-import { AnalysisProgress } from '../../home/components/AnalysisProgress';
+import { AnalysisProgress } from '../../landing/components/AnalysisProgress';
 
 import { PasswordField } from '../components/PasswordField';
 import { useAuth } from '../useAuth';
