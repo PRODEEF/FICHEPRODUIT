@@ -1,4 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+@import 'tailwindcss';
+@config "../../tailwind.config.js";
 
 /* Product shell + landing (aligned with frontend-test index.css) */
 :root {
@@ -353,9 +354,8 @@ a.nav-user-profile-link:hover {
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding: 80px 1.5rem 60px;
-  min-height: calc(100vh - 64px);
-  justify-content: center;
+  padding: 50px 1.5rem 60px;
+  justify-content: flex-start;
 }
 
 .hero h1 {
@@ -505,6 +505,23 @@ a.nav-user-profile-link:hover {
 .landing-suggestion-btn:hover {
   border-color: var(--purple-400);
   background: var(--purple-50);
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 35s linear infinite;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
 }
 
 /* Auth pages */
@@ -797,7 +814,7 @@ a.nav-user-profile-link:hover {
   cursor: not-allowed;
 }
 
-/* Analyze success modal (landing / hero visual language) */
+/* Shared analyze modal primitives */
 .analyze-modal-backdrop {
   position: fixed;
   inset: 0;
@@ -834,13 +851,6 @@ a.nav-user-profile-link:hover {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-}
-
-.analyze-modal-sub {
-  font-size: 0.95rem;
-  color: var(--text-secondary);
-  margin: 0 0 1rem;
-  line-height: 1.5;
 }
 
 .analyze-modal-url {
@@ -1048,7 +1058,7 @@ a.nav-user-profile-link:hover {
 }
 
 .analyses-page {
-  padding: 80px 1.5rem 3rem;
+  padding: 34px 1.5rem 3rem;
   max-width: 72rem;
   margin: 0 auto;
 }
@@ -1056,10 +1066,11 @@ a.nav-user-profile-link:hover {
 .analyses-header {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: space-between;
+  align-items: center;
+  justify-content: center;
   gap: 1rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
+  text-align: center;
 }
 
 .analyses-title {
@@ -1073,7 +1084,12 @@ a.nav-user-profile-link:hover {
   margin: 0.35rem 0 0;
   font-size: 0.9rem;
   color: var(--text-muted);
-  word-break: break-all;
+  word-break: normal;
+}
+
+.analyses-empty-catalog {
+  max-width: 52rem;
+  margin: 1.25rem auto 0;
 }
 
 .analyses-back-link {
@@ -2099,4 +2115,10 @@ a.product-sheet-save-btn {
   flex-wrap: wrap;
   gap: 0.75rem;
   margin-top: 1.25rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee {
+    animation: none;
+  }
 }
