@@ -4,9 +4,9 @@ import {
   getSiteAnalysis,
   type ProductListResponse,
   type SiteAnalysis,
-} from '../../../lib/analysisApi';
-import { getAnalysisDetailCache, setAnalysisDetailCache } from '../../../lib/analysisDetailCache';
-import { setLastAnalysisId } from '../../../lib/lastAnalysisIdStorage';
+} from '@lib/analysis/analysisApi';
+import { getAnalysisDetailCache, setAnalysisDetailCache } from '@lib/analysis/analysisStorage';
+import { setLastAnalysisId } from '@lib/analysis/analysisStorage';
 
 const CACHE_GUEST_KEY = 'guest';
 

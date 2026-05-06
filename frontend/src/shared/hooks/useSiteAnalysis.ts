@@ -1,7 +1,16 @@
 import { useCallback, useState } from 'react';
-import type { SiteAnalysis } from '@lib/analysisApi';
-import { runSiteAnalysisWorkflow } from '@lib/runSiteAnalysisWorkflow';
-import type { SiteAnalysisSummary } from '../../types/siteAnalysis';
+import { toast } from 'sonner';
+import type { SiteAnalysis } from '@lib/analysis/analysisApi';
+import { runSiteAnalysisWorkflow } from '@lib/analysis/runSiteAnalysisWorkflow';
+
+type SiteAnalysisSummary = {
+  id: string;
+  url: string;
+  cms?: string;
+  verticalSummary?: string;
+  catalogMatchCategories?: string[];
+  mainBrands?: string[];
+};
 
 export type RunAnalysisOutcome = 'success' | 'error_alert' | 'error_modal';
 
@@ -29,7 +38,7 @@ export function useSiteAnalysis(options: UseSiteAnalysisOptions = {}) {
 
       if (result.ok === false) {
         if (!result.partial) {
-          window.alert(result.error);
+          toast.error(result.error);
           setAnalysisOpen(false);
           setSiteAnalysis(null);
           return 'error_alert';

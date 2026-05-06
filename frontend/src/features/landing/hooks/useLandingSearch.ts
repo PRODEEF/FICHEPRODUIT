@@ -1,7 +1,8 @@
 import { useCallback, useState } from 'react';
+import { toast } from 'sonner';
 
 import { fetchSuggestUrls } from '../lib/suggestUrls';
-import { parseAsSiteUrl } from '../lib/siteUrl';
+import { parseAsSiteUrl } from '@lib/utils/siteUrl';
 
 type UseLandingSearchParams = {
   runAnalysis: (url: string) => Promise<unknown>;
@@ -43,12 +44,10 @@ export function useLandingSearch({ runAnalysis }: UseLandingSearchParams) {
       if (urls.length) {
         setSuggestedUrls(urls);
       } else {
-        window.alert(
-          'Aucune adresse proposée. Essaie une URL complète (ex. https://…) ou un nom plus précis.',
-        );
+        toast.warning('Aucune adresse proposée. Essaie une URL complète (ex. https://…) ou un nom plus précis.');
       }
     } catch {
-      window.alert('Impossible de récupérer des suggestions pour le moment.');
+      toast.error('Impossible de récupérer des suggestions pour le moment.');
     } finally {
       setSuggestionsLoading(false);
     }

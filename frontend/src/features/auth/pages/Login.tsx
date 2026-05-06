@@ -1,8 +1,9 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router';
+import { useNavigate } from 'react-router';
 
-import { getSupabaseClient } from '@lib/supabase';
-import { parseZodFieldErrors } from '@lib/parseZodErrors';
+import { getSupabaseClient } from '@lib/api/supabase';
+import { parseZodFieldErrors } from '@lib/utils/parseZodErrors';
+import { Banner, Button, Card, InputField, PageSection, TextLink } from '@shared/ui';
 
 import { PasswordField } from '../components/PasswordField';
 import { useAuth } from '../useAuth';
@@ -23,7 +24,7 @@ export function Login() {
 
   useEffect(() => {
     if (authLoading || configError) return;
-    if (userEmail) navigate('/', { replace: true });
+    if (userEmail) navigate('/catalog', { replace: true });
   }, [authLoading, userEmail, configError, navigate]);
 
   async function handleSubmit(e: FormEvent) {
@@ -58,7 +59,7 @@ export function Login() {
         }
         return;
       }
-      navigate('/', { replace: true });
+      navigate('/catalog', { replace: true });
     } finally {
       setSubmitting(false);
     }
@@ -84,17 +85,17 @@ export function Login() {
 
   if (configError) {
     return (
-      <div className="auth-page">
-        <div className="auth-card">
+      <PageSection className="max-w-2xl pt-8">
+        <Card className="mx-auto w-full max-w-[30rem]">
           <h1>Connexion</h1>
-          <p className="auth-banner auth-banner--error">
+          <Banner variant="error">
             Variables d’environnement Supabase manquantes. Copie{' '}
-            <code className="auth-code">frontend/.env.example</code> vers{' '}
-            <code className="auth-code">frontend/.env</code> et renseigne l’URL ainsi que la clé
+            <code className="break-all text-[0.8em]">frontend/.env.example</code> vers{' '}
+            <code className="break-all text-[0.8em]">frontend/.env</code> et renseigne l’URL ainsi que la clé
             anonyme.
-          </p>
-        </div>
-      </div>
+          </Banner>
+        </Card>
+      </PageSection>
     );
   }
 
@@ -102,40 +103,31 @@ export function Login() {
   const passwordErr = fieldErrors.password;
 
   return (
-    <div className="auth-page">
-      <div className="auth-card">
-        <h1>Connexion</h1>
-        <p className="auth-intro">
+    <PageSection className="max-w-2xl pt-8">
+      <Card className="mx-auto w-full max-w-[30rem]">
+        <h1 className="mb-2 text-center text-2xl font-extrabold text-text-primary">Connexion</h1>
+        <p className="mb-5 text-center text-sm text-text-secondary">
           Pas encore de compte ?{' '}
-          <Link to="/signup" className="auth-inline-link">
-            Créer un compte
-          </Link>
+          <TextLink to="/signup">Créer un compte</TextLink>
         </p>
-        <form className="auth-form" noValidate onSubmit={(e) => void handleSubmit(e)}>
-          <div className="auth-field">
-            <label htmlFor="login-email">E-mail</label>
-            <input
-              id="login-email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              placeholder="vous@exemple.fr"
-              aria-required="true"
-              aria-invalid={Boolean(emailErr)}
-              aria-describedby={emailErr ? emailErrorId : undefined}
-              value={email}
-              onChange={(ev) => {
-                setEmail(ev.target.value);
-                clearEmailError();
-              }}
-              disabled={submitting || authLoading}
-            />
-            {emailErr ? (
-              <p id={emailErrorId} className="auth-error" role="alert">
-                {emailErr}
-              </p>
-            ) : null}
-          </div>
+        <form className="flex flex-col gap-4" noValidate onSubmit={(e) => void handleSubmit(e)}>
+          <InputField
+            id="login-email"
+            label="E-mail"
+            name="email"
+            type="email"
+            autoComplete="email"
+            placeholder="vous@exemple.fr"
+            required
+            error={emailErr}
+            errorId={emailErrorId}
+            value={email}
+            onChange={(ev) => {
+              setEmail(ev.target.value);
+              clearEmailError();
+            }}
+            disabled={submitting || authLoading}
+          />
           <PasswordField
             id="login-password"
             label="Mot de passe"
@@ -151,20 +143,18 @@ export function Login() {
             disabled={submitting || authLoading}
           />
           {formError ? (
-            <p className="auth-error" role="alert">
+            <p className="m-0 text-sm text-red-500" role="alert">
               {formError}
             </p>
           ) : null}
-          <button type="submit" className="btn-auth-primary" disabled={submitting || authLoading}>
+          <Button type="submit" variant="gradient" disabled={submitting || authLoading}>
             {submitting ? 'Connexion…' : 'Se connecter'}
-          </button>
+          </Button>
         </form>
-        <p className="auth-footer-link">
-          <Link to="/forgot-password" className="auth-inline-link">
-            Mot de passe oublié ?
-          </Link>
+        <p className="mt-5 text-center text-sm">
+          <TextLink to="/forgot-password">Mot de passe oublié ?</TextLink>
         </p>
-      </div>
-    </div>
+      </Card>
+    </PageSection>
   );
 }

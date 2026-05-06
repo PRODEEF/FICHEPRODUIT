@@ -1,19 +1,22 @@
 import { useEffect, useState } from 'react';
 import { BrowserRouter, Outlet, Route, Routes, useNavigate } from 'react-router';
 import { AuthProvider, useAuth } from '../features/auth/useAuth';
+import { RequireAuthRoute } from '../features/auth/components/RequireAuthRoute';
 import { BackgroundGlow } from '../features/layout/components/BackgroundGlow';
 import { Navbar } from '../features/layout/components/Navbar';
 import { Catalog } from '../features/catalog/pages/Catalog';
-import { ProductSheet } from '../pages/ProductSheet';
+import { PublicCatalog } from '../features/catalog/pages/PublicCatalog';
+import { ProductSheet } from '../features/product-sheet/pages/ProductSheet';
 import { Home } from '../features/landing/pages/Home';
 import { MyStore } from '../features/store/pages/Store';
-import { clearLastAnalysisId, getLastAnalysisId } from '../lib/lastAnalysisIdStorage';
+import { clearLastAnalysisId, getLastAnalysisId } from '@lib/analysis/analysisStorage';
 import { ForgotPassword } from '../features/auth/pages/ForgotPassword';
 import { Login } from '../features/auth/pages/Login';
 import { ResetPassword } from '../features/auth/pages/ResetPassword';
 import { Signup } from '../features/auth/pages/Signup';
 import { Profile } from '../features/auth/pages/Profile';
-import { bootCrisp } from '../lib/crisp';
+import { bootCrisp } from './crisp';
+import { Toaster } from 'sonner';
 
 type AppHeaderProps = {
   drawerOpen: boolean;
@@ -50,9 +53,13 @@ function AppHeader({ drawerOpen, onDrawerToggle, onHomeClick }: AppHeaderProps) 
 function AppShellLayout({ userEmail }: { userEmail: string | null }) {
   const navigate = useNavigate();
   const [drawerOpen, setDrawerOpen] = useState(true);
+  const drawerExpanded = drawerOpen && Boolean(userEmail);
 
   return (
-    <div className="app-shell" data-drawer-open={drawerOpen && userEmail ? 'true' : undefined}>
+    <div
+      className="flex min-h-screen flex-col bg-bg-main"
+      data-drawer-open={drawerExpanded ? 'true' : undefined}
+    >
       <BackgroundGlow />
       <AppHeader
         drawerOpen={drawerOpen}
@@ -62,7 +69,11 @@ function AppShellLayout({ userEmail }: { userEmail: string | null }) {
           navigate('/');
         }}
       />
-      <main className="app-main">
+      <main
+        className={`relative z-[1] flex min-h-0 flex-1 flex-col pt-16 transition-[margin-left] duration-200 ${
+          drawerExpanded ? 'ml-[260px]' : 'ml-0'
+        }`}
+      >
         <Outlet />
       </main>
     </div>
@@ -82,18 +93,23 @@ export function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
+        <Toaster richColors position="bottom-right" />
         <Routes>
           <Route element={<AppShell />}>
             <Route path="/" element={<Home />} />
-            <Route path="/catalog" element={<Catalog />} />
-            <Route path="/catalog/:analysisId" element={<Catalog />} />
-            <Route path="/product-sheet" element={<ProductSheet />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/my-store" element={<MyStore />} />
+            <Route path="/catalog/public/:analysisId" element={<PublicCatalog />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/auth/reset-password" element={<ResetPassword />} />
+
+            <Route element={<RequireAuthRoute />}>
+              <Route path="/catalog" element={<Catalog />} />
+              <Route path="/catalog/:analysisId" element={<Catalog />} />
+              <Route path="/product-sheet" element={<ProductSheet />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/store" element={<MyStore />} />
+            </Route>
           </Route>
         </Routes>
       </BrowserRouter>

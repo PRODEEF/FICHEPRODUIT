@@ -1,29 +1,33 @@
-import { useEffect, useRef } from 'react';
-import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router';
-import { useAuth } from '../../auth/useAuth';
-import { AnalyseResult } from '../../../components/analysis/AnalyseResult';
-import { GuestAnalysisSignupCta } from '../../../components/analysis/GuestAnalysisSignupCta';
-import { AnalysisProgress } from '../../landing/components/AnalysisProgress';
-import { EmptyAnalysis } from '../components/EmptyAnalysis';
-import {
-  clearLastAnalysisId,
-  isValidAnalysisId,
-  setLastAnalysisId,
-} from '../../../lib/lastAnalysisIdStorage';
-import { useSiteAnalysis } from '../../../shared/hooks/useSiteAnalysis';
-import { useLandingSearch } from '../../landing/hooks/useLandingSearch';
-import { useAnalysisDetail } from '../hooks/useAnalysisDetail';
-import { useResultTab } from '../hooks/useResultTab';
+import { useEffect } from 'react';
+import { Navigate, useNavigate, useParams } from 'react-router';
 
+import { clearLastAnalysisId, isValidAnalysisId } from '@lib/analysis/analysisStorage';
+import { useSiteAnalysis } from '../../../shared/hooks/useSiteAnalysis';
+import { useAuth } from '../../auth/useAuth';
+import { AnalysisProgress } from '../../landing/components/AnalysisProgress';
+import { useLandingSearch } from '../../landing/hooks/useLandingSearch';
+import { AnalysisResult } from '../components/AnalysisResult';
+import { EmptyAnalysis } from '../components/EmptyAnalysis';
+import { useAnalysisDetail } from '../hooks/useAnalysisDetail';
+
+/**
+ * Catalogue privé de l'utilisateur connecté.
+ *
+ * Cette page est rendue sous une route protégée par `RequireAuthRoute`, donc on suppose
+ * la session déjà hydratée et l'utilisateur authentifié — pas de gestion d'`authLoading`
+ * ni de redirection vers `/login` ici.
+ *
+ * Le rendu varie selon l'URL :
+ * - `/catalog` (sans id) : affiche la zone de saisie pour lancer une nouvelle analyse.
+ * - `/catalog/:analysisId` : affiche le détail d'une analyse existante.
+ */
 export function Catalog() {
   const navigate = useNavigate();
   const { analysisId } = useParams<{ analysisId: string }>();
-  const [, setSearchParams] = useSearchParams();
-  const prevAnalysisIdRef = useRef<string | null>(null);
-  const { user, loading: authLoading } = useAuth();
+  const { user } = useAuth();
 
   const { runAnalysis, analysisOpen, siteAnalysis, dismissError } = useSiteAnalysis({
-    onSuccess: (summary) => navigate(`/catalog/${summary.id}?tab=catalog`),
+    onSuccess: (summary) => navigate(`/catalog/${summary.id}`),
   });
   const landing = useLandingSearch({ runAnalysis });
 
@@ -35,62 +39,27 @@ export function Catalog() {
     loading: detailLoading,
     error: detailError,
     analysisNotFound,
-  } = useAnalysisDetail(analysisId, user?.id, authLoading);
-
-  const { tab: resultTab, setTab: setResultTab } = useResultTab();
-
-  useEffect(() => {
-    if (!analysisId || !hasValidAnalysisId) return;
-    setLastAnalysisId(analysisId);
-  }, [analysisId, hasValidAnalysisId]);
+  } = useAnalysisDetail(analysisId, user?.id, false);
 
   useEffect(() => {
     if (!analysisId || !hasValidAnalysisId || !analysisNotFound) return;
     clearLastAnalysisId();
-    navigate('/catalog?tab=catalog', { replace: true });
+    navigate('/catalog', { replace: true });
   }, [analysisId, hasValidAnalysisId, analysisNotFound, navigate]);
-
-  // Reset tab quand on navigue vers une autre analyse
-  useEffect(() => {
-    if (!analysisId || !hasValidAnalysisId) return;
-    const prev = prevAnalysisIdRef.current;
-    if (prev !== null && prev !== analysisId) {
-      setSearchParams(
-        (p) => {
-          const next = new URLSearchParams(p);
-          next.delete('tab');
-          return next;
-        },
-        { replace: true },
-      );
-    }
-    prevAnalysisIdRef.current = analysisId;
-  }, [analysisId, hasValidAnalysisId, setSearchParams]);
-
-  if (authLoading) {
-    return (
-      <div className="app-content dashboard-content">
-        <p className="analyses-status" aria-busy="true">
-          Chargement…
-        </p>
-      </div>
-    );
-  }
 
   if (analysisId && !hasValidAnalysisId) {
     return <Navigate to="/catalog" replace />;
   }
 
   if (!analysisId) {
-    if (!user) return <Navigate to="/" replace />;
     return (
       <>
         {analysisOpen && siteAnalysis ? (
           <AnalysisProgress analysis={siteAnalysis} onDismiss={dismissError} />
         ) : null}
-        <div className="app-content dashboard-content">
-          <header className="analyses-header">
-            <h1 className="analyses-title">Mon catalogue</h1>
+        <div className="relative z-[1] w-full px-12 pb-12 pt-9">
+          <header className="mb-5 flex flex-wrap items-center gap-4 text-left">
+            <h1 className="m-0 text-[1.75rem] font-extrabold text-text-primary">Mon catalogue</h1>
           </header>
           <EmptyAnalysis
             siteInput={landing.siteInput}
@@ -107,22 +76,16 @@ export function Catalog() {
   }
 
   return (
-    <div className="app-content dashboard-content">
-      <header className="analyses-header">
-        <h1 className="analyses-title">Mon catalogue</h1>
+    <div className="relative z-[1] w-full px-12 pb-12 pt-9">
+      <header className="mb-5 flex flex-wrap items-center gap-4 text-left">
+        <h1 className="m-0 text-[1.75rem] font-extrabold text-text-primary">Mon catalogue</h1>
       </header>
 
-      {!user && !detailLoading && !detailError && analysis?.status === 'completed' ? (
-        <GuestAnalysisSignupCta websiteUrl={analysis.url} />
-      ) : null}
-
-      <AnalyseResult
+      <AnalysisResult
         loading={detailLoading}
         error={detailError}
         analysis={analysis}
         productPayload={productPayload}
-        activeTab={resultTab}
-        onActiveTabChange={setResultTab}
       />
     </div>
   );

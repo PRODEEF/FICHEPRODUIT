@@ -1,6 +1,6 @@
 import type { User } from '@supabase/supabase-js';
 
-import { getSupabaseClient } from '@lib/supabase';
+import { getSupabaseClient } from '@lib/api/supabase';
 
 import type { ProfilePayload } from './authSchemas';
 import { createSupabaseUserRepository } from '../supabaseUserRepository';

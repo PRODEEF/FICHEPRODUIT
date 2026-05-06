@@ -1,41 +1,13 @@
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router';
-import { useAuth } from '../../auth/useAuth';
-
 export function MyStore() {
-  const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
-
-  useEffect(() => {
-    if (authLoading) return;
-    if (!user) {
-      void navigate('/login', { replace: true });
-    }
-  }, [authLoading, user, navigate]);
-
-  if (authLoading) {
-    return (
-      <div className="app-content dashboard-content">
-        <p className="analyses-status" aria-busy="true">
-          Chargement…
-        </p>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return null;
-  }
-
   return (
-    <div className="app-content dashboard-content">
-      <header className="analyses-header">
+    <div className="relative z-[1] w-full px-12 pb-12 pt-9">
+      <header className="mb-5 flex flex-wrap items-center gap-4 text-left">
         <div>
-          <h1 className="analyses-title">Mon magasin</h1>
-          <p className="analyses-subtitle">Cette section sera bientôt disponible.</p>
+          <h1 className="m-0 text-[1.75rem] font-extrabold text-text-primary">Mon magasin</h1>
+          <p className="mt-1 text-sm text-text-muted">Cette section sera bientôt disponible.</p>
         </div>
       </header>
-      <p className="analyses-status">À venir</p>
+      <p className="text-sm text-text-secondary">À venir</p>
     </div>
   );
 }

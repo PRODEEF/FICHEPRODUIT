@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 
-import { getSupabaseClient } from '@lib/supabase';
-import { parseAsFullSiteUrl } from '@lib/siteUrl';
+import { getSupabaseClient } from '@lib/api/supabase';
+import { parseAsFullSiteUrl } from '@lib/utils/siteUrl';
 import { useSiteAnalysis } from '@shared/hooks/useSiteAnalysis';
+import { Banner, Button, Card, InputField, PageSection, TextLink } from '@shared/ui';
 
 import { AnalysisProgress } from '../../landing/components/AnalysisProgress';
 
@@ -173,17 +174,17 @@ export function Signup() {
 
   if (configError) {
     return (
-      <div className="auth-page">
-        <div className="auth-card">
+      <PageSection className="max-w-2xl pt-8">
+        <Card className="mx-auto w-full max-w-[34rem]">
           <h1>Inscription</h1>
-          <p className="auth-banner auth-banner--error">
+          <Banner variant="error">
             Variables d’environnement Supabase manquantes. Copie{' '}
-            <code className="auth-code">frontend/.env.example</code> vers{' '}
-            <code className="auth-code">frontend/.env</code> et renseigne l’URL ainsi que la clé
+            <code className="break-all text-[0.8em]">frontend/.env.example</code> vers{' '}
+            <code className="break-all text-[0.8em]">frontend/.env</code> et renseigne l’URL ainsi que la clé
             anonyme.
-          </p>
-        </div>
-      </div>
+          </Banner>
+        </Card>
+      </PageSection>
     );
   }
 
@@ -194,102 +195,77 @@ export function Signup() {
   const passwordConfirmErr = fieldErrors.passwordConfirm;
 
   return (
-    <div className="auth-page">
+    <PageSection className="max-w-2xl pt-8">
       {analysisOpen && siteAnalysis ? (
         <AnalysisProgress analysis={siteAnalysis} onDismiss={dismissSignupAnalysis} />
       ) : null}
-      <div className="auth-card">
-        <h1>Inscription</h1>
-        <p className="auth-intro">
+      <Card className="mx-auto w-full max-w-[34rem]">
+        <h1 className="mb-2 text-center text-2xl font-extrabold text-text-primary">Inscription</h1>
+        <p className="mb-5 text-center text-sm text-text-secondary">
           Déjà inscrit ?{' '}
-          <Link to="/login" className="auth-inline-link">
-            Se connecter
-          </Link>
+          <TextLink to="/login">Se connecter</TextLink>
         </p>
         {verifyEmailSent ? (
-          <p className="auth-banner auth-banner--success" role="status">
+          <Banner variant="success" role="status">
             Vérifie ta boîte mail : un lien de confirmation t’a été envoyé. Après confirmation, tu
             pourras te connecter.
             {websiteUrl.trim() ? (
               <> À la première connexion, l’analyse de ton site démarrera automatiquement.</>
             ) : null}
-          </p>
+          </Banner>
         ) : (
-          <form className="auth-form" noValidate onSubmit={(e) => void handleSubmit(e)}>
-            <div className="auth-field">
-              <label htmlFor="signup-email">E-mail</label>
-              <input
-                id="signup-email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                placeholder="vous@exemple.fr"
-                aria-required="true"
-                aria-invalid={Boolean(emailErr)}
-                aria-describedby={emailErr ? emailErrorId : undefined}
-                value={email}
-                onChange={(ev) => {
-                  setEmail(ev.target.value);
-                  clearFieldError('email');
-                }}
-                disabled={submitting || authLoading || signupUrlAnalysisActive}
-              />
-              {emailErr ? (
-                <p id={emailErrorId} className="auth-error" role="alert">
-                  {emailErr}
-                </p>
-              ) : null}
-            </div>
-            <div className="auth-field">
-              <label htmlFor="signup-username">Nom d’utilisateur</label>
-              <input
-                id="signup-username"
-                name="username"
-                type="text"
-                autoComplete="username"
-                placeholder="Marie Dupont"
-                aria-required="true"
-                aria-invalid={Boolean(usernameErr)}
-                aria-describedby={usernameErr ? usernameErrorId : undefined}
-                maxLength={30}
-                value={username}
-                onChange={(ev) => {
-                  setUsername(ev.target.value);
-                  clearFieldError('username');
-                }}
-                disabled={submitting || authLoading || signupUrlAnalysisActive}
-              />
-              {usernameErr ? (
-                <p id={usernameErrorId} className="auth-error" role="alert">
-                  {usernameErr}
-                </p>
-              ) : null}
-            </div>
-            <div className="auth-field">
-              <label htmlFor="signup-website">
-                URL de votre site web <span className="auth-optional">(facultatif)</span>
-              </label>
-              <input
-                id="signup-website"
-                name="websiteUrl"
-                type="url"
-                inputMode="url"
-                placeholder="https://exemple.fr"
-                aria-invalid={Boolean(websiteErr)}
-                aria-describedby={websiteErr ? websiteErrorId : undefined}
-                value={websiteUrl}
-                onChange={(ev) => {
-                  setWebsiteUrl(ev.target.value);
-                  clearFieldError('websiteUrl');
-                }}
-                disabled={submitting || authLoading || signupUrlAnalysisActive}
-              />
-              {websiteErr ? (
-                <p id={websiteErrorId} className="auth-error" role="alert">
-                  {websiteErr}
-                </p>
-              ) : null}
-            </div>
+          <form className="flex flex-col gap-4" noValidate onSubmit={(e) => void handleSubmit(e)}>
+            <InputField
+              id="signup-email"
+              label="E-mail"
+              name="email"
+              type="email"
+              autoComplete="email"
+              placeholder="vous@exemple.fr"
+              required
+              error={emailErr}
+              errorId={emailErrorId}
+              value={email}
+              onChange={(ev) => {
+                setEmail(ev.target.value);
+                clearFieldError('email');
+              }}
+              disabled={submitting || authLoading || signupUrlAnalysisActive}
+            />
+            <InputField
+              id="signup-username"
+              label="Nom d’utilisateur"
+              name="username"
+              type="text"
+              autoComplete="username"
+              placeholder="Marie Dupont"
+              required
+              maxLength={30}
+              error={usernameErr}
+              errorId={usernameErrorId}
+              value={username}
+              onChange={(ev) => {
+                setUsername(ev.target.value);
+                clearFieldError('username');
+              }}
+              disabled={submitting || authLoading || signupUrlAnalysisActive}
+            />
+            <InputField
+              id="signup-website"
+              label="URL de votre site web (facultatif)"
+              name="websiteUrl"
+              type="url"
+              inputMode="url"
+              placeholder="https://exemple.fr"
+              error={websiteErr}
+              errorId={websiteErrorId}
+              value={websiteUrl}
+              onChange={(ev) => {
+                setWebsiteUrl(ev.target.value);
+                clearFieldError('websiteUrl');
+              }}
+              disabled={submitting || authLoading || signupUrlAnalysisActive}
+            />
             <PasswordField
               id="signup-password"
               label="Mot de passe"
@@ -321,20 +297,20 @@ export function Signup() {
               disabled={submitting || authLoading || signupUrlAnalysisActive}
             />
             {formError ? (
-              <p className="auth-error" role="alert">
+              <p className="m-0 text-sm text-red-500" role="alert">
                 {formError}
               </p>
             ) : null}
-            <button
+            <Button
               type="submit"
-              className="btn-auth-primary"
+              variant="gradient"
               disabled={submitting || authLoading || signupUrlAnalysisActive}
             >
               {submitting ? 'Inscription…' : 'Créer mon compte'}
-            </button>
+            </Button>
           </form>
         )}
-      </div>
-    </div>
+      </Card>
+    </PageSection>
   );
 }

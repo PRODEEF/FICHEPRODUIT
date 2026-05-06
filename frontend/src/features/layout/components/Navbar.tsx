@@ -88,7 +88,7 @@ export function Navbar({
             <>
               <Link
                 to="/login"
-                className="px-5 py-2 rounded-lg text-sm font-semibold bg-gradient-to-br from-purple-600 to-purple-500 text-white border-0 cursor-pointer font-sans no-underline inline-block text-center"
+                className="ml-2 bg-purple-600 text-white text-sm font-bold px-5 py-2 rounded-xl hover:bg-purple-700 transition-colors duration-200"
               >
                 Se connecter
               </Link>
@@ -112,11 +112,7 @@ export function Navbar({
           <nav className="flex flex-col h-full py-4 box-border" aria-label="Account">
             <div className="flex flex-col gap-0.5 px-3">
               <NavLink
-                to={
-                  lastAnalysisId
-                    ? `/catalog/${lastAnalysisId}?tab=catalog`
-                    : '/catalog?tab=catalog'
-                }
+                to={lastAnalysisId ? `/catalog/${lastAnalysisId}` : '/catalog'}
                 className={({ isActive }) =>
                   `${drawerItemBaseClass} ${isActive ? 'bg-purple-50 text-black' : ''}`
                 }
@@ -132,7 +128,7 @@ export function Navbar({
                 Ma fiche produit
               </NavLink>
               <NavLink
-                to="/my-store"
+                to="/store"
                 className={({ isActive }) =>
                   `${drawerItemBaseClass} ${isActive ? 'bg-purple-50 text-black' : ''}`
                 }

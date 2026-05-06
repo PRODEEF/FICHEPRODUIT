@@ -1,4 +1,5 @@
 import { CircleCheck, CircleX } from 'lucide-react';
+import { Button, Modal } from '@shared/ui';
 
 import type { components } from '../../../generated/api';
 
@@ -23,51 +24,42 @@ export function AnalysisProgress({ analysis, onDismiss }: AnalysisProgressProps)
   const isFailed = status === 'failed';
 
   return (
-    <div className="analyze-modal-backdrop analysis-progress-backdrop" role="presentation">
-      <div
-        className="analyze-modal-panel analysis-progress-panel"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="analysis-progress-title"
-        aria-busy={!isFailed}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="analysis-progress-icon-wrap">
+    <Modal open title="Progression de l’analyse" onClose={() => {}} className="z-[210]">
+      <div aria-labelledby="analysis-progress-title" aria-busy={!isFailed}>
+        <div className="mb-2 flex justify-center">
           {isFailed ? (
-            <div className="analysis-progress-icon analysis-progress-icon--error">
-              <CircleX
-                className="analysis-progress-icon-svg"
-                size={36}
-                strokeWidth={2}
-                aria-hidden
-              />
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-red-50 text-red-600">
+              <CircleX className="h-9 w-9" size={36} strokeWidth={2} aria-hidden />
             </div>
           ) : (
-            <div className="analysis-progress-spinner" aria-hidden />
+            <div
+              className="h-14 w-14 animate-spin rounded-full border-3 border-soft border-t-purple-600"
+              aria-hidden
+            />
           )}
         </div>
 
-        <h2 id="analysis-progress-title" className="analyze-modal-title">
+        <h2 id="analysis-progress-title" className="mb-3 text-center text-3xl font-black leading-tight">
           {isFailed ? (
             <>Erreur lors de l&apos;analyse</>
           ) : (
             <>
-              <span className="highlight">Analyse</span> en cours…
+              <span className="bg-gradient-to-br from-purple-600 to-purple-400 bg-clip-text text-transparent">Analyse</span> en cours…
             </>
           )}
         </h2>
 
-        <p className="analyze-modal-url analysis-progress-url" title={url}>
+        <p className="mb-4 max-h-[4.5rem] overflow-auto rounded-xl border border-border-purple bg-purple-50 px-4 py-3 text-center text-sm text-purple-600" title={url}>
           {url}
         </p>
 
         {isFailed && errorMessage ? (
-          <div className="analysis-progress-error">
+          <div className="mb-4 rounded-xl bg-red-50 px-4 py-3 text-center text-sm text-red-800">
             <p>{errorMessage}</p>
           </div>
         ) : null}
 
-        <ol className="analysis-progress-steps">
+        <ol className="mb-5 flex list-none flex-col gap-2 p-0">
           {STEPS.map((label, index) => {
             const stepNumber = index + 1;
             const isCompleted = currentStep > stepNumber;
@@ -75,40 +67,33 @@ export function AnalysisProgress({ analysis, onDismiss }: AnalysisProgressProps)
             const isPending = currentStep < stepNumber;
             const isFailedStep = isFailed && currentStep === stepNumber;
 
-            let circleClass = 'analysis-progress-circle';
-            if (isCompleted) circleClass += ' analysis-progress-circle--done';
-            else if (isCurrent) circleClass += ' analysis-progress-circle--active';
-            else if (isFailedStep) circleClass += ' analysis-progress-circle--failed';
-            else if (isPending) circleClass += ' analysis-progress-circle--pending';
-
-            let labelClass = 'analysis-progress-label';
-            if (isCompleted) labelClass += ' analysis-progress-label--done';
-            else if (isCurrent) labelClass += ' analysis-progress-label--active';
-            else if (isFailedStep) labelClass += ' analysis-progress-label--failed';
-            else labelClass += ' analysis-progress-label--pending';
+            const circleClass = isCompleted
+              ? 'bg-green-500 text-white'
+              : isCurrent
+                ? 'bg-purple-600 text-white'
+                : isFailedStep
+                  ? 'bg-red-600 text-white'
+                  : 'bg-gray-100 text-gray-400';
+            const labelClass = isCompleted
+              ? 'font-semibold text-green-600'
+              : isCurrent
+                ? 'font-semibold text-purple-700'
+                : isFailedStep
+                  ? 'font-semibold text-red-600'
+                  : 'text-gray-400';
 
             return (
-              <li key={stepNumber} className="analysis-progress-step">
-                <span className={circleClass}>
+              <li key={stepNumber} className="flex items-center gap-3">
+                <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-extrabold ${circleClass}`}>
                   {isCompleted ? (
-                    <CircleCheck
-                      className="analysis-progress-circle-icon"
-                      size={18}
-                      strokeWidth={2.5}
-                      aria-hidden
-                    />
+                    <CircleCheck className="h-[1.1rem] w-[1.1rem]" size={18} strokeWidth={2.5} aria-hidden />
                   ) : isFailedStep ? (
-                    <CircleX
-                      className="analysis-progress-circle-icon"
-                      size={18}
-                      strokeWidth={2.5}
-                      aria-hidden
-                    />
+                    <CircleX className="h-[1.1rem] w-[1.1rem]" size={18} strokeWidth={2.5} aria-hidden />
                   ) : (
                     stepNumber
                   )}
                 </span>
-                <span className={labelClass}>
+                <span className={`text-sm ${labelClass}`}>
                   {label}
                   {isCurrent ? '…' : ''}
                 </span>
@@ -118,15 +103,11 @@ export function AnalysisProgress({ analysis, onDismiss }: AnalysisProgressProps)
         </ol>
 
         {isFailed && onDismiss ? (
-          <button
-            type="button"
-            className="analyze-modal-close analysis-progress-dismiss"
-            onClick={onDismiss}
-          >
+          <Button type="button" variant="gradient" className="mt-2 w-full" onClick={onDismiss}>
             Fermer
-          </button>
+          </Button>
         ) : null}
       </div>
-    </div>
+    </Modal>
   );
 }

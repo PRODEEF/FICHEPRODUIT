@@ -19,13 +19,7 @@ FICHEPRODUIT/
 │   └── vite.config.ts      # Proxy /api → localhost:3000 en dev
 ├── api/
 │   ├── analyze.js          # Serverless : analyse d’un site (URL, CMS, sitemap…)
-│   └── catalog.js          # Serverless : catalogue enrichi (JSON par secteur)
-├── scripts/
-│   └── enrich-kitesurf.js  # Génère catalogs/kitesurf/products.json (scraping)
-├── catalogs/
-│   └── kitesurf/
-│       ├── brands.json     # URLs catalogue par marque
-│       └── products.json   # Généré par npm run enrich:kitesurf (si absent du dépôt)
+│   └── suggest-urls.js     # Serverless : suggestions d’URLs à analyser
 ├── package.json
 ├── .gitignore
 ├── DEPLOY.md
@@ -38,7 +32,7 @@ L’ancienne entrée statique (`index.html`, `js/`, `css/`) a été **supprimée
 
 ### API (`/api/*`)
 
-Les routes `/api/analyze` et `/api/catalog` sont des fonctions [Vercel](https://vercel.com/docs/functions).
+Les routes `/api/analyze` et `/api/suggest-urls` sont des fonctions [Vercel](https://vercel.com/docs/functions).
 
 ```bash
 cd FICHEPRODUIT
@@ -47,12 +41,6 @@ npm run dev
 ```
 
 Ouvre l’URL indiquée (souvent **http://localhost:3000**). La première fois, `vercel login` peut être nécessaire.
-
-**Catalogue enrichi** : si `catalogs/kitesurf/products.json` est absent, l’API catalogue renvoie une erreur et le front utilise `fallbackProducts.json`. Génération :
-
-```bash
-npm run enrich:kitesurf
-```
 
 ### Front React
 
@@ -72,11 +60,10 @@ Voir **DEPLOY.md**. Chaque push sur `main` peut déclencher un déploiement. Pou
 
 ## Récap des rôles
 
-| Zone | Rôle |
-|------|------|
+| Zone                      | Rôle                                                                        |
+| ------------------------- | --------------------------------------------------------------------------- |
 | `fiche-produit-front/src` | Application React (clean architecture légère : domain / hooks / components) |
-| `api/*.js` | Analyse site et catalogue (Vercel Functions) |
-| `scripts/enrich-kitesurf.js` | Génération `catalogs/kitesurf/products.json` |
+| `api/*.js`                | Analyse site et suggestions d’URLs (Vercel Functions)                       |
 
 ---
 

@@ -39,7 +39,6 @@ type SiteAnalysisRow = {
 
 const FETCH_TIMEOUT_MS = 20_000;
 const TEXT_SAMPLE_MAX = 12_000;
-
 const HEURISTIC_RULES: {
   patterns: RegExp[];
   catalogMatchCategories: string[];

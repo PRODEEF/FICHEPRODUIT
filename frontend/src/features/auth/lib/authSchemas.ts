@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { parseAsFullSiteUrl } from '@lib/siteUrl';
+import { parseAsFullSiteUrl } from '@lib/utils/siteUrl';
 
 import {
   getPasswordStrengthSnapshot,

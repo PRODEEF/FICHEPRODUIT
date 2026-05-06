@@ -23,9 +23,9 @@ export function PasswordStrengthMeter({ password, id }: PasswordStrengthMeterPro
     label === 'empty' ? 'Indique la force de ton mot de passe.' : STRENGTH_LABEL_TEXT[label];
 
   return (
-    <div id={id} className="auth-password-strength">
+    <div id={id} className="mt-1 flex flex-col gap-2">
       <div
-        className="auth-password-strength__bar"
+        className="flex w-full gap-1"
         role="progressbar"
         aria-valuemin={0}
         aria-valuemax={5}
@@ -35,14 +35,19 @@ export function PasswordStrengthMeter({ password, id }: PasswordStrengthMeterPro
         {Array.from({ length: 5 }, (_, i) => (
           <span
             key={i}
-            className={
-              'auth-password-strength__segment' +
-              (i < snapshot.filledCount ? ` auth-password-strength__segment--${label}` : '')
-            }
+            className={`h-1 flex-1 rounded ${
+              i < snapshot.filledCount
+                ? label === 'weak'
+                  ? 'bg-red-500/55'
+                  : label === 'medium'
+                    ? 'bg-amber-600/70'
+                    : 'bg-purple-500'
+                : 'bg-soft'
+            }`}
           />
         ))}
       </div>
-      <p className="auth-password-strength__label" aria-live="polite">
+      <p className="m-0 text-xs font-semibold text-text-secondary" aria-live="polite">
         {levelText}
       </p>
     </div>

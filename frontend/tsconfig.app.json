@@ -1,7 +1,8 @@
 {
   "compilerOptions": {
     "paths": {
-      "@lib/*": ["./src/lib/*"],
+      "@lib/*": ["./src/shared/lib/*"],
+      "@ui": ["./src/shared/ui/index.ts"],
       "@shared/*": ["./src/shared/*"]
     },
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",

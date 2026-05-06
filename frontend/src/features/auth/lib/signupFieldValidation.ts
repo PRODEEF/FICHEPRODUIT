@@ -1,4 +1,4 @@
-import { parseZodFieldErrors } from '@lib/parseZodErrors';
+import { parseZodFieldErrors } from '@lib/utils/parseZodErrors';
 
 import { signupSchema } from './authSchemas';
 import type { SignupFieldErrors, SignupFieldKey, SignupValidatedPayload } from '../types';

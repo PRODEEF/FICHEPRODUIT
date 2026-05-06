@@ -11,8 +11,9 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
-      '@lib': path.resolve(__dirname, './src/lib'),
+      '@lib': path.resolve(__dirname, './src/shared/lib'),
       '@shared': path.resolve(__dirname, './src/shared'),
+      '@ui': path.resolve(__dirname, './src/shared/ui'),
     },
   },
 });

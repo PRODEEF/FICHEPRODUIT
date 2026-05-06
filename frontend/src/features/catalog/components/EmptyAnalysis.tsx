@@ -1,6 +1,6 @@
 import { motion } from 'motion/react';
 
-import { fadeUp } from '@lib/motionVariants';
+import { fadeUp } from '@lib/utils/motionVariants';
 
 import { HeroSearchForm } from '../../landing/components/HeroSearchForm';
 import { LandingSuggestions } from '../../landing/components/LandingSuggestions';
@@ -25,10 +25,10 @@ export function EmptyAnalysis({
   handlePickSuggestion,
 }: EmptyAnalysisProps) {
   return (
-    <section className="analyses-empty-catalog">
+    <section className="mt-5 w-full">
       <header className="mb-6">
-        <h2 className="analyses-title analyses-title--primary">Analyse ton site</h2>
-        <p className="analyses-subtitle">
+        <h2 className="m-0 text-[1.75rem] font-extrabold text-purple-600">Analyse ton site</h2>
+        <p className="mt-1 text-sm text-text-muted">
           Lance un scan de ton site pour générer automatiquement tes premières fiches produits.
         </p>
       </header>
@@ -37,7 +37,7 @@ export function EmptyAnalysis({
         initial="hidden"
         animate="visible"
         transition={{ duration: 0.6, delay: 0.5 }}
-        className="search-container"
+        className="w-full"
       >
         <HeroSearchForm
           siteInput={siteInput}
@@ -45,10 +45,11 @@ export function EmptyAnalysis({
           suggestionsLoading={suggestionsLoading}
           searchEmptyError={searchEmptyError}
           handleSubmit={handleSubmit}
+          align="left"
         />
       </motion.div>
 
-      <motion.div variants={fadeUp} initial="hidden" animate="visible">
+      <motion.div variants={fadeUp} initial="hidden" animate="visible" className="flex justify-center">
         <LandingSuggestions urls={suggestedUrls} onPick={handlePickSuggestion} />
       </motion.div>
     </section>
