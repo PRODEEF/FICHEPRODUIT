@@ -16,9 +16,9 @@ export function GuestAnalysisSignupCta({ websiteUrl }: GuestAnalysisSignupCtaPro
         Cette analyse n&apos;est pas enregistrée sur un compte
       </h2>
       <p className="mb-4 text-sm leading-6 text-text-secondary">
-        Sans inscription, tes résultats ne sont <strong>pas sauvegardés sur ton profil</strong> : tu
-        les consultes tant que la session serveur les garde disponibles. Crée un compte pour
-        retrouver ton historique d&apos;analyses et aller plus loin.
+        Sans inscription, vos résultats ne sont <strong>pas sauvegardés sur votre profil</strong> : vous
+        les consultez tant que la session serveur les garde disponibles. Créez un compte pour
+        retrouver votre historique d&apos;analyses et aller plus loin.
       </p>
       <div className="flex flex-wrap items-center gap-3">
         <Link to={signupHref} className="text-sm font-semibold text-purple-600 no-underline hover:underline">

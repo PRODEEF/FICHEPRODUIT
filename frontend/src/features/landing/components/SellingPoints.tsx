@@ -7,9 +7,9 @@ import { useScrollReveal } from '../hooks/useScrollReveal';
 const points = [
   {
     badge: 'Positionnement',
-    title: 'Adapté à ton univers',
+    title: 'Adapté à votre univers',
     description:
-      'Pas une IA générique — les descriptions sonnent comme un vrai rédacteur de ta niche.',
+      'Pas une IA générique — les descriptions sonnent comme un vrai rédacteur de votre niche.',
   },
   {
     badge: 'Performance',

@@ -11,13 +11,11 @@ export const USERNAME_MIN_LENGTH = 3;
 export const USERNAME_MAX_LENGTH = 30;
 
 export const PASSWORD_MIN = 8;
-/** Alias conservé pour le code existant (attributs HTML, autres modules). */
-export const MIN_PASSWORD_LENGTH = PASSWORD_MIN;
 
 const USERNAME_REGEX = /^[a-zA-Z0-9_\- ]+$/;
 
 const WEBSITE_URL_INVALID_MESSAGE =
-  'URL du site invalide. Indique une adresse complète (ex. https://monsite.fr).';
+  'URL du site invalide. Indiquez une adresse complète (ex. https://monsite.fr).';
 
 const usernameField = z
   .string()
@@ -32,7 +30,7 @@ const usernameField = z
   )
   .regex(
     USERNAME_REGEX,
-    'Utilise uniquement des lettres, des chiffres, des espaces, des tirets et des underscores.',
+    'Utilisez uniquement des lettres, des chiffres, des espaces, des tirets et des underscores.',
   );
 
 const emailField = z
@@ -59,7 +57,7 @@ const websiteUrlField = z
 
 export const loginSchema = z.object({
   email: emailField,
-  password: z.string().min(1, 'Indique ton mot de passe.'),
+  password: z.string().min(1, 'Indiquez votre mot de passe.'),
 });
 
 export const signupSchema = z

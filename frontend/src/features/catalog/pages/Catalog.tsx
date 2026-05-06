@@ -1,7 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router';
 
 import { clearLastAnalysisId, isValidAnalysisId } from '@lib/analysis/analysisStorage';
+
 import { useSiteAnalysis } from '../../../shared/hooks/useSiteAnalysis';
 import { useAuth } from '../../auth/useAuth';
 import { AnalysisProgress } from '../../landing/components/AnalysisProgress';
@@ -13,10 +14,6 @@ import { useAnalysisDetail } from '../hooks/useAnalysisDetail';
 /**
  * Catalogue privé de l'utilisateur connecté.
  *
- * Cette page est rendue sous une route protégée par `RequireAuthRoute`, donc on suppose
- * la session déjà hydratée et l'utilisateur authentifié — pas de gestion d'`authLoading`
- * ni de redirection vers `/login` ici.
- *
  * Le rendu varie selon l'URL :
  * - `/catalog` (sans id) : affiche la zone de saisie pour lancer une nouvelle analyse.
  * - `/catalog/:analysisId` : affiche le détail d'une analyse existante.
@@ -24,14 +21,28 @@ import { useAnalysisDetail } from '../hooks/useAnalysisDetail';
 export function Catalog() {
   const navigate = useNavigate();
   const { analysisId } = useParams<{ analysisId: string }>();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
 
   const { runAnalysis, analysisOpen, siteAnalysis, dismissError } = useSiteAnalysis({
     onSuccess: (summary) => navigate(`/catalog/${summary.id}`),
   });
   const landing = useLandingSearch({ runAnalysis });
 
+  const defaultSiteFromProfileApplied = useRef(false);
   const hasValidAnalysisId = isValidAnalysisId(analysisId);
+
+  useEffect(() => {
+    if (analysisId) return;
+    if (defaultSiteFromProfileApplied.current) return;
+    const fromProfile = profile?.website_url?.trim();
+    if (landing.siteInput.trim() !== '') {
+      defaultSiteFromProfileApplied.current = true;
+      return;
+    }
+    if (!fromProfile) return;
+    defaultSiteFromProfileApplied.current = true;
+    landing.setSiteInput(fromProfile);
+  }, [analysisId, profile?.website_url, landing.siteInput, landing.setSiteInput]);
 
   const {
     analysis,

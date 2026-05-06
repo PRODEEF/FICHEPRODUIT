@@ -103,7 +103,7 @@ export function ResetPassword() {
         {gate === 'invalid' ? (
           <>
             <Banner variant="error" role="alert">
-              Ce lien de réinitialisation est invalide ou expiré. Demande un nouveau lien depuis la
+              Ce lien de réinitialisation est invalide ou expiré. Demandez un nouveau lien depuis la
               page de connexion.
             </Banner>
             <p className="mt-5 text-center text-sm">

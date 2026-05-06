@@ -41,7 +41,7 @@ export function Login() {
 
     const supabase = getSupabaseClient();
     if (!supabase) {
-      setFormError('Configuration Supabase manquante. Vérifie le fichier .env du frontend.');
+      setFormError('Configuration Supabase manquante. Vérifiez le fichier .env du frontend.');
       return;
     }
     setSubmitting(true);
@@ -89,9 +89,9 @@ export function Login() {
         <Card className="mx-auto w-full max-w-[30rem]">
           <h1>Connexion</h1>
           <Banner variant="error">
-            Variables d’environnement Supabase manquantes. Copie{' '}
+            Variables d’environnement Supabase manquantes. Copiez{' '}
             <code className="break-all text-[0.8em]">frontend/.env.example</code> vers{' '}
-            <code className="break-all text-[0.8em]">frontend/.env</code> et renseigne l’URL ainsi que la clé
+            <code className="break-all text-[0.8em]">frontend/.env</code> et renseignez l’URL ainsi que la clé
             anonyme.
           </Banner>
         </Card>

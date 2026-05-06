@@ -160,12 +160,12 @@ export function Signup() {
         setVerifyEmailSent(true);
         return;
       }
-      setFormError('Inscription impossible pour le moment. Réessaie plus tard.');
+      setFormError('Inscription impossible pour le moment. Réessayez plus tard.');
     } catch (err) {
       setFormError(
         err instanceof Error && err.message
           ? err.message
-          : 'Inscription impossible pour le moment. Réessaie plus tard.',
+          : 'Inscription impossible pour le moment. Réessayez plus tard.',
       );
     } finally {
       setSubmitting(false);
@@ -178,9 +178,9 @@ export function Signup() {
         <Card className="mx-auto w-full max-w-[34rem]">
           <h1>Inscription</h1>
           <Banner variant="error">
-            Variables d’environnement Supabase manquantes. Copie{' '}
+            Variables d’environnement Supabase manquantes. Copiez{' '}
             <code className="break-all text-[0.8em]">frontend/.env.example</code> vers{' '}
-            <code className="break-all text-[0.8em]">frontend/.env</code> et renseigne l’URL ainsi que la clé
+            <code className="break-all text-[0.8em]">frontend/.env</code> et renseignez l’URL ainsi que la clé
             anonyme.
           </Banner>
         </Card>
@@ -207,10 +207,10 @@ export function Signup() {
         </p>
         {verifyEmailSent ? (
           <Banner variant="success" role="status">
-            Vérifie ta boîte mail : un lien de confirmation t’a été envoyé. Après confirmation, tu
-            pourras te connecter.
+            Vérifiez votre messagerie : un lien de confirmation vous a été envoyé. Après confirmation, vous
+            pourrez vous connecter.
             {websiteUrl.trim() ? (
-              <> À la première connexion, l’analyse de ton site démarrera automatiquement.</>
+              <> À la première connexion, l’analyse de votre site démarrera automatiquement.</>
             ) : null}
           </Banner>
         ) : (
@@ -287,7 +287,7 @@ export function Signup() {
               label="Confirmer le mot de passe"
               name="passwordConfirm"
               autoComplete="new-password"
-              placeholder="Saisis le même mot de passe"
+              placeholder="Saisissez le même mot de passe"
               value={passwordConfirm}
               error={passwordConfirmErr}
               onChange={(ev) => {

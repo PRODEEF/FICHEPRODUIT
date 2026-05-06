@@ -168,11 +168,11 @@ export function ProductTemplatesWorkspace({
     }
     const fields = rowsToFields(rows);
     if (fields.length === 0) {
-      throw new Error('Ajoute au moins un champ.');
+      throw new Error('Ajoutez au moins un champ.');
     }
     const trimmedName = name.trim();
     if (!trimmedName) {
-      throw new Error('Indique un nom pour la fiche type.');
+      throw new Error('Indiquez un nom pour la fiche type.');
     }
 
     if (templateId) {
@@ -264,7 +264,7 @@ export function ProductTemplatesWorkspace({
   const runScrape = async () => {
     const token = session?.access_token;
     if (!token) {
-      setActionError('Session expirée. Reconnecte-toi.');
+      setActionError('Session expirée. Reconnectez-vous.');
       return;
     }
     const url = scrapeUrl.trim();
@@ -300,7 +300,7 @@ export function ProductTemplatesWorkspace({
     if (!draft || !token) return;
     const rows = draft.fieldRows;
     if (rows.some((r) => !r.name.trim())) {
-      setActionError('Renseigne un nom pour chaque champ avant d’utiliser l’IA.');
+      setActionError('Renseignez un nom pour chaque champ avant d’utiliser l’IA.');
       return;
     }
     setRefiningAi(true);
@@ -352,7 +352,7 @@ export function ProductTemplatesWorkspace({
     const token = session?.access_token;
     if (!token) return;
     if (fieldRows.some((r) => !r.name.trim())) {
-      setActionError('Renseigne un nom pour chaque champ avant d’utiliser l’IA.');
+      setActionError('Renseignez un nom pour chaque champ avant d’utiliser l’IA.');
       return;
     }
     setRefiningAi(true);
@@ -464,8 +464,8 @@ export function ProductTemplatesWorkspace({
           {templates.length === 0 ? (
             <div className="product-templates-empty-mes-fiches">
               <p className="product-sheet-intro">
-                Tu n&apos;as pas encore de fiche type. Définis la structure des champs (colonnes)
-                pour tes imports PrestaShop.
+                Vous n&apos;avez pas encore de fiche type. Définissez la structure des champs (colonnes)
+                pour vos imports PrestaShop.
               </p>
               <button
                 type="button"
@@ -478,7 +478,7 @@ export function ProductTemplatesWorkspace({
           ) : (
             <ul className="product-templates-list">
               <p className="product-sheet-intro product-templates-new-fiche-intro">
-                Retrouve et gère tes fiches produit types.
+                Retrouvez et gérez vos fiches produit types.
               </p>
               {templates.map((t) => (
                 <li key={t.id} className="product-templates-card">
@@ -536,7 +536,7 @@ export function ProductTemplatesWorkspace({
             aria-labelledby="product-templates-new-fiche-title"
           >
             <p className="product-sheet-intro product-templates-new-fiche-intro">
-              Importe un CSV PrestaShop, analyse une URL produit, ou crée tes champs à la main.
+              Importez un CSV PrestaShop, analysez une URL produit, ou créez vos champs à la main.
             </p>
 
             <h2
@@ -594,7 +594,7 @@ export function ProductTemplatesWorkspace({
                 className="landing-search-error product-templates-url-error"
                 role="alert"
               >
-                Indique une URL à analyser
+                Indiquez une URL à analyser
               </p>
             ) : null}
 
@@ -605,7 +605,7 @@ export function ProductTemplatesWorkspace({
               className="product-templates-manual-cta"
               onClick={openManualModal}
             >
-              Créer ma fiche à la main
+              Créer votre fiche à la main
             </button>
 
             {actionError ? (
@@ -722,7 +722,7 @@ export function ProductTemplatesWorkspace({
               onClick={(e) => e.stopPropagation()}
             >
               <h2 id="product-template-modal-title" className="product-template-modal-title">
-                Créer ma fiche à la main
+                Créer votre fiche à la main
               </h2>
               <label className="analyses-field">
                 <span className="analyses-field-label">Nom de la fiche type</span>

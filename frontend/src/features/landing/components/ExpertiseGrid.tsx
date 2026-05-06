@@ -24,7 +24,7 @@ export function ExpertiseGrid() {
         animate={titleInView ? 'visible' : 'hidden'}
         className="text-3xl font-extrabold text-gray-900 mb-4 text-center"
       >
-        ficheproduct connaît ton univers
+        ficheproduct connaît votre univers
       </motion.h2>
       <motion.p
         className="text-gray-500 mb-12 text-center"
@@ -32,7 +32,7 @@ export function ExpertiseGrid() {
         initial="hidden"
         animate={titleInView ? 'visible' : 'hidden'}
       >
-        Notre moteur adapte le ton, la technicité et les arguments selon ta niche e-commerce.
+        Notre moteur adapte le ton, la technicité et les arguments selon votre niche e-commerce.
       </motion.p>
       <motion.div
         ref={ref}

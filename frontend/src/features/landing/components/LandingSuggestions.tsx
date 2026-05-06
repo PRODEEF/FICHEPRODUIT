@@ -8,7 +8,7 @@ export function LandingSuggestions({ urls, onPick }: LandingSuggestionsProps) {
 
   return (
     <div className="mb-6 mt-[-0.25rem] w-full max-w-[620px] text-left" role="list" aria-label="Sites proposés">
-      <p className="mb-3 text-sm font-semibold text-text-secondary">Choisis le site à analyser :</p>
+      <p className="mb-3 text-sm font-semibold text-text-secondary">Choisissez le site à analyser :</p>
       <ul className="m-0 flex list-none flex-col gap-2 p-0">
         {urls.map((url) => (
           <li key={url} role="listitem">

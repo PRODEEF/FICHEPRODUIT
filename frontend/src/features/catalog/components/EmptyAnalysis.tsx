@@ -27,9 +27,9 @@ export function EmptyAnalysis({
   return (
     <section className="mt-5 w-full">
       <header className="mb-6">
-        <h2 className="m-0 text-[1.75rem] font-extrabold text-purple-600">Analyse ton site</h2>
+        <h2 className="m-0 text-[1.75rem] font-extrabold text-purple-600">Analysez votre site</h2>
         <p className="mt-1 text-sm text-text-muted">
-          Lance un scan de ton site pour générer automatiquement tes premières fiches produits.
+          Lancez un scan de votre site pour générer automatiquement vos premières fiches produits.
         </p>
       </header>
       <motion.div

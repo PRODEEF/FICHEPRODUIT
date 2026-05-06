@@ -274,13 +274,13 @@ export async function postSiteAnalysis(url: string): Promise<SiteAnalysis> {
     throw new Error('Réponse du serveur non JSON.');
   }
   if (!res.ok) {
-    if (res.status === 401) throw new Error('Session expirée ou non autorisée. Reconnecte-toi.');
+    if (res.status === 401) throw new Error('Session expirée ou non autorisée. Reconnectez-vous.');
     throw new Error(errorMessageFromBody(parsed, `Impossible de créer l'analyse (${res.status}).`));
   }
   const normalized = normalizeSiteAnalysisJson(parsed);
   if (!normalized) {
     throw new Error(
-      'Réponse serveur invalide : impossible de lire l’analyse (JSON inattendu). Vérifie que le backend renvoie bien un SiteAnalysis.',
+      'Réponse serveur invalide : impossible de lire l’analyse (JSON inattendu). Vérifiez que le backend renvoie bien un SiteAnalysis.',
     );
   }
   return normalized;
@@ -299,7 +299,7 @@ export async function getSiteAnalysis(id: string): Promise<SiteAnalysis> {
     throw new Error('Réponse du serveur non JSON.');
   }
   if (!res.ok) {
-    if (res.status === 401) throw new Error('Session expirée ou non autorisée. Reconnecte-toi.');
+    if (res.status === 401) throw new Error('Session expirée ou non autorisée. Reconnectez-vous.');
     if (res.status === 404) throw new Error('Analyse introuvable.');
     throw new Error(errorMessageFromBody(parsed, `Erreur lors de la lecture de l'analyse (${res.status}).`));
   }
@@ -323,7 +323,7 @@ export async function listSiteAnalyses(): Promise<SiteAnalysis[]> {
     throw new Error('Réponse du serveur non JSON.');
   }
   if (!res.ok) {
-    if (res.status === 401) throw new Error('Session expirée ou non autorisée. Reconnecte-toi.');
+    if (res.status === 401) throw new Error('Session expirée ou non autorisée. Reconnectez-vous.');
     throw new Error(errorMessageFromBody(parsed, `Impossible de lister les analyses (${res.status}).`));
   }
   if (!Array.isArray(parsed)) {
@@ -362,7 +362,7 @@ export async function getAnalysisProducts(
     throw new Error('Réponse du serveur non JSON.');
   }
   if (!res.ok) {
-    if (res.status === 401) throw new Error('Session expirée ou non autorisée. Reconnecte-toi.');
+    if (res.status === 401) throw new Error('Session expirée ou non autorisée. Reconnectez-vous.');
     if (res.status === 404) throw new Error('Analyse introuvable.');
     throw new Error(errorMessageFromBody(parsed, `Impossible de charger les produits (${res.status}).`));
   }

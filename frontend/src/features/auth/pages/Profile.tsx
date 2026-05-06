@@ -45,7 +45,7 @@ export function Profile() {
 
     const supabase = getSupabaseClient();
     if (!supabase) {
-      setFormError('Configuration Supabase manquante. Vérifie le fichier .env du frontend.');
+      setFormError('Configuration Supabase manquante. Vérifiez le fichier .env du frontend.');
       return;
     }
 

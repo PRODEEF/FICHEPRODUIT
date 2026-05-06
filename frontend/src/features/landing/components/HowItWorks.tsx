@@ -6,12 +6,12 @@ import { useScrollReveal } from '../hooks/useScrollReveal';
 
 const steps = [
   {
-    title: 'Colle ton URL',
-    description: 'ficheproduct analyse ton catalogue en quelques secondes',
+    title: 'Collez votre URL',
+    description: 'ficheproduct analyse votre catalogue en quelques secondes',
   },
   {
-    title: 'On détecte ton univers',
-    description: 'Surf, vélo, mode… la rédaction est adaptée à ton secteur',
+    title: 'Nous détectons votre univers',
+    description: 'Surf, vélo, mode… la rédaction est adaptée à votre secteur',
   },
   {
     title: 'Tu exportes',
@@ -46,7 +46,7 @@ export function HowItWorks() {
         animate={titleInView ? 'visible' : 'hidden'}
         className="text-gray-500 text-center mb-12"
       >
-        Trois étapes simples pour passer de ton catalogue brut à des fiches prêtes à publier.
+        Trois étapes simples pour passer de votre catalogue brut à des fiches prêtes à publier.
       </motion.p>
       <motion.div
         ref={ref}

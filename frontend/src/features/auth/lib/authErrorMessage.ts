@@ -1,21 +1,21 @@
 import type { AuthError } from '@supabase/supabase-js';
 
 const KNOWN: Record<string, string> = {
-  invalid_credentials: 'E-mail ou mot de passe incorrect. Vérifie tes identifiants.',
-  invalid_grant: 'E-mail ou mot de passe incorrect. Vérifie tes identifiants.',
+  invalid_credentials: 'E-mail ou mot de passe incorrect. Vérifiez vos identifiants.',
+  invalid_grant: 'E-mail ou mot de passe incorrect. Vérifiez vos identifiants.',
   email_not_confirmed:
-    'Confirme ton adresse e-mail avant de te connecter (lien dans ta boîte de réception).',
+    'Confirmez votre adresse e-mail avant de vous connecter (lien dans votre boîte de réception).',
   user_already_registered:
-    'Un compte existe déjà avec cette adresse e-mail. Connecte-toi ou réinitialise ton mot de passe.',
+    'Un compte existe déjà avec cette adresse e-mail. Connectez-vous ou réinitialisez votre mot de passe.',
   weak_password:
-    'Mot de passe trop faible. Choisis un mot de passe plus long et ajoute des caractères spéciaux.',
+    'Mot de passe trop faible. Choisissez un mot de passe plus long et ajoutez des caractères spéciaux.',
   same_password: 'Le nouveau mot de passe doit être différent de l’ancien.',
-  over_request_rate_limit: 'Trop de tentatives. Réessaie dans quelques minutes.',
+  over_request_rate_limit: 'Trop de tentatives. Réessayez dans quelques minutes.',
 };
 
 /** Message court pour l’interface à partir d’une erreur Auth Supabase. */
 export function authErrorMessage(error: AuthError | null): string {
-  if (!error || !error.code) return 'Une erreur inconnue est survenue. Réessaie.';
+  if (!error || !error.code) return 'Une erreur inconnue est survenue. Réessayez.';
 
   const code = error.code.toLowerCase();
   if (KNOWN[code]) return KNOWN[code];

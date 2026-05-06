@@ -15,7 +15,7 @@ export function ForgotPassword() {
     setError(null);
     const supabase = getSupabaseClient();
     if (!supabase) {
-      setError('Configuration Supabase manquante. Vérifie le fichier .env du frontend.');
+      setError('Configuration Supabase manquante. Vérifiez le fichier .env du frontend.');
       return;
     }
     setSubmitting(true);
@@ -44,7 +44,7 @@ export function ForgotPassword() {
         </p>
         {done ? (
           <Banner variant="success" role="status">
-            Si cette adresse est associée à un compte, tu recevras un e-mail avec un lien pour
+            Si cette adresse est associée à un compte, vous recevrez un e-mail avec un lien pour
             choisir un nouveau mot de passe.
           </Banner>
         ) : (

@@ -48,7 +48,7 @@ export function Home() {
             animate="visible"
             className="mb-8 inline-flex items-center gap-2 rounded-full border border-border-purple bg-purple-50 px-4 py-2 text-sm text-purple-600"
           >
-            ✦ Nouveau - Export Shopify et Prestashop en 1 clic
+            ✦ Nouveau – Export Shopify et PrestaShop en un clic
           </motion.div>
           <motion.h1
             variants={titleReveal}
@@ -57,7 +57,7 @@ export function Home() {
             className="mb-4 text-[clamp(1.8rem,4vw,3rem)] font-black leading-[1.15] text-text-primary"
           >
             <span className="bg-gradient-to-br from-purple-600 to-purple-400 bg-clip-text text-transparent">
-              Génère tes fiches produits
+              Générez vos fiches produits
             </span>
             <br />
             en quelques secondes
@@ -72,7 +72,7 @@ export function Home() {
               ease: [0.22, 1, 0.36, 1],
             }}
           >
-            Laisse-toi guider. Transforme ton catalogue en fiches produits optimisées SEO.
+            Laissez-vous guider. Transformez votre catalogue en fiches produits optimisées SEO.
           </motion.p>
 
           <motion.div

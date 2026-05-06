@@ -4,7 +4,7 @@ const DIGIT = /\d/;
 const SPECIAL = /[^A-Za-z0-9]/;
 
 export const SIGNUP_PASSWORD_COMPLEXITY_MESSAGE =
-  'Réponds à au moins quatre critères sur cinq : 8 caractères, minuscule, majuscule, chiffre et symbole.';
+  'Répondez à au moins quatre critères sur cinq : 8 caractères, minuscule, majuscule, chiffre et symbole.';
 
 export type PasswordStrengthSnapshot = {
   lengthOk: boolean;

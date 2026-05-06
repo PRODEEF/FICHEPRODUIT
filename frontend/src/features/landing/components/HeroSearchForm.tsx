@@ -28,7 +28,7 @@ export function HeroSearchForm({
       >
         <input
           className="w-full rounded-2xl border border-soft bg-bg-white px-6 py-[18px] pr-[140px] font-sans text-base text-text-primary outline-none transition focus:border-purple-400 focus:shadow-[0_0_0_3px_rgba(139,92,246,0.12)] disabled:cursor-not-allowed disabled:bg-bg-main disabled:opacity-85 aria-[invalid=true]:border-red-500 aria-[invalid=true]:shadow-[0_0_0_3px_rgba(239,68,68,0.15)]"
-          placeholder="Indique moi ton site internet"
+          placeholder="Indiquez l’adresse de votre site internet"
           value={siteInput}
           onChange={(e) => setSiteInput(e.target.value)}
           disabled={suggestionsLoading}
@@ -57,7 +57,7 @@ export function HeroSearchForm({
 
       {suggestionsLoading ? (
         <p className={`mb-4 mt-[-0.5rem] max-w-[620px] text-sm text-purple-600 ${alignmentClass}`}>
-          Analyse de ta saisie et recherche d&apos;adresses…
+          Analyse de votre saisie et recherche d&apos;adresses…
         </p>
       ) : null}
     </>

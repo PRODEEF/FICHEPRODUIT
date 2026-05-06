@@ -28,7 +28,7 @@ export async function saveUserProfile(
     const message =
       err instanceof Error && err.message
         ? err.message
-        : 'Enregistrement impossible. Réessaie.';
+        : 'Enregistrement impossible. Réessayez.';
     return { ok: false, message };
   }
 

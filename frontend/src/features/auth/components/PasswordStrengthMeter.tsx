@@ -20,7 +20,9 @@ export function PasswordStrengthMeter({ password, id }: PasswordStrengthMeterPro
   const snapshot = getPasswordStrengthSnapshot(password, PASSWORD_MIN);
   const label = getPasswordStrengthLabel(snapshot);
   const levelText =
-    label === 'empty' ? 'Indique la force de ton mot de passe.' : STRENGTH_LABEL_TEXT[label];
+    label === 'empty'
+      ? 'Le niveau de sécurité de votre mot de passe apparaît au fil de la saisie.'
+      : STRENGTH_LABEL_TEXT[label];
 
   return (
     <div id={id} className="mt-1 flex flex-col gap-2">
