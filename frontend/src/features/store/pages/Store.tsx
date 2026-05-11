@@ -21,10 +21,10 @@ function LoadingState() {
   );
 }
 
-type StoreLoadedProps = {
+interface StoreLoadedProps {
   shop: Shop;
   refetch: () => Promise<void>;
-};
+}
 
 function StoreLoaded({ shop, refetch }: StoreLoadedProps) {
   const [patching, setPatching] = useState(false);
@@ -80,7 +80,7 @@ export function MyStore() {
 
   useEffect(() => {
     if (!loading && shop === null && !error) {
-      navigate('/', { replace: true });
+      void navigate('/', { replace: true });
     }
   }, [loading, shop, error, navigate]);
 

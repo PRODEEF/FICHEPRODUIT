@@ -1,5 +1,5 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
-import { useId } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { motion } from 'motion/react';
 import { Link } from 'react-router';
 
@@ -59,8 +59,16 @@ export function Button({
   const tooltipText = tooltip?.trim();
   const hasTooltip = Boolean(tooltipText);
 
-  const prefersReduced =
-    typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const [prefersReduced, setPrefersReduced] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const apply = () => void setPrefersReduced(mq.matches);
+    queueMicrotask(apply);
+    mq.addEventListener('change', apply);
+    return () => void mq.removeEventListener('change', apply);
+  }, []);
+
+  const prefersReducedMotion = prefersReduced;
   const shouldGlow = glow && (variant === 'primary' || variant === 'secondary');
   const classes = cn(
     variantClasses[variant],
@@ -89,7 +97,7 @@ export function Button({
 
   const withGlow = shouldGlow ? (
     <motion.div
-      {...(!prefersReduced
+      {...(!prefersReducedMotion
         ? {
             animate: {
               boxShadow: [
@@ -100,7 +108,7 @@ export function Button({
             },
           }
         : {})}
-      transition={{ duration: prefersReduced ? 0 : 2.5, repeat: Infinity, ease: 'easeInOut' }}
+      transition={{ duration: prefersReducedMotion ? 0 : 2.5, repeat: Infinity, ease: 'easeInOut' }}
       className="inline-block rounded-xl"
     >
       {core}

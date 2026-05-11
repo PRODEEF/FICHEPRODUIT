@@ -3,17 +3,17 @@ import { useCallback, useState } from 'react';
 import type { Analysis } from '@types-api';
 import { runAnalysisWorkflow } from '@api/runAnalysisWorkflow';
 
-type UseCatalogAnalysisWorkflowOptions = {
+interface UseCatalogAnalysisWorkflowOptions {
   onSuccess?: (analysis: Analysis) => void;
-};
+}
 
-type UseCatalogAnalysisWorkflowResult = {
+interface UseCatalogAnalysisWorkflowResult {
   run: (urlInput: string) => Promise<void>;
   running: boolean;
   currentAnalysis: Analysis | null;
   error: string | null;
   clearError: () => void;
-};
+}
 
 export function useCatalogAnalysisWorkflow(
   options: UseCatalogAnalysisWorkflowOptions = {},
@@ -30,7 +30,7 @@ export function useCatalogAnalysisWorkflow(
       setCurrentAnalysis(null);
 
       const result = await runAnalysisWorkflow(urlInput, {
-        onProgress: (analysis) => setCurrentAnalysis(analysis),
+        onProgress: (analysis) => void setCurrentAnalysis(analysis),
       });
 
       if (!result.ok) {

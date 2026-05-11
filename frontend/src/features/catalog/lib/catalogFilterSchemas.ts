@@ -1,7 +1,10 @@
 import { z } from 'zod';
 
 /** Bornes prix (entiers €) dérivées des champs filtre une fois la saisie validée. */
-export type CatalogPriceBounds = { min?: number; max?: number };
+export interface CatalogPriceBounds {
+  min?: number;
+  max?: number;
+}
 
 export type CatalogPriceFilterFieldKey = 'priceMin' | 'priceMax';
 
@@ -31,21 +34,21 @@ export const catalogPriceFilterSchema = z
     const max = parseCatalogPriceInput(data.priceMax);
     if (min.kind === 'invalid') {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         message: 'Entrez un nombre positif ou laissez vide.',
         path: ['priceMin'],
       });
     }
     if (max.kind === 'invalid') {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         message: 'Entrez un nombre positif ou laissez vide.',
         path: ['priceMax'],
       });
     }
     if (min.kind === 'number' && max.kind === 'number' && min.value > max.value) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         message: 'Le prix minimum doit être inférieur ou égal au prix maximum.',
         path: ['priceMax'],
       });

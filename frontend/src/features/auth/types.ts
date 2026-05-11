@@ -1,8 +1,8 @@
-export type UserProfile = {
+export interface UserProfile {
   username: string;
   website_url: string | null;
   pending_auto_analyze: boolean;
-};
+}
 
 export type PasswordRecoveryGateState = 'loading' | 'ready' | 'invalid';
 
@@ -13,8 +13,8 @@ export type LoginFieldErrors = Partial<Record<LoginFieldKey, string>>;
 // Champs pour l'inscription
 export type SignupFieldKey = 'email' | 'username' | 'websiteUrl' | 'password' | 'passwordConfirm';
 export type SignupFieldErrors = Partial<Record<SignupFieldKey, string>>;
-export type SignupValidatedPayload = {
+export interface SignupValidatedPayload {
   emailTrim: string;
   normalizedUsername: string;
   website_url: string;
-};
+}

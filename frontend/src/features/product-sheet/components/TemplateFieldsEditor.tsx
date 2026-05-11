@@ -18,12 +18,12 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { PRODUCT_TEMPLATE_FIELD_TYPE_OPTIONS, type ProductTemplateFieldType } from '../lib/productTemplates';
 
-export type TemplateFieldRow = {
+export interface TemplateFieldRow {
   id: string;
   name: string;
   type: ProductTemplateFieldType;
   required: boolean;
-};
+}
 
 function SortableFieldRow({
   row,
@@ -66,7 +66,7 @@ function SortableFieldRow({
           type="text"
           className="rounded-xl border border-soft bg-bg-white px-3 py-2 text-sm text-text-primary outline-none transition focus:border-purple-400 focus:shadow-[0_0_0_3px_rgba(168,85,247,0.2)]"
           value={row.name}
-          onChange={(e) => onPatch(row.id, { name: e.target.value })}
+          onChange={(e) => void onPatch(row.id, { name: e.target.value })}
         />
       </label>
       <label className="flex min-w-28 flex-col gap-1.5">
@@ -75,7 +75,7 @@ function SortableFieldRow({
           className="rounded-xl border border-soft bg-bg-white px-3 py-2 text-sm text-text-primary outline-none transition focus:border-purple-400 focus:shadow-[0_0_0_3px_rgba(168,85,247,0.2)]"
           value={row.type}
           onChange={(e) =>
-            onPatch(row.id, {
+            void onPatch(row.id, {
               type: e.target.value as ProductTemplateFieldType,
             })
           }
@@ -91,14 +91,14 @@ function SortableFieldRow({
         <input
           type="checkbox"
           checked={row.required}
-          onChange={(e) => onPatch(row.id, { required: e.target.checked })}
+          onChange={(e) => void onPatch(row.id, { required: e.target.checked })}
         />
         <span>Requis</span>
       </label>
       <button
         type="button"
         className="rounded-lg border border-soft bg-bg-white px-2.5 py-1.5 text-xs text-text-secondary hover:border-red-500 hover:text-red-500"
-        onClick={() => onRemove(row.id)}
+        onClick={() => void onRemove(row.id)}
       >
         Retirer
       </button>
@@ -106,10 +106,10 @@ function SortableFieldRow({
   );
 }
 
-export type TemplateFieldsEditorProps = {
+export interface TemplateFieldsEditorProps {
   rows: TemplateFieldRow[];
   onChange: (rows: TemplateFieldRow[]) => void;
-};
+}
 
 export function TemplateFieldsEditor({ rows, onChange }: TemplateFieldsEditorProps) {
   const sensors = useSensors(

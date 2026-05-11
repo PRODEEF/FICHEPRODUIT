@@ -32,7 +32,7 @@ export function PublicCatalog() {
 
   useEffect(() => {
     if (!analysisId || !hasValidAnalysisId || !analysisNotFound) return;
-    navigate('/', { replace: true });
+    void navigate('/', { replace: true });
   }, [analysisId, hasValidAnalysisId, analysisNotFound, navigate]);
 
   if (!analysisId || !hasValidAnalysisId) {

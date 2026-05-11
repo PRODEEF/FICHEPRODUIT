@@ -5,7 +5,7 @@ import type { ReactNode } from 'react';
 import { cn } from '@shared/lib/cn';
 import { Badge, Button } from '@shared/ui';
 
-export type NavbarProps = {
+export interface NavbarProps {
   userEmail: string | null;
   userLabel: string | null;
   loading?: boolean;
@@ -13,7 +13,7 @@ export type NavbarProps = {
   onDrawerToggle: () => void;
   onLogout: () => void | Promise<void>;
   center?: ReactNode;
-};
+}
 
 const drawerItemClass =
   'block rounded-lg px-3.5 py-2.5 text-sm font-semibold text-text-primary no-underline transition-[background,color] duration-150 hover:bg-purple-50 hover:text-purple-700';

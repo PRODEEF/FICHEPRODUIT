@@ -20,7 +20,7 @@ function analysis(overrides: Partial<Analysis>): Analysis {
   };
 }
 
-test('resolveCatalogWorkflowStatus retourne failed sur erreur explicite', () => {
+void test('resolveCatalogWorkflowStatus retourne failed sur erreur explicite', () => {
   const status = resolveCatalogWorkflowStatus({
     analysis: analysis({ status: 'done', shopId: 'shop-1' }),
     loadingProducts: false,
@@ -31,7 +31,7 @@ test('resolveCatalogWorkflowStatus retourne failed sur erreur explicite', () => 
   assert.equal(status, 'failed');
 });
 
-test('resolveCatalogWorkflowStatus retourne ready quand produits chargés', () => {
+void test('resolveCatalogWorkflowStatus retourne ready quand produits chargés', () => {
   const status = resolveCatalogWorkflowStatus({
     analysis: analysis({ status: 'done', shopId: 'shop-1' }),
     loadingProducts: false,
@@ -42,7 +42,7 @@ test('resolveCatalogWorkflowStatus retourne ready quand produits chargés', () =
   assert.equal(status, 'ready');
 });
 
-test('resolveCatalogWorkflowStatus retourne loading_products pendant chargement', () => {
+void test('resolveCatalogWorkflowStatus retourne loading_products pendant chargement', () => {
   const status = resolveCatalogWorkflowStatus({
     analysis: analysis({ status: 'done', shopId: 'shop-1' }),
     loadingProducts: true,

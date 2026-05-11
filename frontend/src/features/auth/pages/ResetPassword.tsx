@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 
 import { getSupabaseClient } from '../../../shared/supabase';
@@ -20,7 +20,9 @@ export function ResetPassword() {
   useEffect(() => {
     const supabase = getSupabaseClient();
     if (!supabase) {
-      setGate('invalid');
+      queueMicrotask(() => {
+        setGate('invalid');
+      });
       return;
     }
 
@@ -60,7 +62,7 @@ export function ResetPassword() {
     };
   }, []);
 
-  async function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
     const pwdMatch = validatePasswordMatch(password, passwordConfirm);
@@ -85,7 +87,7 @@ export function ResetPassword() {
         setError(result.message);
         return;
       }
-      navigate('/login', { replace: true });
+      void navigate('/login', { replace: true });
     } finally {
       setSubmitting(false);
     }
@@ -123,7 +125,7 @@ export function ResetPassword() {
               required
               minLength={8}
               value={password}
-              onChange={(ev) => setPassword(ev.target.value)}
+              onChange={(ev) => void setPassword(ev.target.value)}
               disabled={submitting}
             />
             <PasswordField
@@ -134,7 +136,7 @@ export function ResetPassword() {
               required
               minLength={8}
               value={passwordConfirm}
-              onChange={(ev) => setPasswordConfirm(ev.target.value)}
+              onChange={(ev) => void setPasswordConfirm(ev.target.value)}
               disabled={submitting}
             />
             {error ? (

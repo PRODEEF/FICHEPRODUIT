@@ -2,12 +2,12 @@ import type { Analysis, Shop } from '@types-api';
 
 import { formatCmsLabel } from '../lib/productUtils';
 
-type AnalysisSiteSummaryProps = {
+interface AnalysisSiteSummaryProps {
   analysis: Analysis;
   shop: Shop | null;
   /** Nombre de marques repérées sur le site (analyse) ou, à défaut, dérivé des exemples. */
   brandCount: number;
-};
+}
 
 export function AnalysisSiteSummary({ analysis, shop, brandCount }: AnalysisSiteSummaryProps) {
   const vertical = shop?.sector?.trim() ?? null;

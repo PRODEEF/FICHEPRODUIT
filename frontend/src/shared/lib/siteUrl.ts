@@ -3,7 +3,7 @@
  * Sinon retourne `null` (texte libre : recherche Tavily / suggestions heuristiques).
  */
 export function parseAsSiteUrl(raw: string): string | null {
-  const trimmed = String(raw).trim();
+  const trimmed = raw.trim();
   if (!trimmed) return null;
 
   if (/^https?:\/\//i.test(trimmed)) {
@@ -28,7 +28,7 @@ export function parseAsSiteUrl(raw: string): string | null {
  * Un domaine seul (« monsite.fr ») est refusé. Utile pour les formulaires qui exigent une vraie URL.
  */
 export function parseAsFullSiteUrl(raw: string): string | null {
-  const trimmed = String(raw).trim();
+  const trimmed = raw.trim();
   if (!trimmed) return null;
 
   if (!/^https?:\/\//i.test(trimmed)) return null;

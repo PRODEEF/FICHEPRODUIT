@@ -8,20 +8,20 @@ import { Button } from '@shared/ui/Button';
 
 const CMS_OPTIONS: ShopCms[] = ['prestashop', 'shopify', 'woocommerce', 'autre', 'inconnu'];
 
-type ShopInfoSectionProps = {
+interface ShopInfoSectionProps {
   shop: Shop;
   onSavePartial: (patch: PatchMyShopBody) => Promise<void>;
   saving?: boolean;
-};
+}
 
 type RowKey = 'name' | 'url' | 'cms' | 'sector';
 
-type Buffers = {
+interface Buffers {
   name: string;
   url: string;
   cms: ShopCms;
   sector: string;
-};
+}
 
 function buffersFromShop(shop: Shop): Buffers {
   return {
@@ -35,7 +35,7 @@ function buffersFromShop(shop: Shop): Buffers {
 export function ShopInfoSection({ shop, onSavePartial, saving = false }: ShopInfoSectionProps) {
   const idBase = useId();
   const [editing, setEditing] = useState<RowKey | null>(null);
-  const [buffers, setBuffers] = useState<Buffers>(() => buffersFromShop(shop));
+  const [draft, setDraft] = useState<Buffers | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const onSavePartialRef = useRef(onSavePartial);
 
@@ -43,22 +43,18 @@ export function ShopInfoSection({ shop, onSavePartial, saving = false }: ShopInf
     onSavePartialRef.current = onSavePartial;
   }, [onSavePartial]);
 
-  useEffect(() => {
-    if (editing === null) {
-      setBuffers(buffersFromShop(shop));
-    }
-  }, [shop, editing]);
+  const buffers: Buffers = editing === null ? buffersFromShop(shop) : (draft ?? buffersFromShop(shop));
 
   const openEdit = (key: RowKey) => {
     setSaveError(null);
-    setBuffers(buffersFromShop(shop));
+    setDraft(buffersFromShop(shop));
     setEditing(key);
   };
 
   const cancelEdit = () => {
     setSaveError(null);
     setEditing(null);
-    setBuffers(buffersFromShop(shop));
+    setDraft(null);
   };
 
   const saveEdit = async () => {
@@ -83,6 +79,7 @@ export function ShopInfoSection({ shop, onSavePartial, saving = false }: ShopInf
 
     if (Object.keys(patch).length === 0) {
       setEditing(null);
+      setDraft(null);
       return;
     }
 
@@ -95,6 +92,7 @@ export function ShopInfoSection({ shop, onSavePartial, saving = false }: ShopInf
       }
       await persist(patch);
       setEditing(null);
+      setDraft(null);
     } catch (e) {
       setSaveError(e instanceof Error ? e.message : 'Enregistrement impossible.');
     }
@@ -112,7 +110,7 @@ export function ShopInfoSection({ shop, onSavePartial, saving = false }: ShopInf
             <span className="truncate text-sm text-gray-900">{display}</span>
           )}
           {!isEditing ? (
-            <Button type="button" variant="neutral-outline" size="sm" onClick={() => openEdit(key)}>
+            <Button type="button" variant="neutral-outline" size="sm" onClick={() => void openEdit(key)}>
               Modifier
             </Button>
           ) : (
@@ -130,6 +128,10 @@ export function ShopInfoSection({ shop, onSavePartial, saving = false }: ShopInf
     );
   };
 
+  const setBuffersPatch = (partial: Partial<Buffers>) => {
+    setDraft((prev) => ({ ...(prev ?? buffersFromShop(shop)), ...partial }));
+  };
+
   return (
     <div>
       {saveError ? <p className="mb-2 text-sm text-red-600">{saveError}</p> : null}
@@ -141,7 +143,7 @@ export function ShopInfoSection({ shop, onSavePartial, saving = false }: ShopInf
           <input
             id={`${idBase}-name`}
             value={buffers.name}
-            onChange={(e) => setBuffers((b) => ({ ...b, name: e.target.value }))}
+            onChange={(e) => void setBuffersPatch({ name: e.target.value })}
             className="w-full max-w-md rounded-md border border-gray-200 px-2 py-1 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-400"
           />,
         )}
@@ -153,7 +155,7 @@ export function ShopInfoSection({ shop, onSavePartial, saving = false }: ShopInf
             id={`${idBase}-url`}
             type="url"
             value={buffers.url}
-            onChange={(e) => setBuffers((b) => ({ ...b, url: e.target.value }))}
+            onChange={(e) => void setBuffersPatch({ url: e.target.value })}
             className="w-full max-w-md rounded-md border border-gray-200 px-2 py-1 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-400"
           />,
         )}
@@ -164,7 +166,7 @@ export function ShopInfoSection({ shop, onSavePartial, saving = false }: ShopInf
           <select
             id={`${idBase}-cms`}
             value={buffers.cms}
-            onChange={(e) => setBuffers((b) => ({ ...b, cms: e.target.value as ShopCms }))}
+            onChange={(e) => void setBuffersPatch({ cms: e.target.value as ShopCms })}
             className="max-w-md rounded-md border border-gray-200 px-2 py-1 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-400"
           >
             {CMS_OPTIONS.map((opt) => (
@@ -181,7 +183,7 @@ export function ShopInfoSection({ shop, onSavePartial, saving = false }: ShopInf
           <input
             id={`${idBase}-sector`}
             value={buffers.sector}
-            onChange={(e) => setBuffers((b) => ({ ...b, sector: e.target.value }))}
+            onChange={(e) => void setBuffersPatch({ sector: e.target.value })}
             placeholder="Secteur"
             className="w-full max-w-md rounded-md border border-gray-200 px-2 py-1 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-400"
           />,

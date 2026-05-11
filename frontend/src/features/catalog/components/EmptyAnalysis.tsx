@@ -4,15 +4,15 @@ import { fadeUp } from '@lib/motionVariants';
 import { UrlSearchForm } from '@shared/components/UrlSearchForm';
 import { UrlsSuggestions } from '@shared/components/UrlsSuggestions';
 
-type EmptyAnalysisProps = {
+interface EmptyAnalysisProps {
   siteInput: string;
   setSiteInput: (value: string) => void;
   suggestionsLoading: boolean;
   searchEmptyError: boolean;
   handleSubmit: () => void;
   suggestedUrls: string[];
-  handlePickSuggestion: (url: string) => Promise<void>;
-};
+  handlePickSuggestion: (url: string) => void;
+}
 
 export function EmptyAnalysis({
   siteInput,
@@ -54,7 +54,7 @@ export function EmptyAnalysis({
         animate="visible"
         className="flex justify-center"
       >
-        <UrlsSuggestions urls={suggestedUrls} onPick={handlePickSuggestion} />
+        <UrlsSuggestions urls={suggestedUrls} onPick={(url) => void handlePickSuggestion(url)} />
       </motion.div>
     </section>
   );

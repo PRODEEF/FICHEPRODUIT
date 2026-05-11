@@ -24,9 +24,9 @@ export function messageFromNestErrorBody(parsed: unknown, fallback: string): str
   if (!parsed || typeof parsed !== 'object' || !('message' in parsed)) {
     return fallback;
   }
-  const m = (parsed as { message: unknown }).message;
+  const m = (parsed).message;
   if (typeof m === 'string' && m.trim()) return m.trim();
-  if (Array.isArray(m) && m[0] && typeof m[0] === 'string') return String(m[0]);
+  if (Array.isArray(m) && m[0] && typeof m[0] === 'string') return m[0];
   return fallback;
 }
 
@@ -55,7 +55,7 @@ function resolveRequestUrl(path: string | undefined, absoluteUrl: string | undef
   throw new Error('requestNestJson: `path` ou `absoluteUrl` est requis.');
 }
 
-export type RequestNestJsonOptions = {
+export interface RequestNestJsonOptions {
   method: NestHttpMethod;
   /** Chemin relatif à `getApiBaseUrl()`, ex. `/analyses`. */
   path?: string;
@@ -68,7 +68,7 @@ export type RequestNestJsonOptions = {
   bearerToken?: string;
   /** Headers statiques (ex. POST JSON sans auth). */
   headers?: Record<string, string>;
-};
+}
 
 /**
  * Client HTTP unique pour le backend Nest : une requête, parse JSON, lève {@link NestHttpError} si `!res.ok`.

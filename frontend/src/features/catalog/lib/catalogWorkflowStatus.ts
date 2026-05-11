@@ -7,12 +7,12 @@ export type CatalogWorkflowStatus =
   | 'ready'
   | 'failed';
 
-type ResolveCatalogWorkflowStatusInput = {
+interface ResolveCatalogWorkflowStatusInput {
   analysis: Analysis | null;
   loadingProducts: boolean;
   hasProducts: boolean;
   error: string | null;
-};
+}
 
 export function resolveCatalogWorkflowStatus(
   input: ResolveCatalogWorkflowStatusInput,

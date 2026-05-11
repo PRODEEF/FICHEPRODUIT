@@ -7,7 +7,7 @@ import { resolveCatalogWorkflowStatus } from '../lib/catalogWorkflowStatus';
 import { AnalysisSummarySection } from './AnalysisSummarySection';
 import { CatalogProductsSection } from './CatalogProductsSection';
 
-export type AnalysisResultProps = {
+export interface AnalysisResultProps {
   isConnected: boolean;
   loading: boolean;
   error: string | null;
@@ -15,7 +15,7 @@ export type AnalysisResultProps = {
   shop: Shop | null;
   products: CatalogProduct[] | null;
   productPayload: CatalogProductPayloadMetadata | null;
-};
+}
 
 export function AnalysisResult(props: AnalysisResultProps) {
   return <AnalysisResultContent key={props.analysis?.id ?? 'none'} {...props} />;

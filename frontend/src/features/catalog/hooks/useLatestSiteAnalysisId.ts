@@ -3,17 +3,17 @@ import { useCallback, useEffect, useState } from 'react';
 import { listAnalyses } from '@api/analysis';
 import { pickLatestSiteAnalysisId } from '../lib/latestSiteAnalysis';
 
-export type UseLatestSiteAnalysisIdOptions = {
+export interface UseLatestSiteAnalysisIdOptions {
   userId: string | undefined;
   enabled: boolean;
-};
+}
 
-export type UseLatestSiteAnalysisIdResult = {
+export interface UseLatestSiteAnalysisIdResult {
   latestId: string | null;
   loading: boolean;
   error: string | null;
   refetch: () => void;
-};
+}
 
 /**
  * Charge la liste des analyses du compte et déduit l’identifiant de la plus récente.
@@ -32,37 +32,38 @@ export function useLatestSiteAnalysisId(
   }, []);
 
   useEffect(() => {
-    let cancelled = false;
-
-    if (!userId || !enabled) {
-      setLatestId(null);
-      setLoading(false);
-      setError(null);
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
+    const guard = { cancelled: false };
 
     void (async () => {
+      await Promise.resolve();
+      if (!userId || !enabled) {
+        setLatestId(null);
+        setLoading(false);
+        setError(null);
+        return;
+      }
+
+      setLoading(true);
+      setError(null);
+
       try {
         const list = await listAnalyses();
-        if (cancelled) return;
+        if (guard.cancelled) return;
         setLatestId(pickLatestSiteAnalysisId(list));
         setError(null);
       } catch (e) {
-        if (!cancelled) {
+        if (!guard.cancelled) {
           const message = e instanceof Error ? e.message : 'Erreur de chargement.';
           setError(message);
           setLatestId(null);
         }
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!guard.cancelled) setLoading(false);
       }
     })();
 
     return () => {
-      cancelled = true;
+      guard.cancelled = true;
     };
   }, [userId, enabled, fetchVersion]);
 

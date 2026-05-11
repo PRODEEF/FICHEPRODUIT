@@ -2,13 +2,13 @@ import { useId, useState, type KeyboardEvent } from 'react';
 
 import { Button, InputField, Modal, Tag } from '@shared/ui';
 
-type TagListEditorProps = {
+interface TagListEditorProps {
   label: string;
   tags: string[];
   disabled?: boolean;
   onAdd: (tag: string) => void | Promise<void>;
   onRemove: (tag: string) => void | Promise<void>;
-};
+}
 
 export function TagListEditor({
   label,
@@ -71,7 +71,7 @@ export function TagListEditor({
           <Tag
             key={tag}
             variant="primary"
-            onDismiss={locked ? undefined : () => setTagToConfirm(tag)}
+            onDismiss={locked ? undefined : () => void setTagToConfirm(tag)}
             dismissLabel={`Retirer ${tag}`}
           >
             {tag}
@@ -83,7 +83,7 @@ export function TagListEditor({
           id={inputId}
           label="Ajouter une nouvelle marque"
           value={input}
-          onChange={(e) => setInput(e.target.value)}
+          onChange={(e) => void setInput(e.target.value)}
           onKeyDown={onKeyDown}
           placeholder="Ajouter…"
           disabled={locked}
@@ -122,7 +122,7 @@ export function TagListEditor({
             variant="neutral-outline"
             size="sm"
             disabled={busy}
-            onClick={() => setTagToConfirm(null)}
+            onClick={() => void setTagToConfirm(null)}
           >
             Annuler
           </Button>

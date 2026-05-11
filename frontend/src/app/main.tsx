@@ -3,7 +3,12 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App';
 
-createRoot(document.getElementById('root')!).render(
+const rootEl = document.getElementById('root');
+if (!rootEl) {
+  throw new Error('Élément #root introuvable : impossible de monter l’application.');
+}
+
+createRoot(rootEl).render(
   <StrictMode>
     <App />
   </StrictMode>,

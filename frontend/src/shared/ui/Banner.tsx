@@ -35,10 +35,10 @@ function usePrefersReducedMotion(): boolean {
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const update = () => setReducedMotion(mediaQuery.matches);
-    update();
+    const update = () => void setReducedMotion(mediaQuery.matches);
+    queueMicrotask(update);
     mediaQuery.addEventListener('change', update);
-    return () => mediaQuery.removeEventListener('change', update);
+    return () => void mediaQuery.removeEventListener('change', update);
   }, []);
 
   return reducedMotion;

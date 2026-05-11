@@ -1,10 +1,17 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { z } from 'zod';
 
 import type { UserProfile } from './types';
 import type { UserRepository } from './userRepository';
 
 /** Colonnes SQL `public.users` ; `display_name` est exposé comme `username` dans `UserProfile`. */
 const USER_COLUMNS = 'display_name, website_url, pending_auto_analyze';
+
+const userProfileRowSchema = z.object({
+  display_name: z.string().nullable(),
+  website_url: z.string().nullable(),
+  pending_auto_analyze: z.boolean().nullable(),
+});
 
 export function createSupabaseUserRepository(client: SupabaseClient): UserRepository {
   return {
@@ -14,11 +21,14 @@ export function createSupabaseUserRepository(client: SupabaseClient): UserReposi
         .select(USER_COLUMNS)
         .eq('id', userId)
         .maybeSingle();
-      if (error || !data) return null;
+      if (error || data == null) return null;
+      const parsed = userProfileRowSchema.safeParse(data);
+      if (!parsed.success) return null;
+      const row = parsed.data;
       return {
-        username: data.display_name ?? '',
-        website_url: data.website_url,
-        pending_auto_analyze: Boolean(data.pending_auto_analyze),
+        username: row.display_name ?? 'Pseudo',
+        website_url: row.website_url,
+        pending_auto_analyze: Boolean(row.pending_auto_analyze),
       };
     },
 

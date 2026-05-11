@@ -37,16 +37,15 @@ const usernameField = z
   );
 
 const emailField = z
-  .string()
+  .email('Format d’e-mail invalide.')
   .trim()
-  .min(1, 'Veuillez entrer une adresse e-mail.')
-  .email('Format d’e-mail invalide.');
+  .min(1, 'Veuillez entrer une adresse e-mail.');
 
 /** Inscription : un seul message d’erreur (4 critères sur 5, dont la longueur). */
 const signupPasswordField = z.string().superRefine((val, ctx) => {
   if (getPasswordStrengthSnapshot(val, PASSWORD_MIN).isAcceptable) return;
   ctx.addIssue({
-    code: z.ZodIssueCode.custom,
+    code: 'custom',
     message: SIGNUP_PASSWORD_COMPLEXITY_MESSAGE,
   });
 });
@@ -56,7 +55,14 @@ const websiteUrlField = z
   .string()
   .transform((v) => v.trim())
   .refine((v) => v === '' || parseAsFullSiteUrl(v) !== null, WEBSITE_URL_INVALID_MESSAGE)
-  .transform((v) => (v === '' ? '' : parseAsFullSiteUrl(v)!));
+  .transform((v) => {
+    if (v === '') return '';
+    const parsed = parseAsFullSiteUrl(v);
+    if (parsed === null) {
+      throw new Error('Invariant Zod : URL invalide après refine.');
+    }
+    return parsed;
+  });
 
 export const loginSchema = z.object({
   email: emailField,

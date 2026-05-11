@@ -5,10 +5,10 @@ import {
   type PasswordStrengthLabel,
 } from '../lib/passwordStrength';
 
-export type PasswordStrengthMeterProps = {
+export interface PasswordStrengthMeterProps {
   password: string;
   id?: string;
-};
+}
 
 const STRENGTH_LABEL_TEXT: Record<Exclude<PasswordStrengthLabel, 'empty'>, string> = {
   weak: 'Faible',

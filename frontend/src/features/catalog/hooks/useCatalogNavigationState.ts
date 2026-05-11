@@ -6,12 +6,12 @@ import { useAuth } from '@shared/hooks/useAuth';
 
 import { useLatestSiteAnalysisId } from './useLatestSiteAnalysisId';
 
-type UseCatalogNavigationStateResult = {
+interface UseCatalogNavigationStateResult {
   analysisId: string | undefined;
   hasValidAnalysisId: boolean;
   latestResolveLoading: boolean;
   latestResolveError: string | null;
-};
+}
 
 /**
  * État d’URL du catalogue connecté : `/catalog` ou `/catalog/:analysisId`.
@@ -32,7 +32,7 @@ export function useCatalogNavigationState(): UseCatalogNavigationStateResult {
 
   useEffect(() => {
     if (!shouldResolveLatest || latestLoading || !latestId) return;
-    navigate(`/catalog/${latestId}`, { replace: true });
+    void navigate(`/catalog/${latestId}`, { replace: true });
   }, [latestId, latestLoading, navigate, shouldResolveLatest]);
 
   return {

@@ -38,7 +38,7 @@ export async function saveUserProfile(
       return {
         ok: false,
         message:
-          authError.message?.trim() ||
+          authError.message.trim() ||
           'Le profil a été enregistré mais la mise à jour du compte Auth a échoué. Réessayez.',
       };
     }

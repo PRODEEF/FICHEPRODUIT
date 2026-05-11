@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { parseZodFieldErrors } from '@lib/parseZodErrors';
 import { getSupabaseClient } from '@shared/supabase';
@@ -23,10 +23,12 @@ export function Profile() {
   const usernameErrorId = 'profile-username-error';
 
   useEffect(() => {
-    setUsername(profile?.username ?? '');
+    queueMicrotask(() => {
+      setUsername(profile?.username ?? '');
+    });
   }, [profile?.username]);
 
-  async function handleSubmit(e: FormEvent): Promise<void> {
+  async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>): Promise<void> {
     e.preventDefault();
     setFormError(null);
     setFieldErrors({});
@@ -50,7 +52,7 @@ export function Profile() {
     try {
       const repo = createSupabaseUserRepository(supabase);
       const result = await saveUserProfile(repo, user, parsed.data);
-      if (result.ok === false) {
+      if (!result.ok) {
         setFormError(result.message);
         return;
       }
@@ -61,12 +63,12 @@ export function Profile() {
     }
   }
 
-  function clearFieldError(key: 'username') {
-    setFieldErrors((prev) => {
-      const next = { ...prev };
-      delete next[key];
-      return next;
-    });
+  function clearFieldError() {
+    setFieldErrors((prev) =>
+      Object.fromEntries(
+        Object.entries(prev).filter(([k]) => k !== 'username'),
+      ),
+    );
     setFormError(null);
   }
 
@@ -90,7 +92,7 @@ export function Profile() {
           role="status"
           aria-live="polite"
           autoDismissAfterMs={SUCCESS_VISIBLE_MS}
-          onDismiss={() => setSuccess(false)}
+          onDismiss={() => void setSuccess(false)}
         >
           Changement enregistré.
         </Banner>
@@ -117,7 +119,7 @@ export function Profile() {
           value={username}
           onChange={(ev) => {
             setUsername(ev.target.value);
-            clearFieldError('username');
+            clearFieldError();
           }}
           disabled={submitting}
         />

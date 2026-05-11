@@ -21,7 +21,7 @@ export function parseDelimitedLine(line: string, delim: string): string[] {
   let cur = '';
   let inQuotes = false;
   for (let i = 0; i < line.length; i++) {
-    const c = line[i]!;
+    const c = line.charAt(i);
     if (inQuotes) {
       if (c === '"') {
         if (line[i + 1] === '"') {
@@ -47,7 +47,7 @@ export function parseDelimitedLine(line: string, delim: string): string[] {
 }
 
 export function extractHeaderLineFromCsv(text: string): string | null {
-  const clean = stripBom(text).replace(/^﻿/, '');
+  const clean = stripBom(text).replace(/^\uFEFF/, '');
   const lines = clean.split(/\r?\n/).map((l) => l.trimEnd());
   for (const line of lines) {
     if (line.trim().length > 0) return line;
@@ -68,22 +68,26 @@ export function parseCsvHeadersAndFirstDataRow(text: string): {
   headers: string[];
   sampleByHeader: Record<string, string>;
 } | null {
-  const clean = stripBom(text).replace(/^﻿/, '');
+  const clean = stripBom(text).replace(/^\uFEFF/, '');
   const lines = clean.split(/\r?\n/).map((l) => l.trimEnd());
   const nonEmpty = lines.map((l) => l.trim()).filter((l) => l.length > 0);
   if (nonEmpty.length === 0) return null;
-  const headerLine = nonEmpty[0]!;
+  const headerLine = nonEmpty[0];
+  if (headerLine === undefined) return null;
   const delim = detectDelimiter(headerLine);
   const headers = parseDelimitedLine(headerLine, delim).filter((h) => h.length > 0);
   if (headers.length === 0) return null;
   const sampleByHeader: Record<string, string> = {};
   if (nonEmpty.length >= 2) {
-    const cells = parseDelimitedLine(nonEmpty[1]!, delim);
-    headers.forEach((h, i) => {
-      const v = (cells[i] ?? '').trim();
-      if (v.length === 0) return;
-      sampleByHeader[h] = v.length > SAMPLE_PREVIEW_MAX ? `${v.slice(0, SAMPLE_PREVIEW_MAX)}…` : v;
-    });
+    const dataRow = nonEmpty[1];
+    if (dataRow !== undefined) {
+      const cells = parseDelimitedLine(dataRow, delim);
+      headers.forEach((h, i) => {
+        const v = (cells[i] ?? '').trim();
+        if (v.length === 0) return;
+        sampleByHeader[h] = v.length > SAMPLE_PREVIEW_MAX ? `${v.slice(0, SAMPLE_PREVIEW_MAX)}…` : v;
+      });
+    }
   }
   return { headers, sampleByHeader };
 }

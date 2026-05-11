@@ -1,8 +1,8 @@
 import { Link } from 'react-router';
 
-type GuestAnalysisSignupCtaProps = {
+interface GuestAnalysisSignupCtaProps {
   websiteUrl: string;
-};
+}
 
 export function GuestAnalysisSignupCta({ websiteUrl }: GuestAnalysisSignupCtaProps) {
   const signupHref = `/signup?${new URLSearchParams({ url: websiteUrl }).toString()}`;

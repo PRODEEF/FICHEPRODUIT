@@ -6,9 +6,9 @@ import { runAnalysisWorkflow } from '@api/runAnalysisWorkflow';
 
 export type RunAnalysisOutcome = 'success' | 'error_alert' | 'error_modal';
 
-type UseSiteAnalysisOptions = {
+interface UseSiteAnalysisOptions {
   onSuccess?: (analysis: Analysis) => void;
-};
+}
 
 /**
  * Orchestre le workflow d’analyse de site dans l’UI : suivi en direct, fermeture, erreurs soit en alerte soit en modale enrichie.
@@ -28,7 +28,7 @@ export function useSiteAnalysis(options: UseSiteAnalysisOptions = {}) {
         },
       });
 
-      if (result.ok === false) {
+      if (!result.ok) {
         if (!result.partial) {
           toast.error(result.error);
           setAnalysisOpen(false);

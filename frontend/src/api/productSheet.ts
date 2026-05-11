@@ -6,28 +6,28 @@ import type {
 
 import { requestNestJson } from './nestHttpClient';
 
-type ProductTemplateInputField = {
+interface ProductTemplateInputField {
   name: string;
   type: ProductTemplateFieldType;
   required: boolean;
-};
+}
 
-export type RefineTemplateFieldsRequest = {
+export interface RefineTemplateFieldsRequest {
   source: RefineFieldsSource;
   fields: ProductTemplateInputField[];
   sampleValues?: Record<string, string>;
-};
+}
 
-export type RefineTemplateFieldsResponse = {
+export interface RefineTemplateFieldsResponse {
   fields: ProductTemplateField[];
   refinedWithAi?: boolean;
   message?: string;
-};
+}
 
-export type ScrapeProductResponse = {
+export interface ScrapeProductResponse {
   fields: ProductTemplateField[];
-  warnings: Array<{ code: string; message: string }>;
-};
+  warnings: { code: string; message: string }[];
+}
 
 export function refineTemplateFields(
   body: RefineTemplateFieldsRequest,

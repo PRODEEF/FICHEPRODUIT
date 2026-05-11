@@ -1,4 +1,4 @@
-export type ProductFilter = {
+export interface ProductFilter {
   search: string;
   brand: string;
   category: string;
@@ -6,11 +6,11 @@ export type ProductFilter = {
   year: string;
   priceMin: string;
   priceMax: string;
-};
+}
 
-export type CatalogProductPayloadMetadata = {
+export interface CatalogProductPayloadMetadata {
   brands: string[];
   categories: string[];
   subCategories: string[];
   years: string[];
-};
+}

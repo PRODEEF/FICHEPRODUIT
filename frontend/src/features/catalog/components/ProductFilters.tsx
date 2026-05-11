@@ -3,7 +3,7 @@ import { InputField } from '@shared/ui';
 import type { ProductFilter } from '../types';
 import type { CatalogPriceFilterFieldKey } from '../lib/catalogFilterSchemas';
 
-type ProductFiltersProps = {
+interface ProductFiltersProps {
   filters: ProductFilter;
   onFilterChange: <K extends keyof ProductFilter>(key: K, value: ProductFilter[K]) => void;
   brandOptions: string[];
@@ -11,7 +11,7 @@ type ProductFiltersProps = {
   subCategoryOptions: string[];
   yearOptions: string[];
   priceFilterErrors?: Partial<Record<CatalogPriceFilterFieldKey, string>>;
-};
+}
 
 export function ProductFilters({
   filters,
@@ -33,7 +33,7 @@ export function ProductFilters({
         type="search"
         placeholder="Marque, catégorie, titre…"
         value={filters.search}
-        onChange={(e) => onFilterChange('search', e.target.value)}
+        onChange={(e) => void onFilterChange('search', e.target.value)}
         autoComplete="off"
       />
 
@@ -44,7 +44,7 @@ export function ProductFilters({
         <select
           className="rounded-xl border border-soft bg-bg-white px-3 py-2 text-sm text-text-primary outline-none transition focus:border-purple-400 focus:shadow-[0_0_0_3px_rgba(168,85,247,0.2)]"
           value={filters.brand}
-          onChange={(e) => onFilterChange('brand', e.target.value)}
+          onChange={(e) => void onFilterChange('brand', e.target.value)}
         >
           <option value="">Toutes</option>
           {brandOptions.map((b) => (
@@ -60,7 +60,7 @@ export function ProductFilters({
         <select
           className="rounded-xl border border-soft bg-bg-white px-3 py-2 text-sm text-text-primary outline-none transition focus:border-purple-400 focus:shadow-[0_0_0_3px_rgba(168,85,247,0.2)]"
           value={filters.year}
-          onChange={(e) => onFilterChange('year', e.target.value)}
+          onChange={(e) => void onFilterChange('year', e.target.value)}
         >
           <option value="">Toutes</option>
           {yearOptions.map((y) => (
@@ -78,7 +78,7 @@ export function ProductFilters({
         <select
           className="rounded-xl border border-soft bg-bg-white px-3 py-2 text-sm text-text-primary outline-none transition focus:border-purple-400 focus:shadow-[0_0_0_3px_rgba(168,85,247,0.2)]"
           value={filters.category}
-          onChange={(e) => onFilterChange('category', e.target.value)}
+          onChange={(e) => void onFilterChange('category', e.target.value)}
         >
           <option value="">Toutes</option>
           {categoryOptions.map((c) => (
@@ -96,7 +96,7 @@ export function ProductFilters({
         <select
           className="rounded-xl border border-soft bg-bg-white px-3 py-2 text-sm text-text-primary outline-none transition focus:border-purple-400 focus:shadow-[0_0_0_3px_rgba(168,85,247,0.2)]"
           value={filters.subCategory}
-          onChange={(e) => onFilterChange('subCategory', e.target.value)}
+          onChange={(e) => void onFilterChange('subCategory', e.target.value)}
         >
           <option value="">Toutes</option>
           {subCategoryOptions.map((sc) => (
@@ -118,7 +118,7 @@ export function ProductFilters({
         autoComplete="off"
         placeholder="0 €"
         value={filters.priceMin}
-        onChange={(e) => onFilterChange('priceMin', e.target.value)}
+        onChange={(e) => void onFilterChange('priceMin', e.target.value)}
         error={priceFilterErrors?.priceMin}
         errorId="catalog-filter-price-min-error"
       />
@@ -134,7 +134,7 @@ export function ProductFilters({
         autoComplete="off"
         placeholder="999 €"
         value={filters.priceMax}
-        onChange={(e) => onFilterChange('priceMax', e.target.value)}
+        onChange={(e) => void onFilterChange('priceMax', e.target.value)}
         error={priceFilterErrors?.priceMax}
         errorId="catalog-filter-price-max-error"
       />

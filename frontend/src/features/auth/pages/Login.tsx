@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 
 import { useAuth } from '@shared/hooks/useAuth';
@@ -24,10 +24,10 @@ export function Login() {
 
   useEffect(() => {
     if (authLoading || configError) return;
-    if (userEmail) navigate('/catalog', { replace: true });
+    if (userEmail) void navigate('/catalog', { replace: true });
   }, [authLoading, userEmail, configError, navigate]);
 
-  async function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
     setFormError(null);
 
@@ -47,7 +47,7 @@ export function Login() {
     setSubmitting(true);
     try {
       const authResult = await signInWithEmailPassword(supabase, emailTrim, passwordVal);
-      if (authResult.ok === false) {
+      if (!authResult.ok) {
         const code = authResult.code?.toLowerCase() ?? '';
         if (code === 'email_not_confirmed') {
           setFieldErrors({ email: authResult.message });
@@ -59,7 +59,7 @@ export function Login() {
         }
         return;
       }
-      navigate('/catalog', { replace: true });
+      void navigate('/catalog', { replace: true });
     } finally {
       setSubmitting(false);
     }

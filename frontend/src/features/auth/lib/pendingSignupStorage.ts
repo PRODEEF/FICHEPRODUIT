@@ -5,13 +5,13 @@ import type { UserRepository } from '../userRepository';
 /**
  * Intent de profil après inscription (sans localStorage) : conservé en mémoire pour l’onglet courant.
  */
-export type PendingSignupPayload = {
+export interface PendingSignupPayload {
   email?: string;
   phone?: string;
   username: string;
   websiteUrl: string;
   pendingAutoAnalyze: boolean;
-};
+}
 
 let pendingSignupMemory: PendingSignupPayload | null = null;
 

@@ -11,6 +11,16 @@ import { getSupabaseClient } from '@shared/supabase';
 
 type ApiHeaders = Record<string, string>;
 
+function omitContentType(headers: ApiHeaders): ApiHeaders {
+  const result: ApiHeaders = {};
+  for (const [key, value] of Object.entries(headers)) {
+    if (key !== 'Content-Type') {
+      result[key] = value;
+    }
+  }
+  return result;
+}
+
 /**
  * Headers de base : Content-Type JSON + Bearer si session Supabase active.
  */
@@ -43,15 +53,13 @@ export async function guestOrAuthHeaders(): Promise<ApiHeaders> {
  */
 export async function authHeadersNoBody(): Promise<ApiHeaders> {
   const h = await authHeaders();
-  const { 'Content-Type': _ct, ...rest } = h;
-  return rest;
+  return omitContentType(h);
 }
 
 /** GET/DELETE invité ou connecté — sans `Content-Type`. */
 export async function guestOrAuthHeadersNoBody(): Promise<ApiHeaders> {
   const h = await guestOrAuthHeaders();
-  const { 'Content-Type': _ct, ...rest } = h;
-  return rest;
+  return omitContentType(h);
 }
 
 /**
@@ -70,19 +78,15 @@ export async function guestOrAuthHeadersNoBodyWithGuestSession(
   guestSessionId?: string | null,
 ): Promise<ApiHeaders> {
   const h = await guestOrAuthHeadersWithGuestSession(guestSessionId);
-  const { 'Content-Type': _ct, ...rest } = h;
-  return rest;
+  return omitContentType(h);
 }
 
 export function extractErrorMessage(parsed: unknown, fallback: string): string {
   if (typeof parsed === 'object' && parsed !== null) {
     const o = parsed as Record<string, unknown>;
-    if (typeof o['message'] === 'string' && o['message'].trim()) {
-      return o['message'].trim();
-    }
-    if (Array.isArray(o['message']) && typeof o['message'][0] === 'string') {
-      return String(o['message'][0]);
-    }
+    if (typeof o['message'] === 'string' && o['message'].trim()) return o['message'].trim();
+
+    if (Array.isArray(o['message']) && typeof o['message'][0] === 'string') return o['message'][0];
   }
   return fallback;
 }

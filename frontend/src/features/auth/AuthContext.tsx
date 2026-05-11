@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
-import type { Session, User } from '@supabase/supabase-js';
 
-import { getSupabaseClient } from '../../shared/supabase';
+import type { Session, User } from '@supabase/supabase-js';
+import { getSupabaseClient } from '@shared/supabase';
 
 import { AuthContext } from './auth-context';
 import { applyPendingSignupFromStorage } from './lib/pendingSignupStorage';
@@ -9,25 +9,31 @@ import { createSupabaseUserRepository } from './supabaseUserRepository';
 import type { UserProfile } from './types';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const supabaseConfigured = getSupabaseClient() !== null;
+  const configError = !supabaseConfigured;
+
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profileBundle, setProfileBundle] = useState<{
+    userId: string;
+    profile: UserProfile | null;
+  } | null>(null);
   const [profileLoading, setProfileLoading] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [configError, setConfigError] = useState(false);
+  const [loading, setLoading] = useState(() => Boolean(getSupabaseClient()));
+
+  const profile =
+    user && profileBundle?.userId === user.id ? profileBundle.profile : null;
 
   useEffect(() => {
     const supabase = getSupabaseClient();
     if (!supabase) {
-      setConfigError(true);
-      setLoading(false);
       return;
     }
 
-    let cancelled = false;
+    const guard = { cancelled: false };
 
     void supabase.auth.getSession().then(({ data: { session: next } }) => {
-      if (cancelled) return;
+      if (guard.cancelled) return;
       setSession(next);
       setUser(next?.user ?? null);
       setLoading(false);
@@ -41,52 +47,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     return () => {
-      cancelled = true;
+      guard.cancelled = true;
       subscription.unsubscribe();
     };
   }, []);
 
   useEffect(() => {
     if (!user) {
-      setProfile(null);
-      setProfileLoading(false);
       return;
     }
     const supabase = getSupabaseClient();
     if (!supabase) {
-      setProfile(null);
-      setProfileLoading(false);
       return;
     }
-    setProfileLoading(true);
-    let cancelled = false;
+    const guard = { cancelled: false };
     const repo = createSupabaseUserRepository(supabase);
     void (async () => {
+      await Promise.resolve();
+      setProfileLoading(true);
       try {
         await applyPendingSignupFromStorage(repo, user);
       } finally {
         const next = await repo.getProfile(user.id);
-        if (!cancelled) {
-          setProfile(next);
+        if (!guard.cancelled) {
+          setProfileBundle({ userId: user.id, profile: next });
           setProfileLoading(false);
         }
       }
     })();
     return () => {
-      cancelled = true;
+      guard.cancelled = true;
     };
   }, [user]);
 
   const refreshProfile = useCallback(async () => {
     if (!user) {
-      setProfile(null);
       return;
     }
     const supabase = getSupabaseClient();
     if (!supabase) return;
     const repo = createSupabaseUserRepository(supabase);
     const next = await repo.getProfile(user.id);
-    setProfile(next);
+    setProfileBundle({ userId: user.id, profile: next });
   }, [user]);
 
   const signOut = useCallback(async () => {
@@ -100,13 +102,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     typeof meta?.['display_name'] === 'string' ? meta['display_name'] : null;
   const metadataFullName = typeof meta?.['full_name'] === 'string' ? meta['full_name'] : null;
 
-  const displayLabel = useMemo(
-    () =>
-      user
-        ? (profile?.username ?? metadataDisplayName ?? metadataFullName ?? userEmail ?? null)
-        : null,
-    [user, profile?.username, metadataDisplayName, metadataFullName, userEmail],
-  );
+  const displayLabel = useMemo(() => {
+    if (!user) return 'Pseudo';
+    return profile?.username ?? metadataDisplayName ?? metadataFullName ?? userEmail ?? 'Pseudo';
+  }, [user, profile?.username, metadataDisplayName, metadataFullName, userEmail]);
 
   const value = useMemo(
     () => ({
@@ -115,7 +114,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       userEmail,
       profile,
       displayLabel,
-      profileLoading,
+      profileLoading: Boolean(user) && profileLoading,
       loading,
       configError,
       signOut,
@@ -135,5 +134,5 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     ],
   );
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return <AuthContext value={value}>{children}</AuthContext>;
 }

@@ -6,12 +6,12 @@ import { fetchCatalogProductsByShopBrands } from '@api/catalog';
 import type { CatalogProductPayloadMetadata } from '../types';
 import { buildCatalogProductMetadata } from '../lib/catalogProductMetadata';
 
-type UseCatalogProductsByIdsResult = {
+interface UseCatalogProductsByIdsResult {
   products: CatalogProduct[] | null;
   metadata: CatalogProductPayloadMetadata | null;
   loading: boolean;
   error: string | null;
-};
+}
 
 export function useCatalogProductsByIds(
   shop: Shop | null,
@@ -24,37 +24,38 @@ export function useCatalogProductsByIds(
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    let cancelled = false;
-
-    if (!enabled || !shop?.id) {
-      setProducts(null);
-      setMetadata(null);
-      setLoading(false);
-      setError(null);
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
+    const guard = { cancelled: false };
 
     void (async () => {
+      await Promise.resolve();
+      if (!enabled || !shop?.id) {
+        setProducts(null);
+        setMetadata(null);
+        setLoading(false);
+        setError(null);
+        return;
+      }
+
+      setLoading(true);
+      setError(null);
+
       try {
         const loadedProducts = await fetchCatalogProductsByShopBrands(shop.id, guestSessionId);
-        if (cancelled) return;
+        if (guard.cancelled) return;
         setProducts(loadedProducts);
         setMetadata(buildCatalogProductMetadata(loadedProducts));
       } catch (e) {
-        if (cancelled) return;
+        if (guard.cancelled) return;
         setProducts(null);
         setMetadata(null);
         setError(e instanceof Error ? e.message : 'Erreur de chargement des produits catalogue.');
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!guard.cancelled) setLoading(false);
       }
     })();
 
     return () => {
-      cancelled = true;
+      guard.cancelled = true;
     };
   }, [enabled, shop, guestSessionId]);
 

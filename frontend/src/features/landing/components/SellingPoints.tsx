@@ -199,9 +199,9 @@ export function SellingPoints() {
                             title: 'F-One Bandit 9m²',
                             tags: 'freestyle · light wind',
                           },
-                        ].map((row, i) => (
+                        ].map((row) => (
                           <tr
-                            key={i}
+                            key={row.handle}
                             className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors"
                           >
                             <td className="px-4 py-3 text-emerald-600 font-mono">{row.handle}</td>

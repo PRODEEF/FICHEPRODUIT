@@ -4,21 +4,21 @@ export type { ProductTemplateFieldType };
 
 // ─── Types (absorbe productTemplateTypes.ts) ──────────────────────────────────
 
-export type ProductTemplateField = {
+export interface ProductTemplateField {
   name: string;
   type: ProductTemplateFieldType;
   required: boolean;
   order?: number;
-};
+}
 
-export type ProductTemplateRow = {
+export interface ProductTemplateRow {
   id: string;
   client_id: string;
   name: string;
   fields: ProductTemplateField[];
   created_at: string;
   updated_at: string;
-};
+}
 
 // ─── Labels et options (absorbe productTemplateFieldLabels.ts) ────────────────
 

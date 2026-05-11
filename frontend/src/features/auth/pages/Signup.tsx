@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 
 import { parseAsFullSiteUrl } from '@lib/siteUrl';
@@ -23,7 +23,7 @@ export function Signup() {
   const [signupUrlAnalysisActive, setSignupUrlAnalysisActive] = useState(false);
   const { runAnalysis, analysisOpen, siteAnalysis, dismissError } = useSiteAnalysis({
     onSuccess: (summary) => {
-      navigate(`/catalog/${summary.id}`);
+      void navigate(`/catalog/${summary.id}`);
     },
   });
 
@@ -46,7 +46,11 @@ export function Signup() {
   useEffect(() => {
     if (!urlFromQuery) return;
     const normalized = parseAsFullSiteUrl(urlFromQuery.trim());
-    if (normalized) setWebsiteUrl(normalized);
+    if (normalized) {
+      queueMicrotask(() => {
+        setWebsiteUrl(normalized);
+      });
+    }
   }, [urlFromQuery]);
 
   const emailErrorId = 'signup-email-error';
@@ -57,19 +61,19 @@ export function Signup() {
     if (authLoading || configError) return;
     if (!userEmail) return;
     if (signupUrlAnalysisActive || analysisOpen) return;
-    navigate('/', { replace: true });
+    void navigate('/', { replace: true });
   }, [authLoading, configError, userEmail, signupUrlAnalysisActive, analysisOpen, navigate]);
 
   function clearFieldError(key: SignupFieldKey) {
-    setFieldErrors((prev) => {
-      const next = { ...prev };
-      delete next[key];
-      return next;
-    });
+    setFieldErrors((prev) =>
+      Object.fromEntries(
+        Object.entries(prev).filter(([k]) => k !== key),
+      ),
+    );
     setFormError(null);
   }
 
-  async function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
     setFormError(null);
     setVerifyEmailSent(false);
@@ -81,7 +85,7 @@ export function Signup() {
       password,
       passwordConfirm,
     });
-    if (validation.ok === false) {
+    if (!validation.ok) {
       setFieldErrors(validation.fieldErrors);
       return;
     }
@@ -145,7 +149,7 @@ export function Signup() {
           }
           return;
         }
-        navigate('/', { replace: true });
+        void navigate('/', { replace: true });
         return;
       }
 

@@ -6,7 +6,7 @@ const SPECIAL = /[^A-Za-z0-9]/;
 export const SIGNUP_PASSWORD_COMPLEXITY_MESSAGE =
   'Répondez à au moins quatre critères sur cinq : 8 caractères, minuscule, majuscule, chiffre et symbole.';
 
-export type PasswordStrengthSnapshot = {
+export interface PasswordStrengthSnapshot {
   lengthOk: boolean;
   lowercase: boolean;
   uppercase: boolean;
@@ -14,7 +14,7 @@ export type PasswordStrengthSnapshot = {
   special: boolean;
   filledCount: number;
   isAcceptable: boolean;
-};
+}
 
 /**
  * Analyse la force du mot de passe pour l’UI et la validation d’inscription.

@@ -6,7 +6,7 @@ import { useAuth } from '@shared/hooks/useAuth';
 import { useAnalysisDetail } from './useAnalysisDetail';
 import { useCatalogNavigationState } from './useCatalogNavigationState';
 
-export type UseCatalogAnalysisResult = {
+export interface UseCatalogAnalysisResult {
   analysisId: string | undefined;
   hasValidAnalysisId: boolean;
   analysis: ReturnType<typeof useAnalysisDetail>['analysis'];
@@ -19,7 +19,7 @@ export type UseCatalogAnalysisResult = {
   latestResolveLoading: boolean;
   latestResolveError: string | null;
   refetchLatestList: () => void;
-};
+}
 
 /**
  * Centralise la logique catalogue autour de l’analyse courante :
@@ -43,7 +43,7 @@ export function useCatalogAnalysis(): UseCatalogAnalysisResult {
 
   useEffect(() => {
     if (!analysisId || !hasValidAnalysisId || !analysisNotFound) return;
-    navigate('/catalog', { replace: true });
+    void navigate('/catalog', { replace: true });
   }, [analysisId, hasValidAnalysisId, analysisNotFound, navigate]);
 
   return {

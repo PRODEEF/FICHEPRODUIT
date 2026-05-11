@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { animate, motion, useInView, useMotionValue, useTransform } from 'motion/react';
 
 import { fadeIn } from '@lib/motionVariants';
@@ -9,8 +9,15 @@ function AnimatedCounter({ target }: { target: number }) {
   const inView = useInView(ref, { once: true });
   const count = useMotionValue(0);
   const rounded = useTransform(count, (v) => Math.floor(v).toLocaleString('fr-FR'));
-  const prefersReduced =
-    typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const [prefersReduced, setPrefersReduced] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const apply = () => void setPrefersReduced(mq.matches);
+    queueMicrotask(apply);
+    mq.addEventListener('change', apply);
+    return () => void mq.removeEventListener('change', apply);
+  }, []);
 
   useEffect(() => {
     if (!inView) return;
@@ -41,9 +48,18 @@ export function SocialProofBar() {
 
       <div className="relative w-full overflow-hidden">
         <div className="animate-marquee flex min-w-max gap-8">
-          {[...universes, ...universes].map((u, i) => (
+          {universes.map((u) => (
             <span
-              key={`${u.label}-${i}`}
+              key={`${u.label}-a`}
+              className="inline-flex items-center gap-2 bg-white border border-purple-200 text-purple-700 text-sm font-medium px-4 py-2 rounded-full flex-shrink-0"
+            >
+              <u.icon size={14} className="text-purple-700" strokeWidth={2} />
+              {u.label}
+            </span>
+          ))}
+          {universes.map((u) => (
+            <span
+              key={`${u.label}-b`}
               className="inline-flex items-center gap-2 bg-white border border-purple-200 text-purple-700 text-sm font-medium px-4 py-2 rounded-full flex-shrink-0"
             >
               <u.icon size={14} className="text-purple-700" strokeWidth={2} />

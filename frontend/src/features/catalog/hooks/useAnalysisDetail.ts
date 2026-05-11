@@ -15,7 +15,7 @@ import type { CatalogProductPayloadMetadata } from '../types';
 
 const CACHE_GUEST_KEY = 'guest';
 
-type UseAnalysisDetailResult = {
+interface UseAnalysisDetailResult {
   analysis: Analysis | null;
   shop: Shop | null;
   productPayload: CatalogProductPayloadMetadata | null;
@@ -23,7 +23,7 @@ type UseAnalysisDetailResult = {
   loading: boolean;
   error: string | null;
   analysisNotFound: boolean;
-};
+}
 
 export function useAnalysisDetail(
   analysisId: string | undefined,
@@ -64,44 +64,48 @@ export function useAnalysisDetail(
 
   useEffect(() => {
     if (!analysisId || authLoading) return;
-    setError(null);
-    setAnalysisNotFound(false);
-    const cached = getAnalysisDetailCache<Analysis, CatalogProductPayloadMetadata, Shop>(
-      cacheUserId,
-      analysisId,
-    );
-    if (cached) {
-      setAnalysis(cached.analysis);
-      setShop(cached.shop ?? null);
-      setLoading(false);
-    } else {
-      setAnalysis(null);
-      setShop(null);
-      setLoading(true);
-    }
+    void (async () => {
+      await Promise.resolve();
+      setError(null);
+      setAnalysisNotFound(false);
+      const cached = getAnalysisDetailCache<Analysis, CatalogProductPayloadMetadata, Shop>(
+        cacheUserId,
+        analysisId,
+      );
+      if (cached) {
+        setAnalysis(cached.analysis);
+        setShop(cached.shop ?? null);
+        setLoading(false);
+      } else {
+        setAnalysis(null);
+        setShop(null);
+        setLoading(true);
+      }
+    })();
   }, [analysisId, authLoading, cacheUserId]);
 
   useEffect(() => {
     if (!analysisId || authLoading) return;
-    let cancelled = false;
+    const guard = { cancelled: false };
+    const isStale = () => guard.cancelled;
 
     void (async () => {
       try {
         const a = await getAnalysis(analysisId, guestSessionFromQuery);
-        if (cancelled) return;
+        if (isStale()) return;
         const guestHdr = !userId ? (guestSessionFromQuery ?? a.sessionId) ?? undefined : undefined;
 
         let nextShop: Shop | null = null;
         if (a.status === 'done' && a.shopId) {
           if (userId) {
             const myShop = await getMyShop();
-            if (cancelled) return;
-            if (myShop && myShop.id === a.shopId) {
+            if (isStale()) return;
+            if (myShop?.id === a.shopId) {
               nextShop = myShop;
             }
           } else {
             nextShop = await getMyShop(a.shopId, guestHdr);
-            if (cancelled) return;
+            if (isStale()) return;
             if (nextShop && nextShop.id !== a.shopId) {
               nextShop = null;
             }
@@ -112,7 +116,7 @@ export function useAnalysisDetail(
         setAnalysisDetailCache(cacheUserId, analysisId, { analysis: a, shop: nextShop });
         setError(null);
       } catch (e) {
-        if (!cancelled) {
+        if (!isStale()) {
           const message = e instanceof Error ? e.message : 'Erreur de chargement.';
           const lowered = message.toLowerCase();
           setAnalysisNotFound(lowered.includes('introuvable') || lowered.includes('not found'));
@@ -127,12 +131,12 @@ export function useAnalysisDetail(
           }
         }
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!isStale()) setLoading(false);
       }
     })();
 
     return () => {
-      cancelled = true;
+      guard.cancelled = true;
     };
   }, [userId, analysisId, authLoading, cacheUserId, guestSessionFromQuery]);
 

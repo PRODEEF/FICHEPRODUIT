@@ -1,12 +1,12 @@
 import { Button } from '@shared/ui';
 
-type ProductResultsToolbarProps = {
+interface ProductResultsToolbarProps {
   isConnected: boolean;
   totalCount: number;
   selectedCount: number;
   onDelete: () => void;
   onExport?: () => void;
-};
+}
 
 const EXPORT_AUTH_TOOLTIP =
   'L’export est réservé aux comptes connectés. Connectez-vous pour exporter vos fiches produits.';

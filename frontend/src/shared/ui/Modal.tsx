@@ -2,14 +2,14 @@ import { useEffect, type ReactNode } from 'react';
 
 import { cn } from '../lib/cn';
 
-type ModalProps = {
+interface ModalProps {
   open: boolean;
   title?: string;
   children: ReactNode;
   onClose: () => void;
   className?: string;
   panelClassName?: string;
-};
+}
 
 export function Modal({
   open,
@@ -25,7 +25,7 @@ export function Modal({
       if (event.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
+    return () => void window.removeEventListener('keydown', onKeyDown);
   }, [open, onClose]);
 
   if (!open) return null;
@@ -47,7 +47,7 @@ export function Modal({
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        onClick={(event) => event.stopPropagation()}
+        onClick={(event) => void event.stopPropagation()}
       >
         {children}
       </div>

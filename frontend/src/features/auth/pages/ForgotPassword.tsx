@@ -1,5 +1,5 @@
-import { useState, type FormEvent } from 'react';
-import { getSupabaseClient } from '../../../shared/supabase';
+import React, { useState } from 'react';
+import { getSupabaseClient } from '@shared/supabase';
 import { Banner, Button, Card, InputField, PageSection, TextLink } from '@shared/ui';
 
 import { getPasswordResetRedirectUrl, requestPasswordResetEmail } from '../lib/passwordAuth';
@@ -10,7 +10,7 @@ export function ForgotPassword() {
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
 
-  async function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
     const supabase = getSupabaseClient();
@@ -25,7 +25,7 @@ export function ForgotPassword() {
         email,
         getPasswordResetRedirectUrl(),
       );
-      if (result.ok === false) {
+      if (!result.ok) {
         setError(result.message);
         return;
       }
@@ -38,7 +38,9 @@ export function ForgotPassword() {
   return (
     <PageSection className="max-w-2xl pt-8">
       <Card className="mx-auto w-full max-w-[30rem]">
-        <h1 className="mb-2 text-center text-2xl font-extrabold text-text-primary">Mot de passe oublié</h1>
+        <h1 className="mb-2 text-center text-2xl font-extrabold text-text-primary">
+          Mot de passe oublié
+        </h1>
         <p className="mb-5 text-center text-sm text-text-secondary">
           <TextLink to="/login">Retour à la connexion</TextLink>
         </p>
@@ -57,7 +59,7 @@ export function ForgotPassword() {
               autoComplete="email"
               required
               value={email}
-              onChange={(ev) => setEmail(ev.target.value)}
+              onChange={(ev) => void setEmail(ev.target.value)}
               disabled={submitting}
             />
             {error ? (

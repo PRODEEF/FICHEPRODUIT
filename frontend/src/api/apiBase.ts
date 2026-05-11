@@ -10,9 +10,9 @@ export function normalizeApiBaseUrl(raw: string | undefined): string {
  * - Sinon : URL absolue normalisée (sans slash final).
  */
 export function getApiBaseUrl(): string {
-  const raw = import.meta.env['VITE_API_URL'];
-  if (raw === undefined || String(raw).trim() === '') {
+  const raw = import.meta.env.VITE_API_URL;
+  if (raw === undefined || raw.trim() === '') {
     return '';
   }
-  return normalizeApiBaseUrl(String(raw));
+  return normalizeApiBaseUrl(raw);
 }

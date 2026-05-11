@@ -10,9 +10,10 @@ import { authErrorMessage } from './authErrorMessage';
  * - `https://<production-host>/auth/reset-password`.
  */
 export function getPasswordResetRedirectUrl(): string {
-  const base =
-    import.meta.env['VITE_SITE_URL']?.replace(/\/$/, '') ??
-    window.location.origin;
+  const siteUrl = import.meta.env.VITE_SITE_URL;
+  const fromEnv =
+    siteUrl !== undefined && siteUrl.trim() !== '' ? siteUrl.replace(/\/$/, '').trim() : '';
+  const base = fromEnv !== '' ? fromEnv : window.location.origin;
   return `${base}/auth/reset-password`;
 }
 

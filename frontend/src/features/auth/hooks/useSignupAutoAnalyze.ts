@@ -3,9 +3,9 @@ import { useEffect, useRef } from 'react';
 import { useAuth } from '@shared/hooks/useAuth';
 import { clearPendingAutoAnalyzeForUser } from '../lib/userProfile';
 
-type UseSignupAutoAnalyzeParams = {
+interface UseSignupAutoAnalyzeParams {
   runAnalysis: (url: string) => Promise<unknown>;
-};
+}
 
 /**
  * Lance une analyse automatique après inscription lorsque le profil porte encore le drapeau

@@ -1,8 +1,8 @@
-type BrandChipsProps = {
+interface BrandChipsProps {
   brands: string[];
   activeBrand: string;
   onToggle: (brand: string) => void;
-};
+}
 
 export function BrandChips({ brands, activeBrand, onToggle }: BrandChipsProps) {
   if (brands.length === 0) return null;
@@ -15,7 +15,7 @@ export function BrandChips({ brands, activeBrand, onToggle }: BrandChipsProps) {
           <button
             key={brand}
             type="button"
-            onClick={() => onToggle(brand)}
+            onClick={() => void onToggle(brand)}
             className={[
               'rounded-full border px-3 py-1 text-xs font-medium transition-colors',
               isActive

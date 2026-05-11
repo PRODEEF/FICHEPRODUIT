@@ -2,14 +2,14 @@ import type { CatalogProduct } from '@types-api';
 
 import { formatPrice } from '../lib/productUtils';
 
-type ProductTableProps = {
+interface ProductTableProps {
   products: CatalogProduct[];
   selectedIds: Set<string>;
   allSelected: boolean;
   someSelected: boolean;
   onToggleOne: (id: string, checked: boolean) => void;
   onToggleAll: () => void;
-};
+}
 
 export function ProductTable({
   products,
@@ -68,7 +68,7 @@ export function ProductTable({
                 <input
                   type="checkbox"
                   checked={selectedIds.has(p.id)}
-                  onChange={(e) => onToggleOne(p.id, e.target.checked)}
+                  onChange={(e) => void onToggleOne(p.id, e.target.checked)}
                   aria-label={`Sélectionner ${p.name}`}
                 />
               </td>
@@ -97,8 +97,8 @@ export function ProductTable({
                   '—'
                 )}
               </td>
-              <td className="px-3 py-2 border-b border-soft">{p.brand ?? '—'}</td>
-              <td className="px-3 py-2 border-b border-soft">{p.category ?? '—'}</td>
+              <td className="px-3 py-2 border-b border-soft">{p.brand}</td>
+              <td className="px-3 py-2 border-b border-soft">{p.category}</td>
               <td className="px-3 py-2 border-b border-soft">{p.subCategory ?? '—'}</td>
               <td className="max-w-48 line-clamp-3 break-words px-3 py-2 border-b border-soft">
                 {p.description || '—'}

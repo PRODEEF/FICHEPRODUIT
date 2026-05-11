@@ -32,13 +32,23 @@ export function Catalog() {
     latestResolveError,
   } = useCatalogAnalysis();
 
-  const { run, running, currentAnalysis, error: workflowError, clearError } = useCatalogAnalysisWorkflow({
-    onSuccess: (nextAnalysis) => navigate(`/catalog/${nextAnalysis.id}`),
+  const {
+    run,
+    running,
+    currentAnalysis,
+    error: workflowError,
+    clearError,
+  } = useCatalogAnalysisWorkflow({
+    onSuccess: (nextAnalysis) => {
+      void navigate(`/catalog/${nextAnalysis.id}`);
+    },
   });
   const search = useCatalogUrlInputFlow({
     analysisId,
     defaultWebsiteUrl: profile?.website_url,
-    onSubmit: run,
+    onSubmit: async (url) => {
+      await run(url);
+    },
   });
 
   if (analysisId && !hasValidAnalysisId) {
@@ -91,9 +101,13 @@ export function Catalog() {
                 setSiteInput={search.setInput}
                 suggestionsLoading={search.suggestionsLoading}
                 searchEmptyError={search.inputEmptyError}
-                handleSubmit={search.handleSubmit}
+                handleSubmit={() => {
+                  void search.handleSubmit();
+                }}
                 suggestedUrls={search.suggestedUrls}
-                handlePickSuggestion={search.handlePickSuggestion}
+                handlePickSuggestion={(url) => {
+                  void search.handlePickSuggestion(url);
+                }}
               />
             </>
           )}

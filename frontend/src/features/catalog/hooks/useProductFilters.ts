@@ -17,7 +17,7 @@ export const DEFAULT_FILTERS: ProductFilter = {
   priceMax: '',
 };
 
-type UseProductFiltersResult = {
+interface UseProductFiltersResult {
   filters: ProductFilter;
   setFilter: <K extends keyof ProductFilter>(key: K, value: ProductFilter[K]) => void;
   /** Vrai dès qu’au moins un critère (recherche ou filtre structuré) est non vide. */
@@ -29,7 +29,7 @@ type UseProductFiltersResult = {
   yearOptions: string[];
   /** Erreurs Zod sur les champs prix (saisie invalide ou min supérieur au max). */
   priceFilterErrors: Partial<Record<CatalogPriceFilterFieldKey, string>>;
-};
+}
 
 export function useProductFilters(
   products: CatalogProduct[],
@@ -48,13 +48,13 @@ export function useProductFilters(
     }
     const fromApi = productPayload?.brands ?? [];
     if (fromApi.length) return uniqueSorted(fromApi);
-    return uniqueSorted(products.map((p) => p.brand).filter(Boolean) as string[]);
+    return uniqueSorted(products.map((p) => p.brand).filter(Boolean));
   }, [shopBrands, productPayload?.brands, products]);
 
   const categoryOptions = useMemo(() => {
     const fromApi = productPayload?.categories ?? [];
     if (fromApi.length) return uniqueSorted(fromApi);
-    return uniqueSorted(products.map((p) => p.category).filter(Boolean) as string[]);
+    return uniqueSorted(products.map((p) => p.category).filter(Boolean));
   }, [productPayload?.categories, products]);
 
   const subCategoryOptions = useMemo(() => {
@@ -75,7 +75,7 @@ export function useProductFilters(
       priceMax: filters.priceMax,
     });
     if (parsed.success) {
-      return { priceBounds: parsed.data, priceFilterErrors: {} as Partial<Record<CatalogPriceFilterFieldKey, string>> };
+      return { priceBounds: parsed.data, priceFilterErrors: {} };
     }
     return {
       priceBounds: null,

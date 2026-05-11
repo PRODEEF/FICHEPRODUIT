@@ -23,7 +23,7 @@ function product(overrides: Partial<CatalogProduct>): CatalogProduct {
   };
 }
 
-test('buildCatalogProductMetadata déduplique et trie les options', () => {
+void test('buildCatalogProductMetadata déduplique et trie les options', () => {
   const metadata = buildCatalogProductMetadata([
     product({ id: '1', brand: 'Nike', category: 'Shoes', subCategory: 'Running', year: 2024 }),
     product({ id: '2', brand: 'Adidas', category: 'Shoes', subCategory: 'Lifestyle', year: 2023 }),

@@ -3,12 +3,12 @@ import { useCallback, useEffect, useState } from 'react';
 import { getMyShop } from '@api/shop';
 import type { Shop } from '../types';
 
-export type UseShopResult = {
+export interface UseShopResult {
   shop: Shop | null;
   loading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
-};
+}
 
 export function useShop(): UseShopResult {
   const [shop, setShop] = useState<Shop | null>(null);
@@ -31,7 +31,9 @@ export function useShop(): UseShopResult {
   }, []);
 
   useEffect(() => {
-    void refetch();
+    queueMicrotask(() => {
+      void refetch();
+    });
   }, [refetch]);
 
   return { shop, loading, error, refetch };

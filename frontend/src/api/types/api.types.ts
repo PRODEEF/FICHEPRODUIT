@@ -36,19 +36,19 @@ export type AnalysisErrorCode =
 // User
 // ---------------------------------------------------------------------------
 
-export type User = {
+export interface User {
   id: string;
   email: string;
   username: string;
   websiteUrl: string | null;
   pendingAutoAnalyze: boolean;
-};
+}
 
 // ---------------------------------------------------------------------------
 // Analysis
 // ---------------------------------------------------------------------------
 
-export type Analysis = {
+export interface Analysis {
   id: string;
   url: string;
   status: AnalysisStatus;
@@ -59,17 +59,17 @@ export type Analysis = {
   /** Défini quand status === 'done'. */
   shopId: string | null;
   createdAt: string;
-};
+}
 
-export type CreateAnalysisBody = {
+export interface CreateAnalysisBody {
   url: string;
-};
+}
 
 // ---------------------------------------------------------------------------
 // Shop
 // ---------------------------------------------------------------------------
 
-export type Shop = {
+export interface Shop {
   id: string;
   name: string;
   url: string;
@@ -80,23 +80,23 @@ export type Shop = {
   ownerId: string;
   createdAt: string;
   updatedAt: string;
-};
+}
 
 /** Corps PATCH `PATCH /api/shop` (tous les champs optionnels). */
-export type PatchMyShopBody = {
+export interface PatchMyShopBody {
   name?: string;
   url?: string;
   cms?: CmsType;
   sector?: string | null;
   brands?: string[];
   categories?: string[];
-};
+}
 
 // ---------------------------------------------------------------------------
 // CatalogProduct
 // ---------------------------------------------------------------------------
 
-export type CatalogProduct = {
+export interface CatalogProduct {
   id: string;
   name: string;
   brand: string;
@@ -109,7 +109,7 @@ export type CatalogProduct = {
   images: string[];
   url: string;
   attributes: Record<string, string>;
-};
+}
 
 // ---------------------------------------------------------------------------
 // ProductTemplate
@@ -141,26 +141,26 @@ export type ProductTemplateFieldType =
   | 'currency'
   | 'json';
 
-export type ProductTemplateField = {
+export interface ProductTemplateField {
   name: string;
   type: ProductTemplateFieldType;
   required: boolean;
   order: number;
-};
+}
 
-export type ProductTemplate = {
+export interface ProductTemplate {
   id: string;
   name: string;
   shopId: string;
   fields: ProductTemplateField[];
   createdAt: string;
   updatedAt: string;
-};
+}
 
-export type CreateProductTemplateBody = {
+export interface CreateProductTemplateBody {
   name: string;
   fields?: ProductTemplateField[];
-};
+}
 
 export type UpdateProductTemplateBody = Partial<CreateProductTemplateBody>;
 
@@ -168,58 +168,58 @@ export type UpdateProductTemplateBody = Partial<CreateProductTemplateBody>;
 // Scrape / Refine fields (product templates)
 // ---------------------------------------------------------------------------
 
-export type ScrapeFieldsBody = {
+export interface ScrapeFieldsBody {
   url: string;
-};
+}
 
-export type ScrapeFieldsResponse = {
+export interface ScrapeFieldsResponse {
   fields: ProductTemplateField[];
-  warnings: Array<{ code: string; message: string }>;
-};
+  warnings: { code: string; message: string }[];
+}
 
 export type RefineFieldsSource = 'csv_import' | 'product_page' | 'manual';
 
-export type RefineFieldsBody = {
+export interface RefineFieldsBody {
   source: RefineFieldsSource;
   fields: ProductTemplateField[];
   sampleValues?: Record<string, string>;
-};
+}
 
-export type RefineFieldsResponse = {
+export interface RefineFieldsResponse {
   fields: ProductTemplateField[];
   refinedWithAi: boolean;
   message?: string;
-};
+}
 
 // ---------------------------------------------------------------------------
 // Export
 // ---------------------------------------------------------------------------
 
-export type ExportBody = {
+export interface ExportBody {
   /** IDs des produits catalogue à exporter. */
   productIds: string[];
   /** ID du template de fiche produit à appliquer. */
   templateId: string;
   /** Format cible. */
   format: 'prestashop' | 'shopify';
-};
+}
 
 // ---------------------------------------------------------------------------
 // Suggest URLs
 // ---------------------------------------------------------------------------
 
-export type SuggestUrlsBody = {
+export interface SuggestUrlsBody {
   q: string;
-};
+}
 
-export type SuggestUrlsResponse = {
+export interface SuggestUrlsResponse {
   urls: string[];
-};
+}
 
 // ---------------------------------------------------------------------------
 // Guest session claim
 // ---------------------------------------------------------------------------
 
-export type ClaimGuestSessionBody = {
+export interface ClaimGuestSessionBody {
   sessionId?: string;
-};
+}

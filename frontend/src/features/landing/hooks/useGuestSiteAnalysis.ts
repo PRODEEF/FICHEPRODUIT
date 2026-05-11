@@ -4,9 +4,9 @@ import { toast } from 'sonner';
 import type { Analysis } from '@types-api';
 import { runAnalysisWorkflow } from '@api/runAnalysisWorkflow';
 
-type UseGuestSiteAnalysisOptions = {
+interface UseGuestSiteAnalysisOptions {
   onSuccess?: (analysis: Analysis) => void;
-};
+}
 
 export type GuestRunAnalysisOutcome = 'success' | 'error_alert' | 'error_modal';
 

@@ -14,7 +14,7 @@ const TOP_BRANDS_CHIP_LIMIT = 10;
 function topBrandsByProductCount(products: CatalogProduct[], limit: number): string[] {
   const counts = new Map<string, number>();
   for (const p of products) {
-    const b = p.brand?.trim();
+    const b = p.brand.trim();
     if (!b) continue;
     counts.set(b, (counts.get(b) ?? 0) + 1);
   }
@@ -27,7 +27,7 @@ function topBrandsByProductCount(products: CatalogProduct[], limit: number): str
     .map(([name]) => name);
 }
 
-export type AnalysisSummarySectionProps = {
+export interface AnalysisSummarySectionProps {
   loading: boolean;
   error: string | null;
   analysis: Analysis | null;
@@ -35,7 +35,7 @@ export type AnalysisSummarySectionProps = {
   allProducts: CatalogProduct[];
   activeBrand: string;
   onBrandToggle: (brand: string) => void;
-};
+}
 
 export function AnalysisSummarySection({
   loading,

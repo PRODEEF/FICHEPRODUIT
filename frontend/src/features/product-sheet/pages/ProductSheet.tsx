@@ -37,7 +37,7 @@ export function ProductSheet() {
                 ? 'text-purple-700'
                 : 'text-text-muted hover:text-purple-300'
             }`}
-            onClick={() => setSheetTab('mes-fiches')}
+            onClick={() => void setSheetTab('mes-fiches')}
           >
             Mes fiches
           </button>
@@ -50,7 +50,7 @@ export function ProductSheet() {
             className={`cursor-pointer border-0 bg-transparent px-2 py-3 text-center text-base font-semibold ${
               sheetTab === 'nouvelle' ? 'text-purple-700' : 'text-text-muted hover:text-purple-300'
             }`}
-            onClick={() => setSheetTab('nouvelle')}
+            onClick={() => void setSheetTab('nouvelle')}
           >
             Nouvelle fiche
           </button>

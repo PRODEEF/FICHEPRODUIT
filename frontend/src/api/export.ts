@@ -51,9 +51,10 @@ export async function downloadExportCsv(body: ExportBody, filename = 'export'): 
 
   // Extraire le nom de fichier depuis Content-Disposition si disponible
   const cd = res.headers.get('Content-Disposition') ?? '';
-  const match = cd.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/i);
+  const match = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/i.exec(cd);
   const serverFilename = match?.[1]?.replace(/['"]/g, '').trim();
-  const finalFilename = serverFilename || `${filename}.csv`;
+  const finalFilename =
+    serverFilename !== undefined && serverFilename.length > 0 ? serverFilename : `${filename}.csv`;
 
   // Déclencher le téléchargement navigateur
   triggerDownload(blob, finalFilename);

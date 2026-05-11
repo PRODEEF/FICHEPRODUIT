@@ -21,7 +21,7 @@ export function formatCmsLabel(cms: CmsType | null): string {
     other: 'Autre',
     unknown: 'Inconnu',
   };
-  return map[cms] ?? 'Inconnu';
+  return map[cms];
 }
 
 export function uniqueSorted(values: Iterable<string>): string[] {

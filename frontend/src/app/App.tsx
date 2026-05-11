@@ -59,10 +59,10 @@ function RouteFallback() {
   );
 }
 
-type AppHeaderProps = {
+interface AppHeaderProps {
   drawerOpen: boolean;
   onDrawerToggle: () => void;
-};
+}
 
 function AppHeader({ drawerOpen, onDrawerToggle }: AppHeaderProps) {
   const navigate = useNavigate();
@@ -76,7 +76,7 @@ function AppHeader({ drawerOpen, onDrawerToggle }: AppHeaderProps) {
       drawerOpen={drawerOpen}
       onDrawerToggle={onDrawerToggle}
       onLogout={async () => {
-        navigate('/', { replace: true });
+        void navigate('/', { replace: true });
         try {
           await signOut();
         } catch {
@@ -97,7 +97,7 @@ function AppShellLayout({ userEmail }: { userEmail: string | null }) {
       data-drawer-open={drawerExpanded ? 'true' : undefined}
     >
       <BackgroundGlow />
-      <AppHeader drawerOpen={drawerOpen} onDrawerToggle={() => setDrawerOpen((o) => !o)} />
+      <AppHeader drawerOpen={drawerOpen} onDrawerToggle={() => void setDrawerOpen((o) => !o)} />
       <main
         className={`relative z-[1] flex min-h-0 flex-1 flex-col pt-16 transition-[margin-left] duration-200 ${
           drawerExpanded ? 'ml-[260px]' : 'ml-0'

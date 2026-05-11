@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuth } from '@shared/hooks/useAuth';
 import { getSupabaseClient } from '@shared/supabase';
 
@@ -21,10 +21,10 @@ import { TemplateFieldsEditor, type TemplateFieldRow } from './TemplateFieldsEdi
 
 type View = { kind: 'list' } | { kind: 'edit'; templateId: string };
 
-type DraftState = {
+interface DraftState {
   templateName: string;
   fieldRows: TemplateFieldRow[];
-};
+}
 
 function newRowId(): string {
   return crypto.randomUUID();
@@ -34,8 +34,8 @@ function fieldsToRows(fields: ProductTemplateField[]): TemplateFieldRow[] {
   return fields.map((f) => ({
     id: newRowId(),
     name: f.name,
-    type: normalizeProductTemplateFieldType(String(f.type)),
-    required: f.required ?? false,
+    type: normalizeProductTemplateFieldType(f.type),
+    required: f.required,
   }));
 }
 
@@ -53,12 +53,15 @@ function applyRefinedFieldsToRows(
   previous: TemplateFieldRow[],
   refined: ProductTemplateField[],
 ): TemplateFieldRow[] {
-  return refined.map((f, i) => ({
-    id: previous[i]?.id ?? newRowId(),
-    name: f.name,
-    type: f.type,
-    required: f.required ?? false,
-  }));
+  return refined.map((f, i) => {
+    const prevRow = previous[i];
+    return {
+      id: prevRow !== undefined ? prevRow.id : newRowId(),
+      name: f.name,
+      type: f.type,
+      required: f.required,
+    };
+  });
 }
 
 function defaultNewTemplateName(existingCount: number): string {
@@ -67,11 +70,11 @@ function defaultNewTemplateName(existingCount: number): string {
 
 export type ProductSheetMainTab = 'mes-fiches' | 'nouvelle';
 
-export type ProductTemplatesWorkspaceProps = {
+export interface ProductTemplatesWorkspaceProps {
   sheetTab: ProductSheetMainTab;
   onSheetTabChange: (tab: ProductSheetMainTab) => void;
   onEditModeChange?: (editing: boolean) => void;
-};
+}
 
 export function ProductTemplatesWorkspace({
   sheetTab,
@@ -136,7 +139,7 @@ export function ProductTemplatesWorkspace({
       setLoadError(error.message);
       setTemplates([]);
     } else {
-      const rows = (data ?? []) as ProductTemplateRow[];
+      const rows = data as ProductTemplateRow[];
       setTemplates(rows);
       setCachedProductTemplatesList(user.id, rows);
     }
@@ -145,13 +148,17 @@ export function ProductTemplatesWorkspace({
 
   useEffect(() => {
     if (!user) return;
-    void refreshList();
+    queueMicrotask(() => {
+      void refreshList();
+    });
   }, [user, refreshList]);
 
   useEffect(() => {
-    if (profile?.website_url) {
-      setScrapeUrl((prev) => (prev.trim() === '' ? profile.website_url! : prev));
-    }
+    const site = profile?.website_url?.trim();
+    if (!site) return;
+    queueMicrotask(() => {
+      setScrapeUrl((prev) => (prev.trim() === '' ? site : prev));
+    });
   }, [profile?.website_url]);
 
   const persistTemplate = async (
@@ -254,7 +261,7 @@ export function ProductTemplatesWorkspace({
     if (csvInputRef.current) csvInputRef.current.value = '';
   };
 
-  const onUrlAnalyzeSubmit = (e: FormEvent) => {
+  const onUrlAnalyzeSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     void runScrape();
   };
@@ -467,7 +474,7 @@ export function ProductTemplatesWorkspace({
               <button
                 type="button"
                 className="product-sheet-save-btn"
-                onClick={() => onSheetTabChange('nouvelle')}
+                onClick={() => void onSheetTabChange('nouvelle')}
               >
                 Créer une fiche
               </button>
@@ -490,7 +497,7 @@ export function ProductTemplatesWorkspace({
                     <button
                       type="button"
                       className="product-sheet-analyze-btn"
-                      onClick={() => openEdit(t)}
+                      onClick={() => void openEdit(t)}
                     >
                       Modifier
                     </button>
@@ -505,8 +512,8 @@ export function ProductTemplatesWorkspace({
                         </tr>
                       </thead>
                       <tbody>
-                        {t.fields.map((f, i) => (
-                          <tr key={`${t.id}-${i}-${f.name}`}>
+                        {t.fields.map((f) => (
+                          <tr key={`${t.id}-${f.name}-${f.type}`}>
                             <td>{f.name}</td>
                             <td>{productTemplateFieldTypeLabel(f.type)}</td>
                             <td>{f.required ? 'Oui' : 'Non'}</td>
@@ -551,7 +558,7 @@ export function ProductTemplatesWorkspace({
                 className="product-templates-csv-input-hidden"
                 aria-hidden
                 tabIndex={-1}
-                onChange={(e) => onCsvFile(e.target.files?.[0] ?? null)}
+                onChange={(e) => void onCsvFile(e.target.files?.[0] ?? null)}
               />
               <button
                 type="button"
@@ -620,7 +627,7 @@ export function ProductTemplatesWorkspace({
                     className="analyses-input"
                     value={draft.templateName}
                     onChange={(e) =>
-                      setDraft((d) => (d ? { ...d, templateName: e.target.value } : d))
+                      void setDraft((d) => (d ? { ...d, templateName: e.target.value } : d))
                     }
                   />
                 </label>
@@ -645,7 +652,7 @@ export function ProductTemplatesWorkspace({
                       type="button"
                       className="product-sheet-analyze-btn"
                       onClick={() =>
-                        setDraft((d) =>
+                        void setDraft((d) =>
                           d
                             ? {
                                 ...d,
@@ -674,7 +681,7 @@ export function ProductTemplatesWorkspace({
                 ) : null}
                 <TemplateFieldsEditor
                   rows={draft.fieldRows}
-                  onChange={(rows) => setDraft((d) => (d ? { ...d, fieldRows: rows } : d))}
+                  onChange={(rows) => void setDraft((d) => (d ? { ...d, fieldRows: rows } : d))}
                 />
                 <div className="product-templates-draft-actions">
                   <button
@@ -716,7 +723,7 @@ export function ProductTemplatesWorkspace({
               role="dialog"
               aria-modal="true"
               aria-labelledby="product-template-modal-title"
-              onClick={(e) => e.stopPropagation()}
+              onClick={(e) => void e.stopPropagation()}
             >
               <h2 id="product-template-modal-title" className="product-template-modal-title">
                 Créer votre fiche à la main
@@ -727,7 +734,7 @@ export function ProductTemplatesWorkspace({
                   type="text"
                   className="analyses-input"
                   value={modalTemplateName}
-                  onChange={(e) => setModalTemplateName(e.target.value)}
+                  onChange={(e) => void setModalTemplateName(e.target.value)}
                 />
               </label>
               <div className="product-templates-fields-header">
@@ -736,7 +743,7 @@ export function ProductTemplatesWorkspace({
                   type="button"
                   className="product-sheet-analyze-btn"
                   onClick={() =>
-                    setModalFieldRows((prev) => [
+                    void setModalFieldRows((prev) => [
                       ...prev,
                       {
                         id: newRowId(),
@@ -781,9 +788,8 @@ export function ProductTemplatesWorkspace({
     );
   }
 
-  if (view.kind === 'edit') {
-    return (
-      <div className="product-templates-workspace">
+  return (
+    <div className="product-templates-workspace">
         <button
           type="button"
           className="product-templates-back"
@@ -803,7 +809,7 @@ export function ProductTemplatesWorkspace({
             type="text"
             className="analyses-input"
             value={templateName}
-            onChange={(e) => setTemplateName(e.target.value)}
+            onChange={(e) => void setTemplateName(e.target.value)}
           />
         </label>
 
@@ -828,7 +834,7 @@ export function ProductTemplatesWorkspace({
               type="button"
               className="product-sheet-analyze-btn"
               onClick={() =>
-                setFieldRows((prev) => [
+                void setFieldRows((prev) => [
                   ...prev,
                   {
                     id: newRowId(),
@@ -867,8 +873,5 @@ export function ProductTemplatesWorkspace({
           </button>
         </div>
       </div>
-    );
-  }
-
-  return null;
+  );
 }

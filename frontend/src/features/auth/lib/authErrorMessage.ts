@@ -15,7 +15,7 @@ const KNOWN: Record<string, string> = {
 
 /** Message court pour l’interface à partir d’une erreur Auth Supabase. */
 export function authErrorMessage(error: AuthError | null): string {
-  if (!error || !error.code) return 'Une erreur inconnue est survenue. Réessayez.';
+  if (!error?.code) return 'Une erreur inconnue est survenue. Réessayez.';
 
   const code = error.code.toLowerCase();
   if (KNOWN[code]) return KNOWN[code];

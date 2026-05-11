@@ -9,7 +9,7 @@ import { ProductFilters } from './ProductFilters';
 import { ProductResultsToolbar } from './ProductResultsToolbar';
 import { ProductTable } from './ProductTable';
 
-export type CatalogProductsSectionProps = {
+export interface CatalogProductsSectionProps {
   isConnected: boolean;
   products: CatalogProduct[];
   productPayload: CatalogProductPayloadMetadata | null;
@@ -17,7 +17,7 @@ export type CatalogProductsSectionProps = {
   shopBrands?: string[] | undefined;
   externalBrandFilter?: string | undefined;
   onBrandFilterChange?: ((brand: string) => void) | undefined;
-};
+}
 
 export function CatalogProductsSection({
   isConnected,
@@ -114,7 +114,9 @@ export function CatalogProductsSection({
             totalCount={displayProducts.length}
             selectedCount={selectedInViewCount}
             onDelete={deleteSelected}
-            onExport={() => {}}
+            onExport={() => {
+              /* export catalogue — brancher l’API d’export */
+            }}
           />
         ) : null}
 

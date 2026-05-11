@@ -9,7 +9,7 @@ const passwordToggleIconProps = {
   strokeWidth: 1.5,
 };
 
-export type PasswordFieldProps = {
+export interface PasswordFieldProps {
   id: string;
   label: string;
   name: string;
@@ -23,7 +23,7 @@ export type PasswordFieldProps = {
   error?: string | null | undefined;
   /** Affiche l’indicateur de force (inscription, premier champ mot de passe). */
   showStrengthMeter?: boolean | undefined;
-};
+}
 
 export function PasswordField({
   id,
@@ -71,7 +71,7 @@ export function PasswordField({
         <button
           type="button"
           className="absolute right-1.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg border-0 bg-transparent p-0 text-text-muted hover:text-purple-600 disabled:cursor-not-allowed disabled:opacity-50"
-          onClick={() => setVisible((v) => !v)}
+          onClick={() => void setVisible((v) => !v)}
           disabled={disabled}
           aria-label={visible ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
           aria-pressed={visible}

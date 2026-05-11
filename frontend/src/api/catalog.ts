@@ -2,7 +2,7 @@ import type { CatalogProduct } from './types/api.types';
 import { getApiBaseUrl } from './apiBase';
 import { apiFetch, guestOrAuthHeaders, guestOrAuthHeadersNoBodyWithGuestSession } from './apiAuth';
 
-export type CatalogSearchCriteria = {
+export interface CatalogSearchCriteria {
   sector?: string;
   brands?: string[];
   categories?: string[];
@@ -13,7 +13,7 @@ export type CatalogSearchCriteria = {
   maxPrice?: number;
   attributes?: Record<string, string>;
   limit?: number;
-};
+}
 
 function normalizeCatalogProduct(raw: unknown): CatalogProduct | null {
   if (typeof raw !== 'object' || raw === null) return null;

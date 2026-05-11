@@ -5,7 +5,7 @@ import type { CatalogProduct } from '@types-api';
 
 import type { ProductFilter } from '../types';
 
-type UseProductSelectionResult = {
+interface UseProductSelectionResult {
   selectedIds: Set<string>;
   toggleOne: (id: string, checked: boolean) => void;
   toggleSelectAll: () => void;
@@ -13,7 +13,7 @@ type UseProductSelectionResult = {
   someFilteredSelected: boolean;
   selectedInViewCount: number;
   deleteSelected: () => void;
-};
+}
 
 export function useProductSelection(
   filteredProducts: CatalogProduct[],
@@ -23,7 +23,7 @@ export function useProductSelection(
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
 
   useEffect(() => {
-    queueMicrotask(() => setSelectedIds(new Set()));
+    queueMicrotask(() => void setSelectedIds(new Set()));
   }, [
     filters.search,
     filters.brand,
@@ -36,7 +36,7 @@ export function useProductSelection(
 
   useEffect(() => {
     if (filteredProducts.length === 0) {
-      queueMicrotask(() => setSelectedIds(new Set()));
+      queueMicrotask(() => void setSelectedIds(new Set()));
     }
   }, [filteredProducts.length]);
 

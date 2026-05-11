@@ -49,23 +49,23 @@ import { useCallback, useState } from 'react';
 import { fetchSuggestUrls } from '@api/suggestUrls';
 import { parseAsSiteUrl } from '@lib/siteUrl';
 
-type UseUrlSearchOptions = {
+interface UseUrlSearchOptions {
   /**
    * Callback appelé avec l'URL résolue, que ce soit une URL directe
    * ou une suggestion choisie par l'utilisateur.
    */
   onSubmit: (url: string) => Promise<unknown>;
-};
+}
 
 export function useUrlSearch({ onSubmit }: UseUrlSearchOptions) {
-  const [input, setInputState] = useState('');
+  const [urlInput, setUrlInput] = useState('');
   const [suggestedUrls, setSuggestedUrls] = useState<string[]>([]);
   const [suggestionsLoading, setSuggestionsLoading] = useState(false);
   const [inputEmptyError, setInputEmptyError] = useState(false);
 
   /** Met à jour la saisie et réinitialise les suggestions et erreurs associées. */
   const setInput = useCallback((value: string) => {
-    setInputState(value);
+    setUrlInput(value);
     setSuggestedUrls([]);
     setInputEmptyError(false);
   }, []);
@@ -78,7 +78,7 @@ export function useUrlSearch({ onSubmit }: UseUrlSearchOptions) {
    * - Texte libre → appelle /api/suggest-urls et expose les résultats.
    */
   const handleSubmit = useCallback(async () => {
-    const raw = input.trim();
+    const raw = urlInput.trim();
 
     if (!raw) {
       setInputEmptyError(true);
@@ -113,7 +113,7 @@ export function useUrlSearch({ onSubmit }: UseUrlSearchOptions) {
     } finally {
       setSuggestionsLoading(false);
     }
-  }, [input, onSubmit]);
+  }, [urlInput, onSubmit]);
 
   /**
    * L'utilisateur clique une suggestion parmi les résultats proposés.
@@ -122,14 +122,14 @@ export function useUrlSearch({ onSubmit }: UseUrlSearchOptions) {
   const handlePickSuggestion = useCallback(
     async (url: string) => {
       setSuggestedUrls([]);
-      setInputState(url);
+      setUrlInput(url);
       await onSubmit(url);
     },
     [onSubmit],
   );
 
   return {
-    input,
+    input: urlInput,
     setInput,
     suggestedUrls,
     suggestionsLoading,

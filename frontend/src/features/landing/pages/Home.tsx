@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router';
 import { motion } from 'motion/react';
+import { useEffect, useState } from 'react';
 
 import { fadeUp, titleReveal, badgeBounce } from '@lib/motionVariants';
 import { AnalysisProgress } from '@shared/components/AnalysisProgress';
@@ -28,15 +29,21 @@ export function Home() {
       const target = user
         ? `/catalog/${summary.id}`
         : `/catalog/public/${summary.id}${summary.sessionId ? `?s=${encodeURIComponent(summary.sessionId)}` : ''}`;
-      navigate(target);
+      void navigate(target);
     },
   });
 
   const search = useUrlSearch({ onSubmit: runAnalysis });
 
   useSignupAutoAnalyze({ runAnalysis });
-  const prefersReduced =
-    typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const [prefersReduced, setPrefersReduced] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const apply = () => void setPrefersReduced(mq.matches);
+    queueMicrotask(apply);
+    mq.addEventListener('change', apply);
+    return () => void mq.removeEventListener('change', apply);
+  }, []);
 
   return (
     <>
@@ -90,7 +97,9 @@ export function Home() {
               setSiteInput={search.setInput}
               suggestionsLoading={search.suggestionsLoading}
               searchEmptyError={search.inputEmptyError}
-              handleSubmit={search.handleSubmit}
+              handleSubmit={() => {
+                void search.handleSubmit();
+              }}
             />
           </motion.div>
 
@@ -100,7 +109,12 @@ export function Home() {
             animate="visible"
             className="w-full flex justify-center"
           >
-            <UrlsSuggestions urls={search.suggestedUrls} onPick={search.handlePickSuggestion} />
+            <UrlsSuggestions
+              urls={search.suggestedUrls}
+              onPick={(url) => {
+                void search.handlePickSuggestion(url);
+              }}
+            />
           </motion.div>
 
           <motion.p

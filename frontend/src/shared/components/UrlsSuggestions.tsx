@@ -1,7 +1,7 @@
-export type UrlsSuggestionsProps = {
+export interface UrlsSuggestionsProps {
   urls: string[];
   onPick: (url: string) => void;
-};
+}
 
 export function UrlsSuggestions({ urls, onPick }: UrlsSuggestionsProps) {
   if (urls.length === 0) return null;

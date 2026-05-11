@@ -2,11 +2,11 @@ import { useEffect, useRef } from 'react';
 
 import { useUrlSearch } from '@shared/hooks/useUrlSearch';
 
-type UseCatalogUrlInputFlowOptions = {
+interface UseCatalogUrlInputFlowOptions {
   analysisId: string | undefined;
   defaultWebsiteUrl: string | null | undefined;
   onSubmit: (url: string) => Promise<unknown>;
-};
+}
 
 export function useCatalogUrlInputFlow(options: UseCatalogUrlInputFlowOptions) {
   const { analysisId, defaultWebsiteUrl, onSubmit } = options;
@@ -24,6 +24,7 @@ export function useCatalogUrlInputFlow(options: UseCatalogUrlInputFlowOptions) {
     if (!fromProfile) return;
     defaultSiteFromProfileApplied.current = true;
     search.setInput(fromProfile);
+    // eslint-disable-next-line react-hooks/exhaustive-deps, react-x/exhaustive-deps -- `search` agrégé : `input` + `setInput` listés
   }, [analysisId, defaultWebsiteUrl, search.input, search.setInput]);
 
   return search;

@@ -22,5 +22,5 @@ export function pickLatestSiteAnalysisId(analyses: Analysis[]): string | null {
       bestTimestamp = analysisTimestamp;
     }
   }
-  return best?.id ?? null;
+  return best.id;
 }

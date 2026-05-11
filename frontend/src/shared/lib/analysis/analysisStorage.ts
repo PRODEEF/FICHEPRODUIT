@@ -6,8 +6,7 @@
 const ANALYSIS_DETAIL_CACHE = new Map<string, unknown>();
 
 /** UUID (RFC) — aligné sur les IDs générés côté backend. */
-const UUID_RE =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function detailCacheKey(userId: string, analysisId: string): string {
   return `${userId}:${analysisId}`;
@@ -22,18 +21,18 @@ export function isValidGuestSessionId(id: string | null | undefined): id is stri
   return isValidAnalysisId(id ?? undefined);
 }
 
-type AnalysisDetailCache<A, P, S> = {
+interface AnalysisDetailCache<A, P, S> {
   analysis: A;
   productPayload?: P;
   shop?: S;
-};
+}
 
 export function getAnalysisDetailCache<A, P, S = unknown>(
   userId: string,
   analysisId: string,
 ): AnalysisDetailCache<A, P, S> | null {
   const raw = ANALYSIS_DETAIL_CACHE.get(detailCacheKey(userId, analysisId));
-  if (!raw || typeof raw !== 'object' || raw === null || !('analysis' in raw)) return null;
+  if (!raw || typeof raw !== 'object' || !('analysis' in raw)) return null;
   return raw as AnalysisDetailCache<A, P, S>;
 }
 

@@ -252,7 +252,7 @@ export async function scrapeFields(
     return nf ? [nf] : [];
   });
   const warnings = Array.isArray(o['warnings'])
-    ? (o['warnings'] as Array<Record<string, unknown>>).map((w) => ({
+    ? (o['warnings'] as Record<string, unknown>[]).map((w) => ({
         code: typeof w['code'] === 'string' ? w['code'] : 'UNKNOWN',
         message: typeof w['message'] === 'string' ? w['message'] : '',
       }))
