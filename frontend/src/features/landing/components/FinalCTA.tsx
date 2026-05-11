@@ -1,7 +1,7 @@
 import { Button } from '@shared/ui/Button';
 import { motion } from 'motion/react';
 
-import { titleReveal } from '@lib/utils/motionVariants';
+import { titleReveal } from '@lib/motionVariants';
 import { useScrollReveal } from '../hooks/useScrollReveal';
 
 export function FinalCTA() {

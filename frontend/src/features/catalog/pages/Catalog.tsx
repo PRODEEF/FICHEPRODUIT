@@ -1,15 +1,12 @@
-import { useEffect, useRef } from 'react';
-import { Navigate, useNavigate, useParams } from 'react-router';
+import { Navigate, useNavigate } from 'react-router';
 
-import { clearLastAnalysisId, isValidAnalysisId } from '@lib/analysis/analysisStorage';
+import { useAuth } from '@shared/hooks/useAuth';
 
-import { useSiteAnalysis } from '../../../shared/hooks/useSiteAnalysis';
-import { useAuth } from '../../auth/useAuth';
-import { AnalysisProgress } from '../../landing/components/AnalysisProgress';
-import { useLandingSearch } from '../../landing/hooks/useLandingSearch';
-import { AnalysisResult } from '../components/AnalysisResult';
 import { EmptyAnalysis } from '../components/EmptyAnalysis';
-import { useAnalysisDetail } from '../hooks/useAnalysisDetail';
+import { AnalysisResult } from '../components/AnalysisResult';
+import { useCatalogAnalysis } from '../hooks/useCatalogAnalysis';
+import { useCatalogAnalysisWorkflow } from '../hooks/useCatalogAnalysisWorkflow';
+import { useCatalogUrlInputFlow } from '../hooks/useCatalogUrlInputFlow';
 
 /**
  * Catalogue privé de l'utilisateur connecté.
@@ -20,43 +17,29 @@ import { useAnalysisDetail } from '../hooks/useAnalysisDetail';
  */
 export function Catalog() {
   const navigate = useNavigate();
-  const { analysisId } = useParams<{ analysisId: string }>();
-  const { user, profile } = useAuth();
-
-  const { runAnalysis, analysisOpen, siteAnalysis, dismissError } = useSiteAnalysis({
-    onSuccess: (summary) => navigate(`/catalog/${summary.id}`),
-  });
-  const landing = useLandingSearch({ runAnalysis });
-
-  const defaultSiteFromProfileApplied = useRef(false);
-  const hasValidAnalysisId = isValidAnalysisId(analysisId);
-
-  useEffect(() => {
-    if (analysisId) return;
-    if (defaultSiteFromProfileApplied.current) return;
-    const fromProfile = profile?.website_url?.trim();
-    if (landing.siteInput.trim() !== '') {
-      defaultSiteFromProfileApplied.current = true;
-      return;
-    }
-    if (!fromProfile) return;
-    defaultSiteFromProfileApplied.current = true;
-    landing.setSiteInput(fromProfile);
-  }, [analysisId, profile?.website_url, landing.siteInput, landing.setSiteInput]);
+  const { profile } = useAuth();
 
   const {
+    analysisId,
+    hasValidAnalysisId,
     analysis,
+    shop,
+    products,
     productPayload,
-    loading: detailLoading,
-    error: detailError,
-    analysisNotFound,
-  } = useAnalysisDetail(analysisId, user?.id, false);
+    detailLoading,
+    detailError,
+    latestResolveLoading,
+    latestResolveError,
+  } = useCatalogAnalysis();
 
-  useEffect(() => {
-    if (!analysisId || !hasValidAnalysisId || !analysisNotFound) return;
-    clearLastAnalysisId();
-    navigate('/catalog', { replace: true });
-  }, [analysisId, hasValidAnalysisId, analysisNotFound, navigate]);
+  const { run, running, currentAnalysis, error: workflowError, clearError } = useCatalogAnalysisWorkflow({
+    onSuccess: (nextAnalysis) => navigate(`/catalog/${nextAnalysis.id}`),
+  });
+  const search = useCatalogUrlInputFlow({
+    analysisId,
+    defaultWebsiteUrl: profile?.website_url,
+    onSubmit: run,
+  });
 
   if (analysisId && !hasValidAnalysisId) {
     return <Navigate to="/catalog" replace />;
@@ -65,22 +48,55 @@ export function Catalog() {
   if (!analysisId) {
     return (
       <>
-        {analysisOpen && siteAnalysis ? (
-          <AnalysisProgress analysis={siteAnalysis} onDismiss={dismissError} />
-        ) : null}
         <div className="relative z-[1] w-full px-12 pb-12 pt-9">
           <header className="mb-5 flex flex-wrap items-center gap-4 text-left">
             <h1 className="m-0 text-[1.75rem] font-extrabold text-text-primary">Mon catalogue</h1>
           </header>
-          <EmptyAnalysis
-            siteInput={landing.siteInput}
-            setSiteInput={landing.setSiteInput}
-            suggestionsLoading={landing.suggestionsLoading}
-            searchEmptyError={landing.searchEmptyError}
-            handleSubmit={landing.handleSubmit}
-            suggestedUrls={landing.suggestedUrls}
-            handlePickSuggestion={landing.handlePickSuggestion}
-          />
+          {running ? (
+            <p className="mb-4 text-sm text-text-secondary" aria-busy="true">
+              Analyse en cours... statut actuel : {currentAnalysis?.status ?? 'pending'}
+            </p>
+          ) : null}
+          {workflowError ? (
+            <div
+              className="mb-4 rounded-xl border border-red-500/35 bg-red-50 px-4 py-3 text-text-primary"
+              role="alert"
+            >
+              <p>{workflowError}</p>
+              <button
+                type="button"
+                className="mt-2 text-sm font-semibold text-purple-600 underline-offset-2 hover:underline"
+                onClick={clearError}
+              >
+                Fermer
+              </button>
+            </div>
+          ) : null}
+          {latestResolveLoading ? (
+            <p className="text-sm text-text-secondary" aria-busy="true">
+              Chargement…
+            </p>
+          ) : (
+            <>
+              {latestResolveError ? (
+                <div
+                  className="mb-4 rounded-xl border border-border-purple bg-purple-50 px-4 py-3 text-text-primary"
+                  role="alert"
+                >
+                  {latestResolveError}
+                </div>
+              ) : null}
+              <EmptyAnalysis
+                siteInput={search.input}
+                setSiteInput={search.setInput}
+                suggestionsLoading={search.suggestionsLoading}
+                searchEmptyError={search.inputEmptyError}
+                handleSubmit={search.handleSubmit}
+                suggestedUrls={search.suggestedUrls}
+                handlePickSuggestion={search.handlePickSuggestion}
+              />
+            </>
+          )}
         </div>
       </>
     );
@@ -93,9 +109,12 @@ export function Catalog() {
       </header>
 
       <AnalysisResult
+        isConnected={!!profile}
         loading={detailLoading}
         error={detailError}
         analysis={analysis}
+        shop={shop}
+        products={products}
         productPayload={productPayload}
       />
     </div>

@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { getSupabaseClient } from '@lib/api/supabase';
+import { getSupabaseClient } from '../../../shared/supabase';
 import { Banner, Button, Card, InputField, PageSection, TextLink } from '@shared/ui';
 
 import { getPasswordResetRedirectUrl, requestPasswordResetEmail } from '../lib/passwordAuth';

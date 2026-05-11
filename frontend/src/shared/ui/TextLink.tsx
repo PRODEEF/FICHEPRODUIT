@@ -1,6 +1,6 @@
 import { Link, type LinkProps } from 'react-router';
 
-import { cn } from '../lib/utils/cn';
+import { cn } from '../lib/cn';
 
 type TextLinkProps = LinkProps & {
   className?: string;

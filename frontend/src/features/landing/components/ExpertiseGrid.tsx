@@ -1,5 +1,5 @@
 import { motion } from 'motion/react';
-import { cardReveal, staggerContainer, titleReveal } from '@lib/utils/motionVariants';
+import { cardReveal, staggerContainer, titleReveal } from '@lib/motionVariants';
 
 import { universes } from '../types';
 

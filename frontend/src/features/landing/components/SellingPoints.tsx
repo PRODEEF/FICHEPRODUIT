@@ -1,7 +1,7 @@
 import { motion } from 'motion/react';
 import { ChevronDown, Download } from 'lucide-react';
 
-import { getSlideVariant, titleReveal } from '@lib/utils/motionVariants';
+import { getSlideVariant, titleReveal } from '@lib/motionVariants';
 import { useScrollReveal } from '../hooks/useScrollReveal';
 
 const points = [

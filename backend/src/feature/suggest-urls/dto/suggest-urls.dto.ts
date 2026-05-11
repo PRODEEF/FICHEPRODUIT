@@ -1,11 +1,11 @@
-import { Transform } from 'class-transformer';
-import { IsNotEmpty, IsString } from 'class-validator';
+import { z } from "zod";
+import { createZodDto } from "nestjs-zod";
 
-export class SuggestUrlsDto {
-  @Transform(({ value }) =>
-    typeof value === 'string' ? value.trim() : value,
-  )
-  @IsString({ message: 'Paramètre q manquant' })
-  @IsNotEmpty({ message: 'Paramètre q manquant' })
-  q!: string;
-}
+export const suggestUrlsSchema = z.object({
+  q: z
+    .string()
+    .min(1, "Le paramètre q est requis")
+    .describe("Indice texte pour trouver des URLs e-commerce"),
+});
+
+export class SuggestUrlsDto extends createZodDto(suggestUrlsSchema) {}

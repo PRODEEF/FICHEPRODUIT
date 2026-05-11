@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
-import type { Product } from '@lib/analysis/analysisApi';
+import type { CatalogProduct } from '@types-api';
 
 import type { ProductFilter } from '../types';
 
@@ -12,20 +12,33 @@ type UseProductSelectionResult = {
   allFilteredSelected: boolean;
   someFilteredSelected: boolean;
   selectedInViewCount: number;
-  importSelected: () => void;
   deleteSelected: () => void;
 };
 
 export function useProductSelection(
-  filteredProducts: Product[],
+  filteredProducts: CatalogProduct[],
   filters: ProductFilter,
-  onRemoveIds: (ids: string[]) => void,
+  onRemoveIds?: (ids: string[]) => void,
 ): UseProductSelectionResult {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
 
   useEffect(() => {
     queueMicrotask(() => setSelectedIds(new Set()));
-  }, [filters.search, filters.brand, filters.category, filters.subCategory, filters.year]);
+  }, [
+    filters.search,
+    filters.brand,
+    filters.category,
+    filters.subCategory,
+    filters.year,
+    filters.priceMin,
+    filters.priceMax,
+  ]);
+
+  useEffect(() => {
+    if (filteredProducts.length === 0) {
+      queueMicrotask(() => setSelectedIds(new Set()));
+    }
+  }, [filteredProducts.length]);
 
   const allFilteredSelected =
     filteredProducts.length > 0 && filteredProducts.every((p) => selectedIds.has(p.id));
@@ -57,10 +70,6 @@ export function useProductSelection(
     [filteredProducts, selectedIds],
   );
 
-  const importSelected = useCallback(() => {
-    toast.success(`${selectedInViewCount} fiche(s) importée(s) avec succès !`);
-  }, [selectedInViewCount]);
-
   const deleteSelected = useCallback(() => {
     const toRemove = filteredProducts.filter((p) => selectedIds.has(p.id));
     if (toRemove.length === 0) return;
@@ -68,7 +77,7 @@ export function useProductSelection(
       action: {
         label: 'Confirmer',
         onClick: () => {
-          onRemoveIds(toRemove.map((p) => p.id));
+          onRemoveIds?.(toRemove.map((p) => p.id));
           setSelectedIds(new Set());
         },
       },
@@ -82,7 +91,6 @@ export function useProductSelection(
     allFilteredSelected,
     someFilteredSelected,
     selectedInViewCount,
-    importSelected,
     deleteSelected,
   };
 }

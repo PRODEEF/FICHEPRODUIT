@@ -1,7 +1,7 @@
 import { useEffect, useState, type HTMLAttributes, type ReactNode } from 'react';
 import { motion } from 'motion/react';
 
-import { cn } from '../lib/utils/cn';
+import { cn } from '../lib/cn';
 
 type BannerVariant = 'neutral' | 'success' | 'error';
 

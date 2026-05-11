@@ -2,11 +2,8 @@ import type { User } from '@supabase/supabase-js';
 
 import type { UserRepository } from '../userRepository';
 
-export const PENDING_SIGNUP_STORAGE_KEY = 'ficheproduct:pendingSignup:v1';
-
 /**
- * Persisted locally when signup requires email/phone verification and we cannot PATCH `profiles`
- * immediately (RLS requires an authenticated user).
+ * Intent de profil après inscription (sans localStorage) : conservé en mémoire pour l’onglet courant.
  */
 export type PendingSignupPayload = {
   email?: string;
@@ -15,6 +12,8 @@ export type PendingSignupPayload = {
   websiteUrl: string;
   pendingAutoAnalyze: boolean;
 };
+
+let pendingSignupMemory: PendingSignupPayload | null = null;
 
 function payloadMatchesUser(payload: PendingSignupPayload, user: User): boolean {
   const ue = user.email?.trim().toLowerCase();
@@ -27,44 +26,18 @@ function payloadMatchesUser(payload: PendingSignupPayload, user: User): boolean 
 }
 
 export function writePendingSignup(payload: PendingSignupPayload): void {
-  try {
-    if (typeof globalThis.localStorage === 'undefined') return;
-    globalThis.localStorage.setItem(PENDING_SIGNUP_STORAGE_KEY, JSON.stringify(payload));
-  } catch {
-    /* ignore quota / SSR */
-  }
+  pendingSignupMemory = payload;
 }
 
 function readPendingSignup(): PendingSignupPayload | null {
-  try {
-    if (typeof globalThis.localStorage === 'undefined') return null;
-    const raw = globalThis.localStorage.getItem(PENDING_SIGNUP_STORAGE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as unknown;
-    if (!parsed || typeof parsed !== 'object') return null;
-    const o = parsed as Record<string, unknown>;
-    const username = typeof o.username === 'string' ? o.username : '';
-    const websiteUrl = typeof o.websiteUrl === 'string' ? o.websiteUrl : '';
-    const pendingAutoAnalyze = typeof o.pendingAutoAnalyze === 'boolean' ? o.pendingAutoAnalyze : false;
-    const email = typeof o.email === 'string' ? o.email : undefined;
-    const phone = typeof o.phone === 'string' ? o.phone : undefined;
-    if (!username.trim()) return null;
-    return { username, websiteUrl, pendingAutoAnalyze, email, phone };
-  } catch {
-    return null;
-  }
+  return pendingSignupMemory;
 }
 
-function clearPendingSignupStorage(): void {
-  try {
-    if (typeof globalThis.localStorage === 'undefined') return;
-    globalThis.localStorage.removeItem(PENDING_SIGNUP_STORAGE_KEY);
-  } catch {
-    /* ignore */
-  }
+function clearPendingSignupMemory(): void {
+  pendingSignupMemory = null;
 }
 
-/** Applies stored signup intent to `profiles` once the user session exists; returns whether a PATCH ran. */
+/** Applique l’intent de signup à `public.users` une fois la session Supabase disponible ; retourne si un PATCH a été exécuté. */
 export async function applyPendingSignupFromStorage(
   repo: UserRepository,
   user: User,
@@ -77,7 +50,7 @@ export async function applyPendingSignupFromStorage(
       website_url: pending.websiteUrl ? pending.websiteUrl : null,
       pending_auto_analyze: pending.pendingAutoAnalyze,
     });
-    clearPendingSignupStorage();
+    clearPendingSignupMemory();
     return true;
   } catch {
     return false;

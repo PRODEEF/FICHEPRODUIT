@@ -1,17 +1,26 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
+import { useId } from 'react';
 import { motion } from 'motion/react';
 import { Link } from 'react-router';
 
-import { cn } from '../lib/utils/cn';
+import { cn } from '../lib/cn';
 
 type ButtonProps = {
   children: ReactNode;
-  href?: string;
-  onClick?: () => void;
-  variant?: 'primary' | 'secondary' | 'ghost' | 'gradient' | 'danger-outline' | 'neutral-outline';
-  size?: 'sm' | 'md' | 'lg';
-  glow?: boolean;
-  className?: string;
+  href?: string | undefined;
+  onClick?: (() => void) | undefined;
+  variant?:
+    | 'primary'
+    | 'secondary'
+    | 'ghost'
+    | 'gradient'
+    | 'danger-outline'
+    | 'neutral-outline'
+    | undefined;
+  size?: 'sm' | 'md' | 'lg' | undefined;
+  glow?: boolean | undefined;
+  className?: string | undefined;
+  tooltip?: string | undefined;
 } & Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children' | 'onClick'>;
 
 const variantClasses: Record<NonNullable<ButtonProps['variant']>, string> = {
@@ -30,6 +39,9 @@ const sizeClasses: Record<NonNullable<ButtonProps['size']>, string> = {
   lg: 'text-lg px-8 py-4 rounded-xl font-bold',
 };
 
+const tooltipBubbleClassName =
+  'pointer-events-none absolute bottom-full left-1/2 z-10 mb-1.5 hidden w-max max-w-[min(18rem,calc(100vw-2rem))] -translate-x-1/2 rounded-md bg-gray-900 px-2.5 py-1.5 text-center text-xs leading-snug text-white shadow-md motion-safe:transition-opacity group-hover/btn-tooltip:block group-focus-within/btn-tooltip:block';
+
 export function Button({
   children,
   href,
@@ -38,9 +50,15 @@ export function Button({
   size = 'md',
   glow = false,
   className,
+  tooltip,
   type = 'button',
   ...buttonProps
 }: ButtonProps) {
+  const reactId = useId();
+  const tooltipElementId = `btn-tooltip-${reactId.replace(/:/g, '')}`;
+  const tooltipText = tooltip?.trim();
+  const hasTooltip = Boolean(tooltipText);
+
   const prefersReduced =
     typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const shouldGlow = glow && (variant === 'primary' || variant === 'secondary');
@@ -51,35 +69,62 @@ export function Button({
     className,
   );
 
-  const buttonContent = href ? (
-    <Link to={href} className={classes}>
+  const describedBy = hasTooltip ? tooltipElementId : buttonProps['aria-describedby'];
+
+  const core = href ? (
+    <Link to={href} className={classes} aria-describedby={describedBy}>
       {children}
     </Link>
   ) : (
-    <button type={type} onClick={onClick} className={classes} {...buttonProps}>
+    <button
+      type={type}
+      className={classes}
+      {...buttonProps}
+      onClick={onClick}
+      aria-describedby={describedBy}
+    >
       {children}
     </button>
   );
 
-  if (!shouldGlow) return buttonContent;
-
-  return (
+  const withGlow = shouldGlow ? (
     <motion.div
-      animate={
-        prefersReduced
-          ? undefined
-          : {
+      {...(!prefersReduced
+        ? {
+            animate: {
               boxShadow: [
                 '0 0 30px rgba(124,58,237,0.3)',
                 '0 0 70px rgba(124,58,237,0.6)',
                 '0 0 30px rgba(124,58,237,0.3)',
               ],
-            }
-      }
+            },
+          }
+        : {})}
       transition={{ duration: prefersReduced ? 0 : 2.5, repeat: Infinity, ease: 'easeInOut' }}
-      className="rounded-xl inline-block"
+      className="inline-block rounded-xl"
     >
-      {buttonContent}
+      {core}
     </motion.div>
+  ) : (
+    core
+  );
+
+  if (!hasTooltip) return withGlow;
+
+  const isDisabled = Boolean(buttonProps.disabled);
+
+  return (
+    <span
+      className={cn(
+        'group/btn-tooltip relative inline-flex',
+        isDisabled && !href && 'cursor-not-allowed',
+      )}
+      title={tooltipText}
+    >
+      {withGlow}
+      <span id={tooltipElementId} role="tooltip" className={tooltipBubbleClassName}>
+        {tooltipText}
+      </span>
+    </span>
   );
 }

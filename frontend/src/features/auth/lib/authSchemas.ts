@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { parseAsFullSiteUrl } from '@lib/utils/siteUrl';
+import { parseAsFullSiteUrl } from '@lib/siteUrl';
 
 import {
   getPasswordStrengthSnapshot,
@@ -11,6 +11,9 @@ export const USERNAME_MIN_LENGTH = 3;
 export const USERNAME_MAX_LENGTH = 30;
 
 export const PASSWORD_MIN = 8;
+
+/** Alias pour imports historiques (`loginFieldValidation`, etc.). */
+export const MIN_PASSWORD_LENGTH = PASSWORD_MIN;
 
 const USERNAME_REGEX = /^[a-zA-Z0-9_\- ]+$/;
 
@@ -75,7 +78,6 @@ export const signupSchema = z
 
 export const profileSchema = z.object({
   username: usernameField,
-  websiteUrl: websiteUrlField,
 });
 
 export type LoginInput = z.input<typeof loginSchema>;

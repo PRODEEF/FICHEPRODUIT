@@ -1,0 +1,120 @@
+/**
+ * Helpers pour construire les headers HTTP vers le backend NestJS.
+ *
+ * - Authentifié : `Authorization: Bearer <supabase_access_token>`
+ * - Invité      : cookie httpOnly posé par `POST /api/analyses`, ou en-tête `x-session-id` si fourni explicitement.
+ *
+ * Tous les appels API utilisent `credentials: 'include'` (voir `apiFetch`).
+ */
+
+import { getSupabaseClient } from '@shared/supabase';
+
+type ApiHeaders = Record<string, string>;
+
+/**
+ * Headers de base : Content-Type JSON + Bearer si session Supabase active.
+ */
+export async function authHeaders(): Promise<ApiHeaders> {
+  const headers: ApiHeaders = { 'Content-Type': 'application/json' };
+
+  const supabase = getSupabaseClient();
+  if (supabase) {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (session?.access_token) {
+      headers['Authorization'] = `Bearer ${session.access_token}`;
+    }
+  }
+
+  return headers;
+}
+
+/**
+ * Headers pour les routes à auth optionnelle (analyses, catalogue, etc.) :
+ * Bearer si session Supabase, sinon uniquement JSON (cookie invité côté navigateur).
+ */
+export async function guestOrAuthHeaders(): Promise<ApiHeaders> {
+  return authHeaders();
+}
+
+/**
+ * Headers pour requêtes sans corps JSON (GET, DELETE).
+ */
+export async function authHeadersNoBody(): Promise<ApiHeaders> {
+  const h = await authHeaders();
+  const { 'Content-Type': _ct, ...rest } = h;
+  return rest;
+}
+
+/** GET/DELETE invité ou connecté — sans `Content-Type`. */
+export async function guestOrAuthHeadersNoBody(): Promise<ApiHeaders> {
+  const h = await guestOrAuthHeaders();
+  const { 'Content-Type': _ct, ...rest } = h;
+  return rest;
+}
+
+/**
+ * Ajoute `x-session-id` si fourni (filet quand le cookie httpOnly n’est pas envoyé, ex. localhost vs 127.0.0.1).
+ */
+export async function guestOrAuthHeadersWithGuestSession(
+  guestSessionId?: string | null,
+): Promise<ApiHeaders> {
+  const h = await guestOrAuthHeaders();
+  const sid = guestSessionId?.trim();
+  if (!sid) return h;
+  return { ...h, 'x-session-id': sid };
+}
+
+export async function guestOrAuthHeadersNoBodyWithGuestSession(
+  guestSessionId?: string | null,
+): Promise<ApiHeaders> {
+  const h = await guestOrAuthHeadersWithGuestSession(guestSessionId);
+  const { 'Content-Type': _ct, ...rest } = h;
+  return rest;
+}
+
+export function extractErrorMessage(parsed: unknown, fallback: string): string {
+  if (typeof parsed === 'object' && parsed !== null) {
+    const o = parsed as Record<string, unknown>;
+    if (typeof o['message'] === 'string' && o['message'].trim()) {
+      return o['message'].trim();
+    }
+    if (Array.isArray(o['message']) && typeof o['message'][0] === 'string') {
+      return String(o['message'][0]);
+    }
+  }
+  return fallback;
+}
+
+/**
+ * Wrapper fetch avec `credentials: 'include'` pour les cookies invité.
+ */
+export async function apiFetch(
+  url: string,
+  init: RequestInit,
+): Promise<{ res: Response; parsed: unknown }> {
+  const res = await fetch(url, { ...init, credentials: 'include' });
+  const text = await res.text();
+
+  let parsed: unknown = null;
+  if (text.length > 0) {
+    try {
+      parsed = JSON.parse(text);
+    } catch {
+      if (!res.ok) throw new Error(`Réponse non-JSON du serveur (${res.status}).`);
+    }
+  }
+
+  if (!res.ok) {
+    const status = res.status;
+
+    if (status === 401) throw new Error('Session expirée ou non autorisée. Reconnecte-toi.');
+    if (status === 403) throw new Error('Accès refusé.');
+    if (status === 404) throw new Error(extractErrorMessage(parsed, 'Ressource introuvable.'));
+
+    throw new Error(extractErrorMessage(parsed, `Erreur serveur (${status}).`));
+  }
+
+  return { res, parsed };
+}

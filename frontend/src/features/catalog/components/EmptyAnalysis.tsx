@@ -1,9 +1,8 @@
 import { motion } from 'motion/react';
 
-import { fadeUp } from '@lib/utils/motionVariants';
-
-import { HeroSearchForm } from '../../landing/components/HeroSearchForm';
-import { LandingSuggestions } from '../../landing/components/LandingSuggestions';
+import { fadeUp } from '@lib/motionVariants';
+import { UrlSearchForm } from '@shared/components/UrlSearchForm';
+import { UrlsSuggestions } from '@shared/components/UrlsSuggestions';
 
 type EmptyAnalysisProps = {
   siteInput: string;
@@ -39,7 +38,7 @@ export function EmptyAnalysis({
         transition={{ duration: 0.6, delay: 0.5 }}
         className="w-full"
       >
-        <HeroSearchForm
+        <UrlSearchForm
           siteInput={siteInput}
           setSiteInput={setSiteInput}
           suggestionsLoading={suggestionsLoading}
@@ -49,8 +48,13 @@ export function EmptyAnalysis({
         />
       </motion.div>
 
-      <motion.div variants={fadeUp} initial="hidden" animate="visible" className="flex justify-center">
-        <LandingSuggestions urls={suggestedUrls} onPick={handlePickSuggestion} />
+      <motion.div
+        variants={fadeUp}
+        initial="hidden"
+        animate="visible"
+        className="flex justify-center"
+      >
+        <UrlsSuggestions urls={suggestedUrls} onPick={handlePickSuggestion} />
       </motion.div>
     </section>
   );

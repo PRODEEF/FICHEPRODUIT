@@ -1,13 +1,13 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router';
 
-import { getSupabaseClient } from '@lib/api/supabase';
-import { parseZodFieldErrors } from '@lib/utils/parseZodErrors';
-import { Banner, Button, Card, InputField, PageSection, TextLink } from '@shared/ui';
+import { useAuth } from '@shared/hooks/useAuth';
+import { getSupabaseClient } from '@shared/supabase';
+import { parseZodFieldErrors } from '@lib/parseZodErrors';
+import { Banner, Button, Card, InputField, PageSection, TextLink } from '@ui';
 
-import { PasswordField } from '../components/PasswordField';
-import { useAuth } from '../useAuth';
 import { loginSchema } from '../lib/authSchemas';
+import { PasswordField } from '../components/PasswordField';
 import { signInWithEmailPassword } from '../lib/credentialsAuth';
 import type { LoginFieldErrors, LoginFieldKey } from '../types';
 
@@ -91,8 +91,8 @@ export function Login() {
           <Banner variant="error">
             Variables d’environnement Supabase manquantes. Copiez{' '}
             <code className="break-all text-[0.8em]">frontend/.env.example</code> vers{' '}
-            <code className="break-all text-[0.8em]">frontend/.env</code> et renseignez l’URL ainsi que la clé
-            anonyme.
+            <code className="break-all text-[0.8em]">frontend/.env</code> et renseignez l’URL ainsi
+            que la clé anonyme.
           </Banner>
         </Card>
       </PageSection>
@@ -107,8 +107,7 @@ export function Login() {
       <Card className="mx-auto w-full max-w-[30rem]">
         <h1 className="mb-2 text-center text-2xl font-extrabold text-text-primary">Connexion</h1>
         <p className="mb-5 text-center text-sm text-text-secondary">
-          Pas encore de compte ?{' '}
-          <TextLink to="/signup">Créer un compte</TextLink>
+          Pas encore de compte ? <TextLink to="/signup">Créer un compte</TextLink>
         </p>
         <form className="flex flex-col gap-4" noValidate onSubmit={(e) => void handleSubmit(e)}>
           <InputField

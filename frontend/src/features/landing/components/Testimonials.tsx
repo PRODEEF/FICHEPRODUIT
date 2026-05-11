@@ -1,7 +1,7 @@
 import { Button } from '@shared/ui/Button';
 import { motion } from 'motion/react';
 
-import { cardReveal, staggerContainer, titleReveal } from '@lib/utils/motionVariants';
+import { cardReveal, staggerContainer, titleReveal } from '@lib/motionVariants';
 import { useScrollReveal } from '../hooks/useScrollReveal';
 import { testimonials } from '../types';
 

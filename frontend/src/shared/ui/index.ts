@@ -1,6 +1,8 @@
 export { Button } from './Button';
 export { InputField } from './InputField';
 export { Badge } from './Badge';
+export { Tag } from './Tag';
+export type { TagVariant } from './Tag';
 export { Banner } from './Banner';
 export { Card } from './Card';
 export { Modal } from './Modal';

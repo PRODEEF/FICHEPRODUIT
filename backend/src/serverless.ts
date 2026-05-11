@@ -1,29 +1,31 @@
-import 'reflect-metadata';
-import { NestFactory } from '@nestjs/core';
-import {
-  FastifyAdapter,
-  NestFastifyApplication,
-} from '@nestjs/platform-fastify';
-import { ValidationPipe } from '@nestjs/common';
-import { AppModule } from './app.module';
-import type { IncomingMessage, ServerResponse } from 'http';
+import "reflect-metadata";
+import cookie from "@fastify/cookie";
+import { ValidationPipe } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { NestFactory } from "@nestjs/core";
+import { FastifyAdapter, NestFastifyApplication } from "@nestjs/platform-fastify";
+import type { IncomingMessage, ServerResponse } from "http";
+import { AppModule } from "./app.module";
 
 let app: NestFastifyApplication;
 
 async function bootstrap(): Promise<NestFastifyApplication> {
   if (app) return app;
 
-  app = await NestFactory.create<NestFastifyApplication>(
-    AppModule,
-    new FastifyAdapter(),
-    { logger: ['error', 'warn'] },
-  );
+  app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter(), {
+    logger: ["error", "warn"],
+  });
 
+  const fastify = app.getHttpAdapter().getInstance();
+  await fastify.register(cookie);
+
+  const configService = app.get(ConfigService);
+  const corsOrigin = configService.get<string>("corsOrigin", "*");
   app.enableCors({
-    origin: true,
+    origin: corsOrigin === "*" ? true : corsOrigin.split(",").map((o) => o.trim()),
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "x-session-id", "Cookie"],
     preflightContinue: false,
     optionsSuccessStatus: 204,
   });
@@ -43,11 +45,8 @@ async function bootstrap(): Promise<NestFastifyApplication> {
   return app;
 }
 
-export default async function handler(
-  req: IncomingMessage,
-  res: ServerResponse,
-) {
+export default async function handler(req: IncomingMessage, res: ServerResponse) {
   const nestApp = await bootstrap();
   const fastify = nestApp.getHttpAdapter().getInstance();
-  fastify.server.emit('request', req, res);
+  fastify.server.emit("request", req, res);
 }

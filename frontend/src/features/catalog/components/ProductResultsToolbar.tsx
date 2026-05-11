@@ -1,47 +1,66 @@
+import { Button } from '@shared/ui';
+
 type ProductResultsToolbarProps = {
+  isConnected: boolean;
   totalCount: number;
   selectedCount: number;
-  onImport: () => void;
   onDelete: () => void;
+  onExport?: () => void;
 };
 
+const EXPORT_AUTH_TOOLTIP =
+  'L’export est réservé aux comptes connectés. Connectez-vous pour exporter vos fiches produits.';
+
 export function ProductResultsToolbar({
+  isConnected,
   totalCount,
   selectedCount,
-  onImport,
   onDelete,
+  onExport,
 }: ProductResultsToolbarProps) {
   const hasSelection = selectedCount > 0;
+  const exportDisabled = !isConnected || !hasSelection;
+  const showExportAuthTooltip = !isConnected && hasSelection;
 
   return (
     <div className="flex items-center justify-between gap-4 py-2">
       <p className="text-sm text-gray-600">
-        <span className="font-semibold text-gray-900">{totalCount}</span> produit{totalCount !== 1 ? 's' : ''}
+        <span className="font-semibold text-gray-900">{totalCount}</span> fiche
+        {totalCount !== 1 ? 's' : ''} produit{totalCount !== 1 ? 's' : ''}
         {hasSelection ? (
           <>
             {' — '}
-            <span className="font-semibold text-purple-600">{selectedCount}</span> sélectionné{selectedCount !== 1 ? 's' : ''}
+            <span className="font-semibold text-purple-600">{selectedCount}</span> sélectionnée
+            {selectedCount !== 1 ? 's' : ''}
           </>
         ) : null}
       </p>
 
       <div className="flex gap-2">
-        <button
+        <Button
           type="button"
-          disabled={!hasSelection}
-          onClick={onImport}
-          className="rounded-lg bg-purple-600 px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-40"
+          variant="primary"
+          size="sm"
+          className="py-1.5 font-medium"
+          disabled={exportDisabled}
+          tooltip={showExportAuthTooltip ? EXPORT_AUTH_TOOLTIP : undefined}
+          onClick={() => {
+            if (!isConnected || !hasSelection) return;
+            onExport?.();
+          }}
         >
-          Importer la sélection
-        </button>
-        <button
+          Exporter
+        </Button>
+        <Button
           type="button"
+          variant="neutral-outline"
+          size="sm"
+          className="py-1.5 font-medium"
           disabled={!hasSelection}
           onClick={onDelete}
-          className="rounded-lg border border-gray-200 px-4 py-1.5 text-sm font-medium text-gray-600 transition-colors hover:border-gray-300 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
         >
           Supprimer de la vue
-        </button>
+        </Button>
       </div>
     </div>
   );

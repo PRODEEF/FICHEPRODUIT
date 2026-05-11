@@ -1,21 +1,13 @@
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
-import type { SiteAnalysis } from '@lib/analysis/analysisApi';
-import { runSiteAnalysisWorkflow } from '@lib/analysis/runSiteAnalysisWorkflow';
 
-type SiteAnalysisSummary = {
-  id: string;
-  url: string;
-  cms?: string;
-  verticalSummary?: string;
-  catalogMatchCategories?: string[];
-  mainBrands?: string[];
-};
+import type { Analysis } from '@types-api';
+import { runAnalysisWorkflow } from '@api/runAnalysisWorkflow';
 
 export type RunAnalysisOutcome = 'success' | 'error_alert' | 'error_modal';
 
 type UseSiteAnalysisOptions = {
-  onSuccess?: (summary: SiteAnalysisSummary) => void;
+  onSuccess?: (analysis: Analysis) => void;
 };
 
 /**
@@ -25,11 +17,11 @@ type UseSiteAnalysisOptions = {
 export function useSiteAnalysis(options: UseSiteAnalysisOptions = {}) {
   const { onSuccess } = options;
   const [analysisOpen, setAnalysisOpen] = useState(false);
-  const [siteAnalysis, setSiteAnalysis] = useState<SiteAnalysis | null>(null);
+  const [siteAnalysis, setSiteAnalysis] = useState<Analysis | null>(null);
 
   const runAnalysis = useCallback(
     async (urlInput: string): Promise<RunAnalysisOutcome> => {
-      const result = await runSiteAnalysisWorkflow(urlInput, {
+      const result = await runAnalysisWorkflow(urlInput, {
         onProgress: (a) => {
           setAnalysisOpen(true);
           setSiteAnalysis(a);
@@ -58,8 +50,7 @@ export function useSiteAnalysis(options: UseSiteAnalysisOptions = {}) {
         return 'error_modal';
       }
 
-      const summary = result.summary;
-      onSuccess?.(summary);
+      onSuccess?.(result.analysis);
       setAnalysisOpen(false);
       setSiteAnalysis(null);
       return 'success';

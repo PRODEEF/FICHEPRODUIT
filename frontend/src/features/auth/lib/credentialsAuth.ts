@@ -5,7 +5,7 @@ import { authErrorMessage } from './authErrorMessage';
 /** En cas d’échec, `code` sert au routage des erreurs par champ dans le formulaire. */
 export type SignInWithEmailResult =
   | { ok: true }
-  | { ok: false; message: string; code?: string };
+  | { ok: false; message: string; code?: string | undefined };
 
 export async function signInWithEmailPassword(
   supabase: SupabaseClient,

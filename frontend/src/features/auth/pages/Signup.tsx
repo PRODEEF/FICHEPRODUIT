@@ -1,15 +1,14 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 
-import { getSupabaseClient } from '@lib/api/supabase';
-import { parseAsFullSiteUrl } from '@lib/utils/siteUrl';
+import { parseAsFullSiteUrl } from '@lib/siteUrl';
+import { getSupabaseClient } from '@shared/supabase';
+import { AnalysisProgress } from '@shared/components/AnalysisProgress';
+import { useAuth } from '@shared/hooks/useAuth';
 import { useSiteAnalysis } from '@shared/hooks/useSiteAnalysis';
 import { Banner, Button, Card, InputField, PageSection, TextLink } from '@shared/ui';
 
-import { AnalysisProgress } from '../../landing/components/AnalysisProgress';
-
 import { PasswordField } from '../components/PasswordField';
-import { useAuth } from '../useAuth';
 import { authErrorMessage } from '../lib/authErrorMessage';
 import { writePendingSignup } from '../lib/pendingSignupStorage';
 import { collectSignupFieldErrors } from '../lib/signupFieldValidation';
@@ -24,7 +23,7 @@ export function Signup() {
   const [signupUrlAnalysisActive, setSignupUrlAnalysisActive] = useState(false);
   const { runAnalysis, analysisOpen, siteAnalysis, dismissError } = useSiteAnalysis({
     onSuccess: (summary) => {
-      navigate(`/analyses/${summary.id}`);
+      navigate(`/catalog/${summary.id}`);
     },
   });
 
@@ -180,8 +179,8 @@ export function Signup() {
           <Banner variant="error">
             Variables d’environnement Supabase manquantes. Copiez{' '}
             <code className="break-all text-[0.8em]">frontend/.env.example</code> vers{' '}
-            <code className="break-all text-[0.8em]">frontend/.env</code> et renseignez l’URL ainsi que la clé
-            anonyme.
+            <code className="break-all text-[0.8em]">frontend/.env</code> et renseignez l’URL ainsi
+            que la clé anonyme.
           </Banner>
         </Card>
       </PageSection>
@@ -202,13 +201,12 @@ export function Signup() {
       <Card className="mx-auto w-full max-w-[34rem]">
         <h1 className="mb-2 text-center text-2xl font-extrabold text-text-primary">Inscription</h1>
         <p className="mb-5 text-center text-sm text-text-secondary">
-          Déjà inscrit ?{' '}
-          <TextLink to="/login">Se connecter</TextLink>
+          Déjà inscrit ? <TextLink to="/login">Se connecter</TextLink>
         </p>
         {verifyEmailSent ? (
           <Banner variant="success" role="status">
-            Vérifiez votre messagerie : un lien de confirmation vous a été envoyé. Après confirmation, vous
-            pourrez vous connecter.
+            Vérifiez votre messagerie : un lien de confirmation vous a été envoyé. Après
+            confirmation, vous pourrez vous connecter.
             {websiteUrl.trim() ? (
               <> À la première connexion, l’analyse de votre site démarrera automatiquement.</>
             ) : null}

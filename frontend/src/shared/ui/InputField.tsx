@@ -1,16 +1,16 @@
 import type { InputHTMLAttributes } from 'react';
 
-import { cn } from '../lib/utils/cn';
+import { cn } from '../lib/cn';
 
 type InputFieldProps = {
   id: string;
   label: string;
-  error?: string;
-  errorId?: string;
-  containerClassName?: string;
-  labelClassName?: string;
-  inputClassName?: string;
-  showCharacterCount?: boolean;
+  error?: string | undefined;
+  errorId?: string | undefined;
+  containerClassName?: string | undefined;
+  labelClassName?: string | undefined;
+  inputClassName?: string | undefined;
+  showCharacterCount?: boolean | undefined;
 } & Omit<InputHTMLAttributes<HTMLInputElement>, 'id'>;
 
 export function InputField({
@@ -26,7 +26,9 @@ export function InputField({
 }: InputFieldProps) {
   const describedBy = error ? errorId : inputProps['aria-describedby'];
   const maxLen =
-    typeof inputProps.maxLength === 'number' && inputProps.maxLength >= 0 ? inputProps.maxLength : undefined;
+    typeof inputProps.maxLength === 'number' && inputProps.maxLength >= 0
+      ? inputProps.maxLength
+      : undefined;
   const rawLen =
     typeof inputProps.value === 'string'
       ? inputProps.value.length
@@ -37,7 +39,13 @@ export function InputField({
   return (
     <div className={cn('flex flex-col gap-1.5 text-left', containerClassName)}>
       <div className="flex items-center justify-between gap-2">
-        <label htmlFor={id} className={cn('text-xs font-semibold uppercase tracking-wide text-gray-500', labelClassName)}>
+        <label
+          htmlFor={id}
+          className={cn(
+            'text-xs font-semibold uppercase tracking-wide text-gray-500',
+            labelClassName,
+          )}
+        >
           {label}
         </label>
         {showCharacterCount && maxLen !== undefined ? (

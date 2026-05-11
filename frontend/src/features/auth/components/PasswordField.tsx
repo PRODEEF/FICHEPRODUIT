@@ -14,15 +14,15 @@ export type PasswordFieldProps = {
   label: string;
   name: string;
   autoComplete: string;
-  required?: boolean;
-  minLength?: number;
-  placeholder?: string;
+  required?: boolean | undefined;
+  minLength?: number | undefined;
+  placeholder?: string | undefined;
   value: string;
   onChange: (ev: ChangeEvent<HTMLInputElement>) => void;
-  disabled?: boolean;
-  error?: string | null;
+  disabled?: boolean | undefined;
+  error?: string | null | undefined;
   /** Affiche l’indicateur de force (inscription, premier champ mot de passe). */
-  showStrengthMeter?: boolean;
+  showStrengthMeter?: boolean | undefined;
 };
 
 export function PasswordField({

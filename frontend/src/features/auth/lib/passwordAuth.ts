@@ -11,7 +11,7 @@ import { authErrorMessage } from './authErrorMessage';
  */
 export function getPasswordResetRedirectUrl(): string {
   const base =
-    (import.meta.env.VITE_SITE_URL as string | undefined)?.replace(/\/$/, '') ??
+    import.meta.env['VITE_SITE_URL']?.replace(/\/$/, '') ??
     window.location.origin;
   return `${base}/auth/reset-password`;
 }

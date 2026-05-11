@@ -1,33 +1,30 @@
 import { useEffect, useState, type FormEvent } from 'react';
 
-import { getSupabaseClient } from '@lib/api/supabase';
-import { parseZodFieldErrors } from '@lib/utils/parseZodErrors';
+import { parseZodFieldErrors } from '@lib/parseZodErrors';
+import { getSupabaseClient } from '@shared/supabase';
+import { useAuth } from '@shared/hooks/useAuth';
 import { Banner, Button, InputField } from '@ui';
 
-import { useAuth } from '../useAuth';
 import { profileSchema } from '../lib/authSchemas';
 import { saveUserProfile } from '../lib/userProfile';
 import { createSupabaseUserRepository } from '../supabaseUserRepository';
 
-type ProfileFieldErrors = Partial<Record<'username' | 'websiteUrl', string>>;
+type ProfileFieldErrors = Partial<Record<'username', string>>;
 
 const SUCCESS_VISIBLE_MS = 5000;
 
 export function Profile() {
   const { user, userEmail, profile, refreshProfile } = useAuth();
   const [username, setUsername] = useState(profile?.username ?? '');
-  const [websiteUrl, setWebsiteUrl] = useState(profile?.website_url ?? '');
   const [submitting, setSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<ProfileFieldErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const usernameErrorId = 'profile-username-error';
-  const websiteErrorId = 'profile-website-error';
 
   useEffect(() => {
     setUsername(profile?.username ?? '');
-    setWebsiteUrl(profile?.website_url ?? '');
-  }, [profile?.username, profile?.website_url]);
+  }, [profile?.username]);
 
   async function handleSubmit(e: FormEvent): Promise<void> {
     e.preventDefault();
@@ -37,9 +34,9 @@ export function Profile() {
 
     if (!user) return;
 
-    const parsed = profileSchema.safeParse({ username, websiteUrl });
+    const parsed = profileSchema.safeParse({ username });
     if (!parsed.success) {
-      setFieldErrors(parseZodFieldErrors<'username' | 'websiteUrl'>(parsed.error));
+      setFieldErrors(parseZodFieldErrors<'username'>(parsed.error));
       return;
     }
 
@@ -64,7 +61,7 @@ export function Profile() {
     }
   }
 
-  function clearFieldError(key: 'username' | 'websiteUrl') {
+  function clearFieldError(key: 'username') {
     setFieldErrors((prev) => {
       const next = { ...prev };
       delete next[key];
@@ -121,23 +118,6 @@ export function Profile() {
           onChange={(ev) => {
             setUsername(ev.target.value);
             clearFieldError('username');
-          }}
-          disabled={submitting}
-        />
-
-        <InputField
-          id="profile-website"
-          label="URL de votre site web (facultatif)"
-          name="websiteUrl"
-          type="url"
-          inputMode="url"
-          placeholder="https://exemple.fr"
-          error={fieldErrors.websiteUrl}
-          errorId={websiteErrorId}
-          value={websiteUrl}
-          onChange={(ev) => {
-            setWebsiteUrl(ev.target.value);
-            clearFieldError('websiteUrl');
           }}
           disabled={submitting}
         />

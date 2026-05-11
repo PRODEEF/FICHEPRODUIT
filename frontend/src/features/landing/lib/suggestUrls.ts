@@ -1,5 +1,6 @@
 // frontend/src/features/home/lib/suggestUrls.ts
-import { getApiBaseUrl } from '@lib/api/apiBase';
+import { getApiBaseUrl } from '../../../api/apiBase';
+import { requestNestJson } from '../../../api/nestHttpClient';
 
 function trimTrailingSlashes(s: string): string {
   return s.replace(/\/+$/, '');
@@ -11,7 +12,7 @@ function trimTrailingSlashes(s: string): string {
  * - sinon : `VITE_API_URL` (voir `apiBase.ts`, défaut aligné avec l’ancienne cible du proxy Vite) + `/api/suggest-urls`.
  */
 function suggestEndpoint(): string {
-  const override = import.meta.env.VITE_SUGGEST_URLS_URL;
+  const override = import.meta.env['VITE_SUGGEST_URLS_URL'];
   if (typeof override === 'string' && override.trim()) {
     return trimTrailingSlashes(override.trim());
   }
@@ -33,15 +34,11 @@ function resolveUrl(endpoint: string): string {
  */
 export async function fetchSuggestUrls(q: string): Promise<string[]> {
   const endpoint = resolveUrl(suggestEndpoint());
-  const res = await fetch(endpoint, {
+  const data = await requestNestJson<unknown>({
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ q }),
+    absoluteUrl: endpoint,
+    body: { q },
   });
-  if (!res.ok) {
-    throw new Error(`Suggest request failed: ${res.status}`);
-  }
-  const data: unknown = await res.json();
   if (
     data &&
     typeof data === 'object' &&

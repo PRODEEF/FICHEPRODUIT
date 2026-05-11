@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router';
 
-import { clearLastAnalysisId, isValidAnalysisId } from '@lib/analysis/analysisStorage';
+import { isValidAnalysisId } from '@lib/analysis/analysisStorage';
 
 import { AnalysisResult } from '../components/AnalysisResult';
 import { GuestAnalysisSignupCta } from '../components/GuestAnalysisSignupCta';
@@ -22,6 +22,8 @@ export function PublicCatalog() {
 
   const {
     analysis,
+    shop,
+    products,
     productPayload,
     loading: detailLoading,
     error: detailError,
@@ -30,7 +32,6 @@ export function PublicCatalog() {
 
   useEffect(() => {
     if (!analysisId || !hasValidAnalysisId || !analysisNotFound) return;
-    clearLastAnalysisId();
     navigate('/', { replace: true });
   }, [analysisId, hasValidAnalysisId, analysisNotFound, navigate]);
 
@@ -44,14 +45,17 @@ export function PublicCatalog() {
         <h1 className="m-0 text-[1.75rem] font-extrabold text-text-primary">Mon catalogue</h1>
       </header>
 
-      {!detailLoading && !detailError && analysis?.status === 'completed' ? (
+      {!detailLoading && !detailError && analysis?.status === 'done' ? (
         <GuestAnalysisSignupCta websiteUrl={analysis.url} />
       ) : null}
 
       <AnalysisResult
+        isConnected={false}
         loading={detailLoading}
         error={detailError}
         analysis={analysis}
+        shop={shop}
+        products={products}
         productPayload={productPayload}
       />
     </div>

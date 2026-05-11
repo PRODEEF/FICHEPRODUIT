@@ -151,7 +151,7 @@ export class SuggestUrlsService {
    * @see https://docs.tavily.com/documentation/api-reference/endpoint/search
    */
   async suggestWithTavilySearch(q: string): Promise<string[] | null> {
-    const key = this.configService.get<string>('tavilySearchApiKey', '').trim();
+    const key = this.configService.get<string>("tavilyApiKey");
     if (!key) return null;
 
     const searchDepth = this.configService

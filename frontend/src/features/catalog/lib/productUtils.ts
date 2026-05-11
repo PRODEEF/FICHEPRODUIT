@@ -1,21 +1,27 @@
-import type { SiteAnalysis } from '@lib/analysis/analysisApi';
+import type { CmsType } from '@types-api';
 
-export function formatPrice(price: number | undefined, currency: string): string {
+export function formatPrice(price: number | null): string {
   if (price == null || Number.isNaN(price)) return '—';
+
   return new Intl.NumberFormat('fr-FR', {
     style: 'currency',
-    currency: currency || 'EUR',
+    currency: 'EUR',
   }).format(price);
 }
 
-export function formatCmsLabel(cms: SiteAnalysis['cmsType'] | undefined): string {
-  if (!cms || cms === 'unknown') return 'Inconnu';
-  const map: Record<string, string> = {
+export function formatCmsLabel(cms: CmsType | null): string {
+  if (!cms) return 'Inconnu';
+
+  const map: Record<CmsType, string> = {
     prestashop: 'PrestaShop',
     shopify: 'Shopify',
     woocommerce: 'WooCommerce',
+    autre: 'Autre',
+    inconnu: 'Inconnu',
+    other: 'Autre',
+    unknown: 'Inconnu',
   };
-  return map[cms] ?? cms;
+  return map[cms] ?? 'Inconnu';
 }
 
 export function uniqueSorted(values: Iterable<string>): string[] {

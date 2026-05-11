@@ -1,6 +1,6 @@
 import { Navigate, Outlet } from 'react-router';
 
-import { useAuth } from '../useAuth';
+import { useAuth } from '@shared/hooks/useAuth';
 
 /**
  * Garde de route applicable à toute route privée.

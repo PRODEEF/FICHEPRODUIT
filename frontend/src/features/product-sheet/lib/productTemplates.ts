@@ -1,9 +1,15 @@
-import type { components } from '../../../generated/api';
+import type { ProductTemplateFieldType } from '@types-api';
+
+export type { ProductTemplateFieldType };
 
 // ─── Types (absorbe productTemplateTypes.ts) ──────────────────────────────────
 
-export type ProductTemplateField = components['schemas']['ProductTemplateField'];
-export type ProductTemplateFieldType = components['schemas']['ProductTemplateFieldType'];
+export type ProductTemplateField = {
+  name: string;
+  type: ProductTemplateFieldType;
+  required: boolean;
+  order?: number;
+};
 
 export type ProductTemplateRow = {
   id: string;

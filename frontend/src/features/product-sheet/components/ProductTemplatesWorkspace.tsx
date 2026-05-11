@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
-import { useAuth } from '../../auth/useAuth';
-import { getSupabaseClient } from '@lib/api/supabase';
+import { useAuth } from '@shared/hooks/useAuth';
+import { getSupabaseClient } from '@shared/supabase';
+
 import {
   normalizeProductTemplateFieldType,
   productTemplateFieldTypeLabel,
@@ -11,15 +12,12 @@ import {
   inferProductTemplateFieldTypeFromCsvHeader,
   parseCsvHeadersAndFirstDataRow,
 } from '../lib/csvHeaders';
-import { refineTemplateFields, scrapeProductPage } from '../lib/productSheetApi';
+import { refineTemplateFields, scrapeProductPage } from '@api/productSheet';
 import {
   getCachedProductTemplatesList,
   setCachedProductTemplatesList,
 } from '../lib/productTemplatesCache';
-import {
-  TemplateFieldsEditor,
-  type TemplateFieldRow,
-} from './TemplateFieldsEditor';
+import { TemplateFieldsEditor, type TemplateFieldRow } from './TemplateFieldsEditor';
 
 type View = { kind: 'list' } | { kind: 'edit'; templateId: string };
 
@@ -321,10 +319,9 @@ export function ProductTemplatesWorkspace({
             type: r.type,
             required: r.required,
           })),
-          sampleValues:
-            draftFieldSamples && Object.keys(draftFieldSamples).length > 0
-              ? draftFieldSamples
-              : undefined,
+          ...(draftFieldSamples && Object.keys(draftFieldSamples).length > 0
+            ? { sampleValues: draftFieldSamples }
+            : {}),
         },
         token,
       );
@@ -464,8 +461,8 @@ export function ProductTemplatesWorkspace({
           {templates.length === 0 ? (
             <div className="product-templates-empty-mes-fiches">
               <p className="product-sheet-intro">
-                Vous n&apos;avez pas encore de fiche type. Définissez la structure des champs (colonnes)
-                pour vos imports PrestaShop.
+                Vous n&apos;avez pas encore de fiche type. Définissez la structure des champs
+                (colonnes) pour vos imports PrestaShop.
               </p>
               <button
                 type="button"

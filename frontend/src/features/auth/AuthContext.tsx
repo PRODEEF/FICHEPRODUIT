@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
 
-import { getSupabaseClient } from '@lib/api/supabase';
-import { clearLastAnalysisId } from '@lib/analysis/analysisStorage';
+import { getSupabaseClient } from '../../shared/supabase';
 
 import { AuthContext } from './auth-context';
 import { applyPendingSignupFromStorage } from './lib/pendingSignupStorage';
@@ -37,9 +36,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, next) => {
-      if (!next) {
-        clearLastAnalysisId();
-      }
       setSession(next);
       setUser(next?.user ?? null);
     });
@@ -95,16 +91,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = useCallback(async () => {
     const supabase = getSupabaseClient();
-    if (supabase) {
-      await supabase.auth.signOut();
-    }
+    if (supabase) await supabase.auth.signOut();
   }, []);
 
   const userEmail = user?.email ?? null;
+  const meta = user?.user_metadata;
+  const metadataDisplayName =
+    typeof meta?.['display_name'] === 'string' ? meta['display_name'] : null;
+  const metadataFullName = typeof meta?.['full_name'] === 'string' ? meta['full_name'] : null;
 
   const displayLabel = useMemo(
-    () => (user ? (profile?.username ?? userEmail ?? null) : null),
-    [user, profile, userEmail],
+    () =>
+      user
+        ? (profile?.username ?? metadataDisplayName ?? metadataFullName ?? userEmail ?? null)
+        : null,
+    [user, profile?.username, metadataDisplayName, metadataFullName, userEmail],
   );
 
   const value = useMemo(

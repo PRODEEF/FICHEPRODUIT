@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router';
 
-import { getSupabaseClient } from '@lib/api/supabase';
+import { getSupabaseClient } from '../../../shared/supabase';
 import { Banner, Button, Card, PageSection, TextLink } from '@shared/ui';
 
 import { PasswordField } from '../components/PasswordField';
