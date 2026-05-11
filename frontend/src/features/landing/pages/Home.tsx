@@ -67,10 +67,10 @@ export function Home() {
             className="mb-4 text-[clamp(1.8rem,4vw,3rem)] font-black leading-[1.15] text-text-primary"
           >
             <span className="bg-gradient-to-br from-purple-600 to-purple-400 bg-clip-text text-transparent">
-              Générez vos fiches produits
+              Générez vos fiches produits et importez les
             </span>
             <br />
-            en quelques secondes
+            en quelques secondes sur votre site
           </motion.h1>
           <motion.p
             className="mb-8 max-w-[560px] text-base text-text-secondary"
