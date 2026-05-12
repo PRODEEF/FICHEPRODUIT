@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
 
 import { getAnalysis } from '@api/analysis';
+import { ApiHttpError } from '@api/apiAuth';
 import { getMyShop } from '@api/shop';
 import type { Analysis, CatalogProduct, Shop } from '@types-api';
 import {
@@ -119,7 +120,10 @@ export function useAnalysisDetail(
         if (!isStale()) {
           const message = e instanceof Error ? e.message : 'Erreur de chargement.';
           const lowered = message.toLowerCase();
-          setAnalysisNotFound(lowered.includes('introuvable') || lowered.includes('not found'));
+          const http404 = e instanceof ApiHttpError && e.status === 404;
+          setAnalysisNotFound(
+            http404 || lowered.includes('introuvable') || lowered.includes('not found'),
+          );
           setError(message);
           const cached = getAnalysisDetailCache<Analysis, CatalogProductPayloadMetadata, Shop>(
             cacheUserId,

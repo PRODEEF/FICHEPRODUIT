@@ -81,6 +81,17 @@ export async function guestOrAuthHeadersNoBodyWithGuestSession(
   return omitContentType(h);
 }
 
+/** Erreur HTTP renvoyée par {@link apiFetch} lorsque `response.ok` est faux. */
+export class ApiHttpError extends Error {
+  readonly status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = 'ApiHttpError';
+    this.status = status;
+  }
+}
+
 export function extractErrorMessage(parsed: unknown, fallback: string): string {
   if (typeof parsed === 'object' && parsed !== null) {
     const o = parsed as Record<string, unknown>;
@@ -106,18 +117,20 @@ export async function apiFetch(
     try {
       parsed = JSON.parse(text);
     } catch {
-      if (!res.ok) throw new Error(`Réponse non-JSON du serveur (${res.status}).`);
+      if (!res.ok) throw new ApiHttpError(`Réponse non-JSON du serveur (${res.status}).`, res.status);
     }
   }
 
   if (!res.ok) {
     const status = res.status;
 
-    if (status === 401) throw new Error('Session expirée ou non autorisée. Reconnecte-toi.');
-    if (status === 403) throw new Error('Accès refusé.');
-    if (status === 404) throw new Error(extractErrorMessage(parsed, 'Ressource introuvable.'));
+    if (status === 401)
+      throw new ApiHttpError('Session expirée ou non autorisée. Reconnecte-toi.', 401);
+    if (status === 403) throw new ApiHttpError('Accès refusé.', 403);
+    if (status === 404)
+      throw new ApiHttpError(extractErrorMessage(parsed, 'Ressource introuvable.'), 404);
 
-    throw new Error(extractErrorMessage(parsed, `Erreur serveur (${status}).`));
+    throw new ApiHttpError(extractErrorMessage(parsed, `Erreur serveur (${status}).`), status);
   }
 
   return { res, parsed };
