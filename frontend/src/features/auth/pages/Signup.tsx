@@ -26,8 +26,8 @@ export function Signup() {
   const [verifyEmailSent, setVerifyEmailSent] = useState(false);
 
   const { runAnalysis, analysisOpen, siteAnalysis, dismissError } = useSiteAnalysis({
-    onSuccess: (summary) => {
-      void navigate(`/catalog/${summary.id}`);
+    onSuccess: () => {
+      void navigate('/catalog', { replace: true });
     },
   });
 
@@ -140,7 +140,7 @@ export function Signup() {
           }
           return;
         }
-        void navigate('/', { replace: true });
+        void navigate('/store', { replace: true });
         return;
       }
 

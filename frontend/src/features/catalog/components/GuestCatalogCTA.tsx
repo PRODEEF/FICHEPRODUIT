@@ -1,10 +1,10 @@
-import { Link } from 'react-router';
+import { TextLink } from '@shared/ui';
 
-interface GuestAnalysisSignupCtaProps {
+interface GuestCatalogCTAProps {
   websiteUrl: string;
 }
 
-export function GuestAnalysisSignupCta({ websiteUrl }: GuestAnalysisSignupCtaProps) {
+export function GuestCatalogCTA({ websiteUrl }: GuestCatalogCTAProps) {
   const signupHref = `/signup?${new URLSearchParams({ url: websiteUrl }).toString()}`;
 
   return (
@@ -16,14 +16,17 @@ export function GuestAnalysisSignupCta({ websiteUrl }: GuestAnalysisSignupCtaPro
         Cette analyse n&apos;est pas enregistrée sur un compte
       </h2>
       <p className="mb-4 text-sm leading-6 text-text-secondary">
-        Sans inscription, vos résultats ne sont <strong>pas sauvegardés sur votre profil</strong> : vous
-        les consultez tant que la session serveur les garde disponibles. Créez un compte pour
+        Sans inscription, vos résultats ne sont <strong>pas sauvegardés sur votre profil</strong> :
+        vous les consultez tant que la session serveur les garde disponibles. Créez un compte pour
         retrouver votre historique d&apos;analyses et aller plus loin.
       </p>
       <div className="flex flex-wrap items-center gap-3">
-        <Link to={signupHref} className="text-sm font-semibold text-purple-600 no-underline hover:underline">
+        <TextLink
+          to={signupHref}
+          className="text-sm font-semibold text-purple-600 no-underline hover:underline"
+        >
           Créer un compte
-        </Link>
+        </TextLink>
       </div>
     </section>
   );

@@ -1,120 +1,66 @@
-import { Navigate, useNavigate } from 'react-router';
+import { useMemo, useState } from 'react';
 
 import { useAuth } from '@shared/hooks/useAuth';
 
-import { EmptyAnalysis } from '../components/EmptyAnalysis';
-import { AnalysisResult } from '../components/AnalysisResult';
+import { CatalogProductsSection } from '../components/CatalogProductsSection';
+import { EmptyProducts } from '../components/EmptyProducts';
+import { ErrorState, LoadingState } from '../components/CatalogSectionStates';
+import { ShopSummarySection } from '../components/ShopSummarySection';
 import { useCatalogAnalysis } from '../hooks/useCatalogAnalysis';
-import { useCatalogAnalysisWorkflow } from '../hooks/useCatalogAnalysisWorkflow';
-import { useCatalogUrlInputFlow } from '../hooks/useCatalogUrlInputFlow';
+import { useCatalogProducts } from '../hooks/useCatalogProducts';
+import { resolveCatalogWorkflowStatus } from '../lib/catalogWorkflowStatus';
+import { useShop } from '../../store/hooks/useShop';
 
 /**
- * Catalogue privé de l'utilisateur connecté.
+ * Catalogue privé de l'utilisateur connecté sur `/catalog`.
  *
- * Le rendu varie selon l'URL :
- * - `/catalog` (sans id) : affiche la zone de saisie pour lancer une nouvelle analyse.
- * - `/catalog/:analysisId` : affiche le détail d'une analyse existante.
+ * Les exemples produits et le magasin sont accessibles même sans analyse récente ; l’analyse
+ * du compte s’affiche en complément lorsqu’elle existe.
  */
 export function Catalog() {
-  const navigate = useNavigate();
   const { profile } = useAuth();
+  const { shop, loading: shopLoading, error: shopError } = useShop();
+
+  const { analysisId, analysis,  detailError } = useCatalogAnalysis({
+    skipProductFetch: true,
+  });
 
   const {
-    analysisId,
-    hasValidAnalysisId,
-    analysis,
-    shop,
-    products,
+    products: catalogProducts,
     productPayload,
-    detailLoading,
-    detailError,
-    latestResolveLoading,
-    latestResolveError,
-  } = useCatalogAnalysis();
-
-  const {
-    run,
-    running,
-    currentAnalysis,
-    error: workflowError,
-    clearError,
-  } = useCatalogAnalysisWorkflow({
-    onSuccess: (nextAnalysis) => {
-      void navigate(`/catalog/${nextAnalysis.id}`);
-    },
-  });
-  const search = useCatalogUrlInputFlow({
-    analysisId,
-    defaultWebsiteUrl: profile?.website_url,
-    onSubmit: async (url) => {
-      await run(url);
-    },
+    loading: productsLoading,
+    error: productsError,
+  } = useCatalogProducts({
+    shop,
+    shopLoading,
   });
 
-  if (analysisId && !hasValidAnalysisId) {
-    return <Navigate to="/catalog" replace />;
+  const [activeBrand, setActiveBrand] = useState('');
+  const [activeBrandForAnalysisId, setActiveBrandForAnalysisId] = useState<string | undefined>(
+    undefined,
+  );
+  const analysisIdKey = analysisId ?? '';
+  if (analysisIdKey !== activeBrandForAnalysisId) {
+    setActiveBrandForAnalysisId(analysisIdKey);
+    setActiveBrand('');
   }
 
-  if (!analysisId) {
-    return (
-      <>
-        <div className="relative z-[1] w-full px-12 pb-12 pt-9">
-          <header className="mb-5 flex flex-wrap items-center gap-4 text-left">
-            <h1 className="m-0 text-[1.75rem] font-extrabold text-text-primary">Mon catalogue</h1>
-          </header>
-          {running ? (
-            <p className="mb-4 text-sm text-text-secondary" aria-busy="true">
-              Analyse en cours... statut actuel : {currentAnalysis?.status ?? 'pending'}
-            </p>
-          ) : null}
-          {workflowError ? (
-            <div
-              className="mb-4 rounded-xl border border-red-500/35 bg-red-50 px-4 py-3 text-text-primary"
-              role="alert"
-            >
-              <p>{workflowError}</p>
-              <button
-                type="button"
-                className="mt-2 text-sm font-semibold text-purple-600 underline-offset-2 hover:underline"
-                onClick={clearError}
-              >
-                Fermer
-              </button>
-            </div>
-          ) : null}
-          {latestResolveLoading ? (
-            <p className="text-sm text-text-secondary" aria-busy="true">
-              Chargement…
-            </p>
-          ) : (
-            <>
-              {latestResolveError ? (
-                <div
-                  className="mb-4 rounded-xl border border-border-purple bg-purple-50 px-4 py-3 text-text-primary"
-                  role="alert"
-                >
-                  {latestResolveError}
-                </div>
-              ) : null}
-              <EmptyAnalysis
-                siteInput={search.input}
-                setSiteInput={search.setInput}
-                suggestionsLoading={search.suggestionsLoading}
-                searchEmptyError={search.inputEmptyError}
-                handleSubmit={() => {
-                  void search.handleSubmit();
-                }}
-                suggestedUrls={search.suggestedUrls}
-                handlePickSuggestion={(url) => {
-                  void search.handlePickSuggestion(url);
-                }}
-              />
-            </>
-          )}
-        </div>
-      </>
-    );
-  }
+  const allProducts = useMemo(() => catalogProducts ?? [], [catalogProducts]);
+
+  const handleBrandToggle = (brand: string) => {
+    setActiveBrand((prev) => (prev === brand ? '' : brand));
+  };
+
+  const hasShopWithBrands = Boolean(shop?.brands.some((b) => b.trim()));
+
+  const workflowStatus = resolveCatalogWorkflowStatus({
+    analysis,
+    loadingProducts: productsLoading,
+    hasProducts: Boolean(catalogProducts?.length),
+    error: detailError ?? productsError,
+  });
+
+  const isLoadingProducts = workflowStatus === 'loading_products';
 
   return (
     <div className="relative z-[1] w-full px-12 pb-12 pt-9">
@@ -122,15 +68,43 @@ export function Catalog() {
         <h1 className="m-0 text-[1.75rem] font-extrabold text-text-primary">Mon catalogue</h1>
       </header>
 
-      <AnalysisResult
-        isConnected={!!profile}
-        loading={detailLoading}
-        error={detailError}
-        analysis={analysis}
-        shop={shop}
-        products={products}
-        productPayload={productPayload}
-      />
+      <div className="mb-6 flex flex-col gap-4">
+        {shopLoading ? (
+          <LoadingState label="Chargement de votre boutique…" />
+        ) : shopError || shop === null ? (
+          <ErrorState
+            message={shopError ?? 'Une erreur est survenue lors du chargement de votre boutique'}
+          />
+        ) : (
+          <ShopSummarySection
+            shop={shop}
+            activeBrand={activeBrand}
+            onBrandClick={handleBrandToggle}
+          />
+        )}
+      </div>
+
+      <div className="flex flex-col gap-4">
+        {productsLoading ? (
+          <LoadingState label="Chargement des exemples de fiches…" />
+        ) : productsError ? (
+          <ErrorState message={productsError} />
+        ) : catalogProducts !== null && catalogProducts.length === 0 ? (
+          <EmptyProducts />
+        ) : (
+          <CatalogProductsSection
+            shopName={shop?.name ?? ''}
+            isConnected={!!profile}
+            products={allProducts}
+            productPayload={productPayload}
+            isLoadingProducts={isLoadingProducts}
+            shopBrands={hasShopWithBrands ? shop?.brands : undefined}
+            externalBrandFilter={activeBrand}
+            onBrandFilterChange={setActiveBrand}
+            introVariant={hasShopWithBrands ? 'shop' : 'all'}
+          />
+        )}
+      </div>
     </div>
   );
 }

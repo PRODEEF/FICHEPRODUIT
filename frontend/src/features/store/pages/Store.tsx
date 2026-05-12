@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 
 import { patchMyShop } from '@api/shop';
 import type { PatchMyShopBody } from '@types-api';
+import { Banner } from '@shared/ui';
 
 import type { Shop } from '../types';
 import { ShopInfoSection } from '../components/ShopInfoSection';
@@ -106,6 +107,13 @@ export function MyStore() {
       <header className="mb-6 text-left">
         <h1 className="m-0 text-[1.75rem] font-extrabold text-text-primary">Mon magasin</h1>
       </header>
+
+      {!shop.url.trim() ? (
+        <Banner variant="neutral" className="mb-6" role="status">
+          Indiquez l&apos;URL de votre boutique ci-dessous pour lier vos analyses et enrichir votre
+          fiche magasin.
+        </Banner>
+      ) : null}
 
       <StoreLoaded shop={shop} refetch={refetch} />
     </div>

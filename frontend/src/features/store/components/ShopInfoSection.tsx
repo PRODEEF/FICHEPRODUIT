@@ -43,7 +43,8 @@ export function ShopInfoSection({ shop, onSavePartial, saving = false }: ShopInf
     onSavePartialRef.current = onSavePartial;
   }, [onSavePartial]);
 
-  const buffers: Buffers = editing === null ? buffersFromShop(shop) : (draft ?? buffersFromShop(shop));
+  const buffers: Buffers =
+    editing === null ? buffersFromShop(shop) : (draft ?? buffersFromShop(shop));
 
   const openEdit = (key: RowKey) => {
     setSaveError(null);
@@ -98,7 +99,7 @@ export function ShopInfoSection({ shop, onSavePartial, saving = false }: ShopInf
     }
   };
 
-  const row = (key: RowKey, label: string, display: string, edit: ReactNode) => {
+  const row = (key: RowKey, label: string, display: ReactNode, edit: ReactNode) => {
     const isEditing = editing === key;
     return (
       <div className="group flex flex-wrap items-center gap-2 py-3">
@@ -107,18 +108,35 @@ export function ShopInfoSection({ shop, onSavePartial, saving = false }: ShopInf
           {isEditing ? (
             <div className="min-w-0 flex-1">{edit}</div>
           ) : (
-            <span className="truncate text-sm text-gray-900">{display}</span>
+            <div className="min-w-0 flex-1 truncate text-sm text-gray-900">{display}</div>
           )}
           {!isEditing ? (
-            <Button type="button" variant="neutral-outline" size="sm" onClick={() => void openEdit(key)}>
+            <Button
+              type="button"
+              variant="neutral-outline"
+              size="sm"
+              onClick={() => void openEdit(key)}
+            >
               Modifier
             </Button>
           ) : (
             <div className="flex shrink-0 items-center gap-2">
-              <Button type="button" variant="secondary" size="sm" disabled={saving} onClick={cancelEdit}>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                disabled={saving}
+                onClick={cancelEdit}
+              >
                 Annuler
               </Button>
-              <Button type="button" variant="primary" size="sm" onClick={() => void saveEdit()} disabled={saving}>
+              <Button
+                type="button"
+                variant="primary"
+                size="sm"
+                onClick={() => void saveEdit()}
+                disabled={saving}
+              >
                 {saving ? 'Enregistrement…' : 'Enregistrer'}
               </Button>
             </div>
@@ -150,7 +168,7 @@ export function ShopInfoSection({ shop, onSavePartial, saving = false }: ShopInf
         {row(
           'url',
           'URL',
-          shop.url,
+          shop.url.trim() ? shop.url : <span className="text-gray-500">Non renseignée</span>,
           <input
             id={`${idBase}-url`}
             type="url"

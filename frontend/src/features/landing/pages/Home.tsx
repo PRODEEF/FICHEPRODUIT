@@ -27,7 +27,7 @@ export function Home() {
       // Les invités atterrissent sur la vue publique d'analyse,
       // les utilisateurs connectés sur leur catalogue privé.
       const target = user
-        ? `/catalog/${summary.id}`
+        ? '/catalog'
         : `/catalog/public/${summary.id}${summary.sessionId ? `?s=${encodeURIComponent(summary.sessionId)}` : ''}`;
       void navigate(target);
     },

@@ -1,18 +1,22 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router';
 
 import { isValidAnalysisId } from '@lib/analysis/analysisStorage';
 
-import { AnalysisResult } from '../components/AnalysisResult';
-import { GuestAnalysisSignupCta } from '../components/GuestAnalysisSignupCta';
+import { CatalogProductsSection } from '../components/CatalogProductsSection';
+import { EmptyProducts } from '../components/EmptyProducts';
+import { ErrorState, LoadingState } from '../components/CatalogSectionStates';
+import { GuestCatalogCTA } from '../components/GuestCatalogCTA';
+import { ShopSummarySection } from '../components/ShopSummarySection';
 import { useAnalysisDetail } from '../hooks/useAnalysisDetail';
+import { resolveCatalogWorkflowStatus } from '../lib/catalogWorkflowStatus';
 
 /**
- * Vue publique d'une analyse pour les visiteurs non connectés.
+ * Vue publique d’une analyse pour les invités non connectés (`/catalog/public/:analysisId`),
+ * typiquement après une analyse : la boutique vient d’être créée et les fiches exemples sont
+ * les mêmes blocs que sur `/catalog`, avec un rappel d’inscription.
  *
- * Affiche le détail d'une analyse identifiée par `analysisId` ainsi qu'un appel à
- * l'inscription. Toute analyse introuvable ou identifiant invalide redirige vers la page
- * d'accueil afin d'éviter une page vide aux invités.
+ * Toute analyse introuvable ou identifiant invalide redirige vers l’accueil.
  */
 export function PublicCatalog() {
   const navigate = useNavigate();
@@ -23,12 +27,53 @@ export function PublicCatalog() {
   const {
     analysis,
     shop,
-    products,
+    products: catalogProducts,
     productPayload,
-    loading: detailLoading,
     error: detailError,
     analysisNotFound,
+    analysisShopLoading,
+    catalogProductsLoading,
   } = useAnalysisDetail(analysisId, undefined, false);
+
+  const [activeBrand, setActiveBrand] = useState('');
+  const [activeBrandForAnalysisId, setActiveBrandForAnalysisId] = useState<string | undefined>(
+    undefined,
+  );
+  const analysisIdKey = analysisId !== undefined && analysisId !== '' ? analysisId : '';
+  if (analysisIdKey !== activeBrandForAnalysisId) {
+    setActiveBrandForAnalysisId(analysisIdKey);
+    setActiveBrand('');
+  }
+
+  const allProducts = useMemo(() => catalogProducts ?? [], [catalogProducts]);
+
+  const handleBrandToggle = (brand: string) => {
+    setActiveBrand((prev) => (prev === brand ? '' : brand));
+  };
+
+  const hasShopWithBrands = Boolean(shop?.brands.some((b) => b.trim()));
+
+  const shopLoading = analysisShopLoading || (analysis !== null && analysis.status !== 'done');
+
+  const shopErrorMessage =
+    !shopLoading && shop === null
+      ? (detailError ?? 'Une erreur est survenue lors du chargement de votre boutique')
+      : null;
+
+  const productsLoading = shop !== null && analysis?.status === 'done' && catalogProductsLoading;
+
+  const productsError = shop !== null ? detailError : null;
+
+  const workflowStatus = resolveCatalogWorkflowStatus({
+    analysis,
+    loadingProducts: catalogProductsLoading,
+    hasProducts: Boolean(catalogProducts?.length),
+    error: detailError,
+  });
+
+  const isLoadingProducts = workflowStatus === 'loading_products';
+
+  const signupWebsiteUrl = analysis?.url ?? shop?.url ?? '';
 
   useEffect(() => {
     if (!analysisId || !hasValidAnalysisId || !analysisNotFound) return;
@@ -45,19 +90,47 @@ export function PublicCatalog() {
         <h1 className="m-0 text-[1.75rem] font-extrabold text-text-primary">Mon catalogue</h1>
       </header>
 
-      {!detailLoading && !detailError && analysis?.status === 'done' ? (
-        <GuestAnalysisSignupCta websiteUrl={analysis.url} />
-      ) : null}
+      <GuestCatalogCTA websiteUrl={signupWebsiteUrl} />
 
-      <AnalysisResult
-        isConnected={false}
-        loading={detailLoading}
-        error={detailError}
-        analysis={analysis}
-        shop={shop}
-        products={products}
-        productPayload={productPayload}
-      />
+      <div className="mb-6 flex flex-col gap-4">
+        {shopLoading ? (
+          <LoadingState label="Chargement de votre boutique…" />
+        ) : shopErrorMessage !== null || shop === null ? (
+          <ErrorState
+            message={
+              shopErrorMessage ?? 'Une erreur est survenue lors du chargement de votre boutique'
+            }
+          />
+        ) : (
+          <ShopSummarySection
+            shop={shop}
+            activeBrand={activeBrand}
+            onBrandClick={handleBrandToggle}
+          />
+        )}
+      </div>
+
+      <div className="flex flex-col gap-4">
+        {shop === null ? null : productsLoading ? (
+          <LoadingState label="Chargement des exemples de fiches…" />
+        ) : productsError ? (
+          <ErrorState message={productsError} />
+        ) : catalogProducts !== null && catalogProducts.length === 0 ? (
+          <EmptyProducts />
+        ) : (
+          <CatalogProductsSection
+            shopName={shop.name}
+            isConnected={false}
+            products={allProducts}
+            productPayload={productPayload}
+            isLoadingProducts={isLoadingProducts}
+            shopBrands={hasShopWithBrands ? shop.brands : undefined}
+            externalBrandFilter={activeBrand}
+            onBrandFilterChange={setActiveBrand}
+            introVariant={hasShopWithBrands ? 'shop' : 'all'}
+          />
+        )}
+      </div>
     </div>
   );
 }

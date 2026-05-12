@@ -1,0 +1,98 @@
+import { InternalServerErrorException } from "@nestjs/common";
+
+import { ShopService } from "./shop.service";
+import { type IShopRepository } from "./shop.repository.interface";
+import type { Shop } from "./types/shop.types";
+
+describe("ShopService", () => {
+  const repo: jest.Mocked<IShopRepository> = {
+    findById: jest.fn(),
+    findByIdForGuest: jest.fn(),
+    findAllByOwner: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    upsertFromAnalysis: jest.fn(),
+    transferToUser: jest.fn(),
+    purgeGuestDataOlderThan: jest.fn(),
+  };
+
+  const service = new ShopService(repo);
+
+  const sampleShop: Shop = {
+    id: "shop-1",
+    name: "Existant",
+    url: "https://exemple.fr",
+    cms: "shopify",
+    sector: null,
+    brands: [],
+    categories: [],
+    ownerId: "user-1",
+    sessionId: null,
+    createdAt: "2020-01-01T00:00:00.000Z",
+    updatedAt: "2020-01-01T00:00:00.000Z",
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("getMyShop renvoie le magasin existant sans création", async () => {
+    repo.findAllByOwner.mockResolvedValue([sampleShop]);
+
+    await expect(service.getMyShop("user-1", "tok")).resolves.toBe(sampleShop);
+    expect(repo.create).not.toHaveBeenCalled();
+  });
+
+  it("getMyShop crée un magasin minimal si aucun", async () => {
+    const created: Shop = {
+      ...sampleShop,
+      id: "shop-new",
+      name: "Mon magasin",
+      url: "",
+      cms: "inconnu",
+    };
+    repo.findAllByOwner.mockResolvedValueOnce([]);
+    repo.create.mockResolvedValue(created);
+
+    await expect(service.getMyShop("user-1", "tok")).resolves.toEqual(created);
+    expect(repo.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "Mon magasin",
+        url: "",
+        cms: "inconnu",
+        sector: null,
+        brands: [],
+        categories: [],
+        ownerId: "user-1",
+        sessionId: null,
+      }),
+      "tok",
+    );
+  });
+
+  it("getMyShop récupère le magasin après échec de création (concurrence)", async () => {
+    repo.findAllByOwner.mockResolvedValueOnce([]).mockResolvedValueOnce([sampleShop]);
+    repo.create.mockRejectedValue(new Error("insert race"));
+
+    await expect(service.getMyShop("user-1", "tok")).resolves.toBe(sampleShop);
+  });
+
+  it("getMyShop lève une erreur serveur si création et relecure vides", async () => {
+    repo.findAllByOwner.mockResolvedValue([]);
+    repo.create.mockRejectedValue(new Error("db"));
+
+    await expect(service.getMyShop("user-1", "tok")).rejects.toBeInstanceOf(InternalServerErrorException);
+  });
+
+  it("updateMyShop assure un magasin puis met à jour", async () => {
+    const shop = { ...sampleShop, id: "shop-x", url: "" };
+    repo.findAllByOwner.mockResolvedValueOnce([]);
+    repo.create.mockResolvedValue(shop);
+    repo.update.mockResolvedValue({ ...shop, name: "Renommé" });
+
+    const out = await service.updateMyShop("user-1", { name: "Renommé" }, "tok");
+
+    expect(out.name).toBe("Renommé");
+    expect(repo.update).toHaveBeenCalledWith("shop-x", { name: "Renommé" }, "tok");
+  });
+});
