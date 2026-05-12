@@ -1,87 +1,57 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 
 import { useAuth } from '@shared/hooks/useAuth';
 import { getSupabaseClient } from '@shared/supabase';
-import { parseZodFieldErrors } from '@lib/parseZodErrors';
 import { Banner, Button, Card, InputField, PageSection, TextLink } from '@ui';
 
-import { loginSchema } from '../lib/authSchemas';
 import { PasswordField } from '../components/PasswordField';
 import { signInWithEmailPassword } from '../lib/credentialsAuth';
-import type { LoginFieldErrors, LoginFieldKey } from '../types';
+import { loginSchema, type LoginInput } from '../lib/authSchemas';
 
 export function Login() {
   const navigate = useNavigate();
   const { userEmail, loading: authLoading, configError } = useAuth();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [fieldErrors, setFieldErrors] = useState<LoginFieldErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
 
-  const emailErrorId = 'login-email-error';
+  const {
+    register,
+    watch,
+    handleSubmit,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginInput>({
+    resolver: zodResolver(loginSchema),
+  });
 
   useEffect(() => {
     if (authLoading || configError) return;
     if (userEmail) void navigate('/catalog', { replace: true });
   }, [authLoading, userEmail, configError, navigate]);
 
-  async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
-    e.preventDefault();
+  const onSubmit = async (data: LoginInput) => {
     setFormError(null);
-
-    const result = loginSchema.safeParse({ email, password });
-    if (!result.success) {
-      setFieldErrors(parseZodFieldErrors<LoginFieldKey>(result.error));
-      return;
-    }
-
-    const { email: emailTrim, password: passwordVal } = result.data;
-
     const supabase = getSupabaseClient();
     if (!supabase) {
       setFormError('Configuration Supabase manquante. Vérifiez le fichier .env du frontend.');
       return;
     }
-    setSubmitting(true);
-    try {
-      const authResult = await signInWithEmailPassword(supabase, emailTrim, passwordVal);
-      if (!authResult.ok) {
-        const code = authResult.code?.toLowerCase() ?? '';
-        if (code === 'email_not_confirmed') {
-          setFieldErrors({ email: authResult.message });
-        } else if (code === 'invalid_credentials' || code === 'invalid_grant') {
-          setFieldErrors({ password: authResult.message });
-        } else {
-          setFieldErrors({});
-          setFormError(authResult.message);
-        }
-        return;
+    const authResult = await signInWithEmailPassword(supabase, data.email, data.password);
+    if (!authResult.ok) {
+      const code = authResult.code?.toLowerCase() ?? '';
+      if (code === 'email_not_confirmed') {
+        setError('email', { message: authResult.message });
+      } else if (code === 'invalid_credentials' || code === 'invalid_grant') {
+        setError('password', { message: authResult.message });
+      } else {
+        setFormError(authResult.message);
       }
-      void navigate('/catalog', { replace: true });
-    } finally {
-      setSubmitting(false);
+      return;
     }
-  }
-
-  function clearEmailError() {
-    setFieldErrors((prev) => {
-      const next = { ...prev };
-      delete next.email;
-      return next;
-    });
-    setFormError(null);
-  }
-
-  function clearPasswordError() {
-    setFieldErrors((prev) => {
-      const next = { ...prev };
-      delete next.password;
-      return next;
-    });
-    setFormError(null);
-  }
+    void navigate('/catalog', { replace: true });
+  };
 
   if (configError) {
     return (
@@ -89,9 +59,9 @@ export function Login() {
         <Card className="mx-auto w-full max-w-[30rem]">
           <h1>Connexion</h1>
           <Banner variant="error">
-            Variables d’environnement Supabase manquantes. Copiez{' '}
+            Variables d'environnement Supabase manquantes. Copiez{' '}
             <code className="break-all text-[0.8em]">frontend/.env.example</code> vers{' '}
-            <code className="break-all text-[0.8em]">frontend/.env</code> et renseignez l’URL ainsi
+            <code className="break-all text-[0.8em]">frontend/.env</code> et renseignez l'URL ainsi
             que la clé anonyme.
           </Banner>
         </Card>
@@ -99,8 +69,7 @@ export function Login() {
     );
   }
 
-  const emailErr = fieldErrors.email;
-  const passwordErr = fieldErrors.password;
+  const isDisabled = isSubmitting || authLoading;
 
   return (
     <PageSection className="max-w-2xl pt-8">
@@ -109,45 +78,40 @@ export function Login() {
         <p className="mb-5 text-center text-sm text-text-secondary">
           Pas encore de compte ? <TextLink to="/signup">Créer un compte</TextLink>
         </p>
-        <form className="flex flex-col gap-4" noValidate onSubmit={(e) => void handleSubmit(e)}>
+        <form
+          className="flex flex-col gap-4"
+          noValidate
+          onSubmit={(e) => void handleSubmit(onSubmit)(e)}
+        >
           <InputField
             id="login-email"
             label="E-mail"
-            name="email"
             type="email"
             autoComplete="email"
             placeholder="vous@exemple.fr"
             required
-            error={emailErr}
-            errorId={emailErrorId}
-            value={email}
-            onChange={(ev) => {
-              setEmail(ev.target.value);
-              clearEmailError();
-            }}
-            disabled={submitting || authLoading}
+            error={errors.email?.message}
+            errorId="login-email-error"
+            disabled={isDisabled}
+            {...register('email')}
           />
           <PasswordField
             id="login-password"
             label="Mot de passe"
-            name="password"
             autoComplete="current-password"
             placeholder="••••••••"
-            value={password}
-            error={passwordErr}
-            onChange={(ev) => {
-              setPassword(ev.target.value);
-              clearPasswordError();
-            }}
-            disabled={submitting || authLoading}
+            value={watch('password') ?? ''}
+            error={errors.password?.message}
+            disabled={isDisabled}
+            {...register('password')}
           />
           {formError ? (
             <p className="m-0 text-sm text-red-500" role="alert">
               {formError}
             </p>
           ) : null}
-          <Button type="submit" variant="gradient" disabled={submitting || authLoading}>
-            {submitting ? 'Connexion…' : 'Se connecter'}
+          <Button type="submit" variant="gradient" disabled={isDisabled}>
+            {isSubmitting ? 'Connexion…' : 'Se connecter'}
           </Button>
         </form>
         <p className="mt-5 text-center text-sm">

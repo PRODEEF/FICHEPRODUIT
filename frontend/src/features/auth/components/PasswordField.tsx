@@ -1,4 +1,4 @@
-import { useState, type ChangeEvent } from 'react';
+import { forwardRef, useState, type ChangeEvent, type FocusEvent } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 
 import { PasswordStrengthMeter } from './PasswordStrengthMeter';
@@ -19,26 +19,32 @@ export interface PasswordFieldProps {
   placeholder?: string | undefined;
   value: string;
   onChange: (ev: ChangeEvent<HTMLInputElement>) => void;
+  /** Utilisé par react-hook-form (`register`) pour touched / revalidation au blur. */
+  onBlur?: ((ev: FocusEvent<HTMLInputElement>) => void) | undefined;
   disabled?: boolean | undefined;
   error?: string | null | undefined;
   /** Affiche l’indicateur de force (inscription, premier champ mot de passe). */
   showStrengthMeter?: boolean | undefined;
 }
 
-export function PasswordField({
-  id,
-  label,
-  name,
-  autoComplete,
-  required,
-  minLength,
-  placeholder,
-  value,
-  onChange,
-  disabled,
-  error,
-  showStrengthMeter = false,
-}: PasswordFieldProps) {
+export const PasswordField = forwardRef<HTMLInputElement, PasswordFieldProps>(function PasswordField(
+  {
+    id,
+    label,
+    name,
+    autoComplete,
+    required,
+    minLength,
+    placeholder,
+    value,
+    onChange,
+    onBlur,
+    disabled,
+    error,
+    showStrengthMeter = false,
+  },
+  ref,
+) {
   const [visible, setVisible] = useState(false);
   const errorId = `${id}-error`;
   const strengthId = `${id}-strength`;
@@ -54,6 +60,7 @@ export function PasswordField({
       </label>
       <div className="relative w-full">
         <input
+          ref={ref}
           id={id}
           name={name}
           type={visible ? 'text' : 'password'}
@@ -63,6 +70,7 @@ export function PasswordField({
           placeholder={placeholder}
           value={value}
           onChange={onChange}
+          onBlur={onBlur}
           disabled={disabled}
           aria-invalid={hasError}
           aria-describedby={describedBy || undefined}
@@ -89,4 +97,6 @@ export function PasswordField({
       ) : null}
     </div>
   );
-}
+});
+
+PasswordField.displayName = 'PasswordField';

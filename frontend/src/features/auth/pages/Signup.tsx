@@ -1,5 +1,7 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
+import { useForm, useWatch } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 
 import { parseAsFullSiteUrl } from '@lib/siteUrl';
 import { getSupabaseClient } from '@shared/supabase';
@@ -11,16 +13,18 @@ import { Banner, Button, Card, InputField, PageSection, TextLink } from '@shared
 import { PasswordField } from '../components/PasswordField';
 import { authErrorMessage } from '../lib/authErrorMessage';
 import { writePendingSignup } from '../lib/pendingSignupStorage';
-import { collectSignupFieldErrors } from '../lib/signupFieldValidation';
 import { clearPendingAutoAnalyzeForUser } from '../lib/userProfile';
 import { createSupabaseUserRepository } from '../supabaseUserRepository';
-import type { SignupFieldErrors, SignupFieldKey } from '../types';
+import { signupSchema, type SignupInput } from '../lib/authSchemas';
 
 export function Signup() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { userEmail, loading: authLoading, configError, refreshProfile } = useAuth();
   const [signupUrlAnalysisActive, setSignupUrlAnalysisActive] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [verifyEmailSent, setVerifyEmailSent] = useState(false);
+
   const { runAnalysis, analysisOpen, siteAnalysis, dismissError } = useSiteAnalysis({
     onSuccess: (summary) => {
       void navigate(`/catalog/${summary.id}`);
@@ -31,32 +35,41 @@ export function Signup() {
     dismissError();
     setSignupUrlAnalysisActive(false);
   }, [dismissError]);
-  const [email, setEmail] = useState('');
-  const [username, setUsername] = useState('');
-  const [websiteUrl, setWebsiteUrl] = useState('');
-  const [password, setPassword] = useState('');
-  const [passwordConfirm, setPasswordConfirm] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [fieldErrors, setFieldErrors] = useState<SignupFieldErrors>({});
-  const [formError, setFormError] = useState<string | null>(null);
-  const [verifyEmailSent, setVerifyEmailSent] = useState(false);
 
+  const {
+    register,
+    handleSubmit,
+    setError,
+    setValue,
+    control,
+    formState: { errors, isSubmitting },
+  } = useForm<SignupInput>({
+    resolver: zodResolver(signupSchema),
+    defaultValues: {
+      email: '',
+      username: '',
+      websiteUrl: '',
+      password: '',
+      passwordConfirm: '',
+    },
+  });
+
+  // useWatch au lieu de watch() pour limiter les re-renders aux champs concernés
+  const passwordValue = useWatch({ control, name: 'password' }) ?? '';
+  const passwordConfirmValue = useWatch({ control, name: 'passwordConfirm' }) ?? '';
+  const websiteUrlValue = useWatch({ control, name: 'websiteUrl' }) ?? '';
+
+  // Pré-remplit l'URL depuis le query param
   const urlFromQuery = searchParams.get('url');
-
   useEffect(() => {
     if (!urlFromQuery) return;
     const normalized = parseAsFullSiteUrl(urlFromQuery.trim());
     if (normalized) {
-      queueMicrotask(() => {
-        setWebsiteUrl(normalized);
-      });
+      queueMicrotask(() => setValue('websiteUrl', normalized));
     }
-  }, [urlFromQuery]);
+  }, [urlFromQuery, setValue]);
 
-  const emailErrorId = 'signup-email-error';
-  const usernameErrorId = 'signup-username-error';
-  const websiteErrorId = 'signup-website-error';
-
+  // Redirige si déjà connecté
   useEffect(() => {
     if (authLoading || configError) return;
     if (!userEmail) return;
@@ -64,83 +77,59 @@ export function Signup() {
     void navigate('/', { replace: true });
   }, [authLoading, configError, userEmail, signupUrlAnalysisActive, analysisOpen, navigate]);
 
-  function clearFieldError(key: SignupFieldKey) {
-    setFieldErrors((prev) =>
-      Object.fromEntries(
-        Object.entries(prev).filter(([k]) => k !== key),
-      ),
-    );
-    setFormError(null);
-  }
+  const onSubmit = useCallback(
+    async (data: SignupInput) => {
+      setFormError(null);
+      setVerifyEmailSent(false);
 
-  async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setFormError(null);
-    setVerifyEmailSent(false);
+      const supabase = getSupabaseClient();
+      if (!supabase) {
+        setFormError('Configuration Supabase manquante.');
+        return;
+      }
 
-    const validation = collectSignupFieldErrors({
-      email,
-      username,
-      websiteUrl,
-      password,
-      passwordConfirm,
-    });
-    if (!validation.ok) {
-      setFieldErrors(validation.fieldErrors);
-      return;
-    }
+      const emailTrim = data.email.trim();
+      const normalizedUsername = data.username.trim();
+      const websiteUrl = data.websiteUrl ?? '';
 
-    const { emailTrim, normalizedUsername, website_url } = validation.payload;
-
-    const supabase = getSupabaseClient();
-    if (!supabase) {
-      setFormError('Configuration Supabase manquante.');
-      return;
-    }
-
-    setFieldErrors({});
-
-    setSubmitting(true);
-    try {
-      const emailRedirectTo = `${window.location.origin}/`;
-      const { data, error: signError } = await supabase.auth.signUp({
+      const { data: authData, error: signError } = await supabase.auth.signUp({
         email: emailTrim,
-        password,
+        password: data.password,
         options: {
-          emailRedirectTo,
-          // Visible dans le dashboard Supabase (user_metadata / « Display name » selon les vues).
+          emailRedirectTo: `${window.location.origin}/`,
           data: {
             display_name: normalizedUsername,
             full_name: normalizedUsername,
           },
         },
       });
+
       if (signError) {
         const message = authErrorMessage(signError);
         const code = signError.code?.toLowerCase() ?? '';
         if (code === 'user_already_registered') {
-          setFieldErrors({ email: message });
+          setError('email', { message });
         } else if (code === 'weak_password' || code === 'same_password') {
-          setFieldErrors({ password: message });
+          setError('password', { message });
         } else {
           setFormError(message);
         }
         return;
       }
-      if (data.session?.user) {
-        const userId = data.session.user.id;
+
+      if (authData.session?.user) {
+        const userId = authData.session.user.id;
         const repo = createSupabaseUserRepository(supabase);
         await repo.updateProfile(userId, {
           username: normalizedUsername,
-          website_url: website_url === '' ? null : website_url,
-          pending_auto_analyze: website_url !== '',
+          website_url: websiteUrl === '' ? null : websiteUrl,
+          pending_auto_analyze: websiteUrl !== '',
         });
         await refreshProfile();
-        if (website_url) {
+        if (websiteUrl) {
           setSignupUrlAnalysisActive(true);
-          setSubmitting(false);
           try {
-            const outcome = await runAnalysis(website_url);
+            const outcome = await runAnalysis(websiteUrl);
             if (outcome === 'error_alert') {
               setSignupUrlAnalysisActive(false);
             }
@@ -153,27 +142,21 @@ export function Signup() {
         return;
       }
 
-      if (data.user) {
+      if (authData.user) {
         writePendingSignup({
           email: emailTrim,
           username: normalizedUsername,
-          websiteUrl: website_url,
-          pendingAutoAnalyze: website_url !== '',
+          websiteUrl,
+          pendingAutoAnalyze: websiteUrl !== '',
         });
         setVerifyEmailSent(true);
         return;
       }
+
       setFormError('Inscription impossible pour le moment. Réessayez plus tard.');
-    } catch (err) {
-      setFormError(
-        err instanceof Error && err.message
-          ? err.message
-          : 'Inscription impossible pour le moment. Réessayez plus tard.',
-      );
-    } finally {
-      setSubmitting(false);
-    }
-  }
+    },
+    [navigate, refreshProfile, runAnalysis, setError, setValue],
+  );
 
   if (configError) {
     return (
@@ -181,9 +164,9 @@ export function Signup() {
         <Card className="mx-auto w-full max-w-[34rem]">
           <h1>Inscription</h1>
           <Banner variant="error">
-            Variables d’environnement Supabase manquantes. Copiez{' '}
+            Variables d'environnement Supabase manquantes. Copiez{' '}
             <code className="break-all text-[0.8em]">frontend/.env.example</code> vers{' '}
-            <code className="break-all text-[0.8em]">frontend/.env</code> et renseignez l’URL ainsi
+            <code className="break-all text-[0.8em]">frontend/.env</code> et renseignez l'URL ainsi
             que la clé anonyme.
           </Banner>
         </Card>
@@ -191,11 +174,7 @@ export function Signup() {
     );
   }
 
-  const emailErr = fieldErrors.email;
-  const usernameErr = fieldErrors.username;
-  const websiteErr = fieldErrors.websiteUrl;
-  const passwordErr = fieldErrors.password;
-  const passwordConfirmErr = fieldErrors.passwordConfirm;
+  const isDisabled = isSubmitting || authLoading || signupUrlAnalysisActive;
 
   return (
     <PageSection className="max-w-2xl pt-8">
@@ -211,104 +190,81 @@ export function Signup() {
           <Banner variant="success" role="status">
             Vérifiez votre messagerie : un lien de confirmation vous a été envoyé. Après
             confirmation, vous pourrez vous connecter.
-            {websiteUrl.trim() ? (
-              <> À la première connexion, l’analyse de votre site démarrera automatiquement.</>
+            {websiteUrlValue.trim() ? (
+              <> À la première connexion, l'analyse de votre site démarrera automatiquement.</>
             ) : null}
           </Banner>
         ) : (
-          <form className="flex flex-col gap-4" noValidate onSubmit={(e) => void handleSubmit(e)}>
+          <form
+            className="flex flex-col gap-4"
+            noValidate
+            onSubmit={(e) => void handleSubmit(onSubmit)(e)}
+          >
             <InputField
               id="signup-email"
               label="E-mail"
-              name="email"
               type="email"
               autoComplete="email"
               placeholder="vous@exemple.fr"
               required
-              error={emailErr}
-              errorId={emailErrorId}
-              value={email}
-              onChange={(ev) => {
-                setEmail(ev.target.value);
-                clearFieldError('email');
-              }}
-              disabled={submitting || authLoading || signupUrlAnalysisActive}
+              error={errors.email?.message}
+              errorId="signup-email-error"
+              disabled={isDisabled}
+              {...register('email')}
             />
             <InputField
               id="signup-username"
-              label="Nom d’utilisateur"
-              name="username"
+              label="Nom d'utilisateur"
               type="text"
               autoComplete="username"
               placeholder="Marie Dupont"
               required
               maxLength={30}
-              error={usernameErr}
-              errorId={usernameErrorId}
-              value={username}
-              onChange={(ev) => {
-                setUsername(ev.target.value);
-                clearFieldError('username');
-              }}
-              disabled={submitting || authLoading || signupUrlAnalysisActive}
+              error={errors.username?.message}
+              errorId="signup-username-error"
+              disabled={isDisabled}
+              {...register('username')}
             />
             <InputField
               id="signup-website"
               label="URL de votre site web (facultatif)"
-              name="websiteUrl"
               type="url"
               inputMode="url"
               placeholder="https://exemple.fr"
-              error={websiteErr}
-              errorId={websiteErrorId}
-              value={websiteUrl}
-              onChange={(ev) => {
-                setWebsiteUrl(ev.target.value);
-                clearFieldError('websiteUrl');
-              }}
-              disabled={submitting || authLoading || signupUrlAnalysisActive}
+              error={errors.websiteUrl?.message}
+              errorId="signup-website-error"
+              disabled={isDisabled}
+              {...register('websiteUrl')}
             />
             <PasswordField
               id="signup-password"
               label="Mot de passe"
-              name="password"
               autoComplete="new-password"
               placeholder="Veuillez entrer un mot de passe"
               required
-              value={password}
-              error={passwordErr}
+              value={passwordValue}
+              error={errors.password?.message}
               showStrengthMeter
-              onChange={(ev) => {
-                setPassword(ev.target.value);
-                clearFieldError('password');
-              }}
-              disabled={submitting || authLoading || signupUrlAnalysisActive}
+              disabled={isDisabled}
+              {...register('password')}
             />
             <PasswordField
               id="signup-password-confirm"
               label="Confirmer le mot de passe"
-              name="passwordConfirm"
               autoComplete="new-password"
               placeholder="Saisissez le même mot de passe"
-              value={passwordConfirm}
-              error={passwordConfirmErr}
-              onChange={(ev) => {
-                setPasswordConfirm(ev.target.value);
-                clearFieldError('passwordConfirm');
-              }}
-              disabled={submitting || authLoading || signupUrlAnalysisActive}
+              value={passwordConfirmValue}
+              error={errors.passwordConfirm?.message}
+              disabled={isDisabled}
+              {...register('passwordConfirm')}
             />
             {formError ? (
               <p className="m-0 text-sm text-red-500" role="alert">
                 {formError}
               </p>
             ) : null}
-            <Button
-              type="submit"
-              variant="gradient"
-              disabled={submitting || authLoading || signupUrlAnalysisActive}
-            >
-              {submitting ? 'Inscription…' : 'Créer mon compte'}
+            <Button type="submit" variant="gradient" disabled={isDisabled}>
+              {isSubmitting ? 'Inscription…' : 'Créer mon compte'}
             </Button>
           </form>
         )}
