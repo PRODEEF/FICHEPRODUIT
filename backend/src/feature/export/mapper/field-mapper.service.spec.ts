@@ -18,8 +18,6 @@ const sampleProduct = (): CatalogProduct => ({
 });
 
 const tplField = (name: string): ProductTemplateField => ({
-  id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
-  templateId: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
   name,
   type: 'text',
   required: false,

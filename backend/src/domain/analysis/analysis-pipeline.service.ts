@@ -50,6 +50,9 @@ export class AnalysisPipelineService {
       const classification = await this.classifier.classify({
         url: analysis.url,
         html: scrapeResult.html,
+        cms: scrapeResult.cms,
+        title: scrapeResult.title,
+        textSample: scrapeResult.textSample,
       });
 
       // 3. Boutique persistée pour connecté OU invité (session_id)

@@ -6,8 +6,6 @@ const field = (
   name: string,
   overrides: Partial<ProductTemplateField> = {},
 ): ProductTemplateField => ({
-  id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
-  templateId: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
   name,
   type: 'text',
   required: false,

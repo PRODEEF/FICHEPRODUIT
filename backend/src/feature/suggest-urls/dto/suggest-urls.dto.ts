@@ -1,11 +1,11 @@
-import { z } from "zod";
 import { createZodDto } from "nestjs-zod";
+import { z } from "zod";
 
 export const suggestUrlsSchema = z.object({
   q: z
-    .string()
-    .min(1, "Le paramètre q est requis")
-    .describe("Indice texte pour trouver des URLs e-commerce"),
+    .string({ error: "Paramètre q manquant" })
+    .min(1, "Paramètre q manquant")
+    .transform((v) => v.trim()),
 });
 
 export class SuggestUrlsDto extends createZodDto(suggestUrlsSchema) {}

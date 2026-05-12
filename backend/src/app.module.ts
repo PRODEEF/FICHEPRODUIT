@@ -1,8 +1,9 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
-import { APP_PIPE } from "@nestjs/core";
+import { APP_FILTER, APP_PIPE } from "@nestjs/core";
 import { ZodValidationPipe } from "nestjs-zod";
 import configuration from "./core/config/configuration";
+import { AllHttpExceptionsFilter } from "./core/filters/http-exception.filter";
 
 // core/
 import { SupabaseModule } from "./core/supabase/supabase.module";
@@ -46,9 +47,15 @@ import { SuggestUrlsModule } from "./feature/suggest-urls/suggest-urls.module";
     SuggestUrlsModule,
   ],
   providers: [
+    // Validation globale — ZodValidationPipe sur tous les DTOs
     {
       provide: APP_PIPE,
       useClass: ZodValidationPipe,
+    },
+    // Gestion d'erreur globale — normalise toutes les exceptions en { statusCode, message, error, timestamp, path }
+    {
+      provide: APP_FILTER,
+      useClass: AllHttpExceptionsFilter,
     },
   ],
 })
