@@ -55,9 +55,9 @@ export function Signup() {
   });
 
   // useWatch au lieu de watch() pour limiter les re-renders aux champs concernés
-  const passwordValue = useWatch({ control, name: 'password' }) ?? '';
-  const passwordConfirmValue = useWatch({ control, name: 'passwordConfirm' }) ?? '';
-  const websiteUrlValue = useWatch({ control, name: 'websiteUrl' }) ?? '';
+  const passwordValue = useWatch({ control, name: 'password', defaultValue: '' });
+  const passwordConfirmValue = useWatch({ control, name: 'passwordConfirm', defaultValue: '' });
+  const websiteUrlValue = useWatch({ control, name: 'websiteUrl', defaultValue: '' });
 
   // Pré-remplit l'URL depuis le query param
   const urlFromQuery = searchParams.get('url');
@@ -65,7 +65,9 @@ export function Signup() {
     if (!urlFromQuery) return;
     const normalized = parseAsFullSiteUrl(urlFromQuery.trim());
     if (normalized) {
-      queueMicrotask(() => setValue('websiteUrl', normalized));
+      queueMicrotask(() => {
+        void setValue('websiteUrl', normalized);
+      });
     }
   }, [urlFromQuery, setValue]);
 
@@ -90,7 +92,7 @@ export function Signup() {
 
       const emailTrim = data.email.trim();
       const normalizedUsername = data.username.trim();
-      const websiteUrl = data.websiteUrl ?? '';
+      const websiteUrl = data.websiteUrl;
 
       const { data: authData, error: signError } = await supabase.auth.signUp({
         email: emailTrim,
@@ -155,7 +157,7 @@ export function Signup() {
 
       setFormError('Inscription impossible pour le moment. Réessayez plus tard.');
     },
-    [navigate, refreshProfile, runAnalysis, setError, setValue],
+    [navigate, refreshProfile, runAnalysis, setError],
   );
 
   if (configError) {

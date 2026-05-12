@@ -16,6 +16,7 @@ function product(overrides: Partial<CatalogProduct>): CatalogProduct {
     year: 2024,
     price: 10,
     description: 'desc',
+    detailedDescription: '',
     images: [],
     url: 'https://example.com/p1',
     attributes: {},

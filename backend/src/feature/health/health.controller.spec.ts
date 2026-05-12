@@ -20,7 +20,6 @@ const mockConfigService = {
 
 describe("HealthController", () => {
   let controller: HealthController;
-  let healthService: HealthService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -33,7 +32,6 @@ describe("HealthController", () => {
     }).compile();
 
     controller = module.get<HealthController>(HealthController);
-    healthService = module.get<HealthService>(HealthService);
   });
 
   it("retourne ok quand la DB répond", async () => {

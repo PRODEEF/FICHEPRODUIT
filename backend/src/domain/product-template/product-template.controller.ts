@@ -136,7 +136,8 @@ export class ProductTemplateController {
   @ApiOkResponse({ description: "Champs après raffinement", type: RefineFieldsResultDto })
   @ApiBadRequestResponse({ description: "Corps JSON invalide (Zod)" })
   @ApiUnauthorizedResponse({ description: "JWT manquant ou invalide" })
-  refineFields(@Body() body: RefineFieldsDto, @CurrentUser() _user: AuthenticatedUser) {
+  refineFields(@Body() body: RefineFieldsDto, @CurrentUser() user: AuthenticatedUser) {
+    void user;
     return this.service.refineWithAi(body.fields, body.source, body.sampleValues);
   }
 }

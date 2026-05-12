@@ -240,6 +240,7 @@ export class CatalogRepository implements ICatalogRepository {
       year: row.year ?? 0,
       price: row.price,
       description: row.description ?? "",
+      detailedDescription: row.detailed_description ?? "",
       images: row.images ?? [],
       url: row.url,
       attributes: this.attributesFromJson(row.attributes),

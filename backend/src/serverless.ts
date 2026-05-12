@@ -5,6 +5,7 @@ import { NestFactory } from "@nestjs/core";
 import { FastifyAdapter, NestFastifyApplication } from "@nestjs/platform-fastify";
 import type { IncomingMessage, ServerResponse } from "http";
 import { AppModule } from "./app.module";
+import { registerHttpSecurityPlugins } from "./core/http/fastify-security-plugins";
 
 let app: NestFastifyApplication;
 
@@ -16,6 +17,7 @@ async function bootstrap(): Promise<NestFastifyApplication> {
   });
 
   const fastify = app.getHttpAdapter().getInstance();
+  await registerHttpSecurityPlugins(fastify);
   await fastify.register(cookie);
 
   const configService = app.get(ConfigService);

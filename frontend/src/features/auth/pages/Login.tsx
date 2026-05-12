@@ -24,6 +24,7 @@ export function Login() {
     formState: { errors, isSubmitting },
   } = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
+    defaultValues: { email: '', password: '' },
   });
 
   useEffect(() => {
@@ -100,7 +101,7 @@ export function Login() {
             label="Mot de passe"
             autoComplete="current-password"
             placeholder="••••••••"
-            value={watch('password') ?? ''}
+            value={watch('password')}
             error={errors.password?.message}
             disabled={isDisabled}
             {...register('password')}

@@ -1,5 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { load } from "cheerio";
+import { assertUrlSafeForServerFetch } from "./scrape-url-policy";
 import type { CmsType, ScrapePageResult } from "./scraper.types";
 
 const FETCH_TIMEOUT_MS = 20_000;
@@ -12,6 +13,12 @@ export class SiteScraperService {
   private readonly logger = new Logger(SiteScraperService.name);
 
   async fetchPage(url: string): Promise<ScrapePageResult> {
+    const safe = await assertUrlSafeForServerFetch(url);
+    if (!safe.ok) {
+      this.logger.warn(`fetchPage blocked URL policy: ${safe.reason} (${url})`);
+      return { ok: false, error: safe.reason };
+    }
+
     try {
       const res = await fetch(url, {
         redirect: "follow",

@@ -106,6 +106,7 @@ export interface CatalogProduct {
   year: number;
   price: number;
   description: string;
+  detailedDescription: string;
   images: string[];
   url: string;
   attributes: Record<string, string>;

@@ -52,6 +52,7 @@ Produit :
 - Marque : ${product.brand}
 - Catégorie : ${product.category}
 - Description fabricant : ${product.description}
+${product.detailedDescription.trim() ? `- Description détaillée : ${product.detailedDescription}` : ""}
 - Prix : ${product.price}€
 - Attributs : ${JSON.stringify(product.attributes)}
 

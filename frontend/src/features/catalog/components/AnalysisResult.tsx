@@ -62,6 +62,7 @@ function AnalysisResultContent({
 
       {isDone && workflowStatus !== 'waiting_analysis' ? (
         <CatalogProductsSection
+          shopName={shop?.name ?? ''}
           isConnected={isConnected}
           products={allProducts}
           productPayload={productPayload}

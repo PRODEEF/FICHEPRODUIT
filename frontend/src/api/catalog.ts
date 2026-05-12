@@ -29,6 +29,8 @@ function normalizeCatalogProduct(raw: unknown): CatalogProduct | null {
   const year = typeof o['year'] === 'number' ? o['year'] : 0;
   const price = typeof o['price'] === 'number' ? o['price'] : 0;
   const description = typeof o['description'] === 'string' ? o['description'] : '';
+  const detailedDescription =
+    typeof o['detailedDescription'] === 'string' ? o['detailedDescription'] : '';
   const images = Array.isArray(o['images'])
     ? (o['images'] as unknown[]).filter((x): x is string => typeof x === 'string')
     : [];
@@ -52,6 +54,7 @@ function normalizeCatalogProduct(raw: unknown): CatalogProduct | null {
     year,
     price,
     description,
+    detailedDescription,
     images,
     url,
     attributes,

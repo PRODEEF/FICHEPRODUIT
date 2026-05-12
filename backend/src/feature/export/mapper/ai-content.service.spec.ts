@@ -14,6 +14,7 @@ const product = (): CatalogProduct => ({
   year: 2025,
   price: 10,
   description: "D",
+  detailedDescription: "",
   images: [],
   url: "https://x",
   attributes: {},

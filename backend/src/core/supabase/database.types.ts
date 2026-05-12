@@ -66,6 +66,7 @@ export type Database = {
           category: string;
           created_at: string;
           description: string | null;
+          detailed_description: string | null;
           id: string;
           images: string[];
           name: string;
@@ -82,6 +83,7 @@ export type Database = {
           category: string;
           created_at?: string;
           description?: string | null;
+          detailed_description?: string | null;
           id?: string;
           images?: string[];
           name: string;
@@ -98,6 +100,7 @@ export type Database = {
           category?: string;
           created_at?: string;
           description?: string | null;
+          detailed_description?: string | null;
           id?: string;
           images?: string[];
           name?: string;

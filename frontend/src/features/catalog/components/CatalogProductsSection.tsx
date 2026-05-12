@@ -10,6 +10,7 @@ import { ProductResultsToolbar } from './ProductResultsToolbar';
 import { ProductTable } from './ProductTable';
 
 export interface CatalogProductsSectionProps {
+  shopName: string;
   isConnected: boolean;
   products: CatalogProduct[];
   productPayload: CatalogProductPayloadMetadata | null;
@@ -20,6 +21,7 @@ export interface CatalogProductsSectionProps {
 }
 
 export function CatalogProductsSection({
+  shopName,
   isConnected,
   products,
   productPayload,
@@ -130,6 +132,7 @@ export function CatalogProductsSection({
           <p className="my-4 text-text-secondary">Aucun exemple ne correspond aux filtres.</p>
         ) : (
           <ProductTable
+            shopName={shopName}
             products={displayProducts}
             selectedIds={selectedIds}
             allSelected={allFilteredSelected}

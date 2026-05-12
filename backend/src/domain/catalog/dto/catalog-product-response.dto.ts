@@ -11,6 +11,7 @@ export const catalogProductResponseSchema = z.object({
   year: z.number().int().describe("Année modèle (0 si inconnue)"),
   price: z.number().describe("Prix catalogue"),
   description: z.string().describe("Description texte brut"),
+  detailedDescription: z.string().describe("Description détaillée / fiche technique"),
   images: z.array(z.string()).describe("URLs des visuels"),
   url: z.string().describe("Lien fiche fabricant / source"),
   attributes: z.record(z.string(), z.string()).describe("Attributs libres (couleur, taille, etc.)"),

@@ -5,11 +5,13 @@ import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import cookie from "@fastify/cookie";
 import { cleanupOpenApiDoc } from "nestjs-zod";
 import { AppModule } from "./app.module";
+import { registerHttpSecurityPlugins } from "./core/http/fastify-security-plugins";
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter());
 
   const fastify = app.getHttpAdapter().getInstance();
+  await registerHttpSecurityPlugins(fastify);
   await fastify.register(cookie);
 
   const configService = app.get(ConfigService);

@@ -1,4 +1,5 @@
 import { Injectable, Logger, Inject } from "@nestjs/common";
+import { scheduleBackgroundWork } from "../../core/http/serverless-background";
 import { SiteScraperService } from "../../core/scraper/site-scraper.service";
 import { SiteClassifierService } from "../../core/scraper/site-classifier.service";
 import { ShopService } from "../shop/shop.service";
@@ -22,9 +23,10 @@ export class AnalysisPipelineService {
    * L'appelant reçoit immédiatement l'Analysis en status=pending.
    */
   runInBackground(analysis: Analysis, accessToken: string): void {
-    void this.run(analysis, accessToken).catch((err) => {
+    const task = this.run(analysis, accessToken).catch((err) => {
       this.logger.error(`Pipeline crashed for ${analysis.id}`, err);
     });
+    scheduleBackgroundWork(task);
   }
 
   private async run(analysis: Analysis, accessToken: string): Promise<void> {

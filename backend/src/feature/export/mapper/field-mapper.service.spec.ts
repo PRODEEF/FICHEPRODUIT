@@ -12,6 +12,7 @@ const sampleProduct = (): CatalogProduct => ({
   year: 2024,
   price: 129.9,
   description: 'Description fabricant',
+  detailedDescription: '',
   images: ['https://cdn.test/1.jpg', 'https://cdn.test/2.jpg'],
   url: 'https://shop.test/p/1',
   attributes: { Couleur: 'Rouge', ' poids ': '1kg' },

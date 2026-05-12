@@ -1,9 +1,13 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
+import { ConfigModule } from '@nestjs/config';
 import { ExportModule } from '../src/feature/export/export.module';
 import { JwtGuard } from '../src/core/auth/guards/jwt.guard';
+import { OptionalJwtGuard } from '../src/core/auth/guards/optional-jwt.guard';
 import { AiContentService } from '../src/feature/export/mapper/ai-content.service';
+import { SupabaseModule } from '../src/core/supabase/supabase.module';
+import configuration from '../src/core/config/configuration';
 import { CatalogService } from '@/domain/catalog/catalog.service';
 import { ProductTemplateService } from '@/domain/product-template/product-template.service';
 import type { CatalogProduct } from '@/domain/catalog/types/catalog.types';
@@ -19,6 +23,14 @@ class E2eJwtStub implements CanActivate {
       email: 'e2e@test.com',
       accessToken: 'e2e-token',
     };
+    return true;
+  }
+}
+
+/** Remplace OptionalJwtGuard pour les e2e sans client Supabase sur les routes catalogue. */
+@Injectable()
+class E2eOptionalJwtStub implements CanActivate {
+  canActivate(): boolean {
     return true;
   }
 }
@@ -40,6 +52,7 @@ describe('ExportController (e2e)', () => {
     year: 2025,
     price: 199,
     description: 'ANC',
+    detailedDescription: '',
     images: [],
     url: 'https://ex.test/p',
     attributes: {},
@@ -51,18 +64,14 @@ describe('ExportController (e2e)', () => {
     shopId,
     fields: [
       {
-        id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
-        templateId,
-        name: 'name',
-        type: 'text',
+        name: "name",
+        type: "text",
         required: true,
         order: 0,
       },
       {
-        id: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
-        templateId,
-        name: 'prix',
-        type: 'price',
+        name: "prix",
+        type: "price",
         required: true,
         order: 1,
       },
@@ -70,11 +79,28 @@ describe('ExportController (e2e)', () => {
   });
 
   beforeAll(async () => {
+    process.env.SUPABASE_URL = process.env.SUPABASE_URL ?? 'https://test.supabase.co';
+    process.env.SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY ?? 'eyJhbGciOiJIUzI1NiJ9.test-anon';
+    process.env.SUPABASE_SERVICE_ROLE_KEY =
+      process.env.SUPABASE_SERVICE_ROLE_KEY ?? 'eyJhbGciOiJIUzI1NiJ9.test-service';
+    process.env.OPENAI_API_KEY = process.env.OPENAI_API_KEY ?? 'sk-test';
+    process.env.TAVILY_API_KEY = process.env.TAVILY_API_KEY ?? 'tvly-test';
+
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [ExportModule],
+      imports: [
+        ConfigModule.forRoot({
+          isGlobal: true,
+          load: [configuration],
+          ignoreEnvFile: true,
+        }),
+        SupabaseModule,
+        ExportModule,
+      ],
     })
       .overrideGuard(JwtGuard)
       .useClass(E2eJwtStub)
+      .overrideProvider(OptionalJwtGuard)
+      .useClass(E2eOptionalJwtStub)
       .overrideProvider(CatalogService)
       .useValue({
         findByIds: jest.fn().mockResolvedValue([sampleProduct()]),
