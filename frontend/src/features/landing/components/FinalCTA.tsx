@@ -21,7 +21,7 @@ export function FinalCTA() {
         animate={titleInView ? 'visible' : 'hidden'}
         className="text-4xl font-extrabold mb-4"
       >
-        Lance-toi — 14 jours gratuits, sans carte bancaire
+        Lancez-vous — 14 jours gratuits, sans carte bancaire
       </motion.h2>
       <motion.p
         variants={titleReveal}
@@ -29,7 +29,7 @@ export function FinalCTA() {
         animate={titleInView ? 'visible' : 'hidden'}
         className="text-purple-200 mb-10 text-lg"
       >
-        Crée ton compte et commence à générer des fiches en quelques minutes.
+        Créez votre compte et commencez à générer des fiches en quelques minutes.
       </motion.p>
       <motion.div variants={titleReveal} initial="hidden" animate={titleInView ? 'visible' : 'hidden'}>
         <Button href="/signup" variant="secondary" size="lg" glow>

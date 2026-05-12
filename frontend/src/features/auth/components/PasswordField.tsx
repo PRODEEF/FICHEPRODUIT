@@ -1,4 +1,4 @@
-import { useState, type ChangeEvent } from 'react';
+import { forwardRef, useState, type ChangeEvent, type FocusEvent } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 
 import { PasswordStrengthMeter } from './PasswordStrengthMeter';
@@ -9,36 +9,42 @@ const passwordToggleIconProps = {
   strokeWidth: 1.5,
 };
 
-export type PasswordFieldProps = {
+export interface PasswordFieldProps {
   id: string;
   label: string;
   name: string;
   autoComplete: string;
-  required?: boolean;
-  minLength?: number;
-  placeholder?: string;
+  required?: boolean | undefined;
+  minLength?: number | undefined;
+  placeholder?: string | undefined;
   value: string;
   onChange: (ev: ChangeEvent<HTMLInputElement>) => void;
-  disabled?: boolean;
-  error?: string | null;
+  /** Utilisé par react-hook-form (`register`) pour touched / revalidation au blur. */
+  onBlur?: ((ev: FocusEvent<HTMLInputElement>) => void) | undefined;
+  disabled?: boolean | undefined;
+  error?: string | null | undefined;
   /** Affiche l’indicateur de force (inscription, premier champ mot de passe). */
-  showStrengthMeter?: boolean;
-};
+  showStrengthMeter?: boolean | undefined;
+}
 
-export function PasswordField({
-  id,
-  label,
-  name,
-  autoComplete,
-  required,
-  minLength,
-  placeholder,
-  value,
-  onChange,
-  disabled,
-  error,
-  showStrengthMeter = false,
-}: PasswordFieldProps) {
+export const PasswordField = forwardRef<HTMLInputElement, PasswordFieldProps>(function PasswordField(
+  {
+    id,
+    label,
+    name,
+    autoComplete,
+    required,
+    minLength,
+    placeholder,
+    value,
+    onChange,
+    onBlur,
+    disabled,
+    error,
+    showStrengthMeter = false,
+  },
+  ref,
+) {
   const [visible, setVisible] = useState(false);
   const errorId = `${id}-error`;
   const strengthId = `${id}-strength`;
@@ -48,10 +54,13 @@ export function PasswordField({
     .join(' ');
 
   return (
-    <div className="auth-field">
-      <label htmlFor={id}>{label}</label>
-      <div className="auth-password-wrap">
+    <div className="flex flex-col gap-1.5 text-left">
+      <label htmlFor={id} className="text-sm font-semibold text-text-secondary">
+        {label}
+      </label>
+      <div className="relative w-full">
         <input
+          ref={ref}
           id={id}
           name={name}
           type={visible ? 'text' : 'password'}
@@ -61,14 +70,16 @@ export function PasswordField({
           placeholder={placeholder}
           value={value}
           onChange={onChange}
+          onBlur={onBlur}
           disabled={disabled}
           aria-invalid={hasError}
           aria-describedby={describedBy || undefined}
+          className="w-full rounded-xl border border-soft bg-bg-white px-3 py-2.5 pr-11 text-sm text-text-primary outline-none transition focus:border-purple-400 focus:shadow-[0_0_0_3px_rgba(139,92,246,0.15)] disabled:cursor-not-allowed disabled:opacity-70 aria-[invalid=true]:border-red-500 aria-[invalid=true]:shadow-[0_0_0_3px_rgba(239,68,68,0.18)]"
         />
         <button
           type="button"
-          className="auth-password-toggle"
-          onClick={() => setVisible((v) => !v)}
+          className="absolute right-1.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg border-0 bg-transparent p-0 text-text-muted hover:text-purple-600 disabled:cursor-not-allowed disabled:opacity-50"
+          onClick={() => void setVisible((v) => !v)}
           disabled={disabled}
           aria-label={visible ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
           aria-pressed={visible}
@@ -80,10 +91,12 @@ export function PasswordField({
         <PasswordStrengthMeter id={strengthId} password={value} />
       ) : null}
       {error ? (
-        <p id={errorId} className="auth-error" role="alert">
+        <p id={errorId} className="m-0 text-sm text-red-500" role="alert">
           {error}
         </p>
       ) : null}
     </div>
   );
-}
+});
+
+PasswordField.displayName = 'PasswordField';

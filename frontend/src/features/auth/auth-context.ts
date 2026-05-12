@@ -3,7 +3,7 @@ import type { Session, User } from '@supabase/supabase-js';
 
 import type { UserProfile } from './types';
 
-export type AuthContextValue = {
+export interface AuthContextValue {
   session: Session | null;
   user: User | null;
   userEmail: string | null;
@@ -14,6 +14,6 @@ export type AuthContextValue = {
   configError: boolean;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
-};
+}
 
 export const AuthContext = createContext<AuthContextValue | null>(null);

@@ -1,55 +1,79 @@
 import { useNavigate } from 'react-router';
 import { motion } from 'motion/react';
+import { useEffect, useState } from 'react';
 
 import { fadeUp, titleReveal, badgeBounce } from '@lib/motionVariants';
-import { useSiteAnalysis } from '@shared/hooks/useSiteAnalysis';
+import { AnalysisProgress } from '@shared/components/AnalysisProgress';
+import { UrlSearchForm } from '@shared/components/UrlSearchForm';
+import { UrlsSuggestions } from '@shared/components/UrlsSuggestions';
+import { useAuth } from '@shared/hooks/useAuth';
+import { useUrlSearch } from '@shared/hooks/useUrlSearch';
 
-import { AnalysisProgress } from '../components/AnalysisProgress';
 import { ExpertiseGrid } from '../components/ExpertiseGrid';
 import { FinalCTA } from '../components/FinalCTA';
-import { HeroSearchForm } from '../components/HeroSearchForm';
 import { HowItWorks } from '../components/HowItWorks';
-import { LandingFooter } from '../components/LandingFooter';
-import { LandingSuggestions } from '../components/LandingSuggestions';
+// import { LandingFooter } from '../components/LandingFooter';
 import { SellingPoints } from '../components/SellingPoints';
 import { SocialProofBar } from '../components/SocialProofBar';
 import { Testimonials } from '../components/Testimonials';
-import { useLandingSearch } from '../hooks/useLandingSearch';
-import { useSignupAutoAnalyze } from '../hooks/useSignupAutoAnalyze';
+import { useGuestSiteAnalysis } from '../hooks/useGuestSiteAnalysis';
+import { useSignupAutoAnalyze } from '../../auth/hooks/useSignupAutoAnalyze';
 
 export function Home() {
   const navigate = useNavigate();
-  const { runAnalysis, analysisOpen, siteAnalysis, dismissError } = useSiteAnalysis({
-    onSuccess: (summary) => navigate(`/catalog/${summary.id}`),
+  const { user } = useAuth();
+  const { runAnalysis, analysisOpen, siteAnalysis, dismissError } = useGuestSiteAnalysis({
+    onSuccess: (summary) => {
+      // Les invités atterrissent sur la vue publique d'analyse,
+      // les utilisateurs connectés sur leur catalogue privé.
+      const target = user
+        ? `/catalog/${summary.id}`
+        : `/catalog/public/${summary.id}${summary.sessionId ? `?s=${encodeURIComponent(summary.sessionId)}` : ''}`;
+      void navigate(target);
+    },
   });
 
+  const search = useUrlSearch({ onSubmit: runAnalysis });
+
   useSignupAutoAnalyze({ runAnalysis });
-  const landing = useLandingSearch({ runAnalysis });
-  const prefersReduced =
-    typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const [prefersReduced, setPrefersReduced] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const apply = () => void setPrefersReduced(mq.matches);
+    queueMicrotask(apply);
+    mq.addEventListener('change', apply);
+    return () => void mq.removeEventListener('change', apply);
+  }, []);
 
   return (
     <>
       {analysisOpen && siteAnalysis ? (
         <AnalysisProgress analysis={siteAnalysis} onDismiss={dismissError} />
       ) : null}
-      <div className="app-content">
-        <section className="hero">
+      <div className="relative z-[1] flex-1">
+        <section className="flex flex-col items-center justify-start px-6 pb-16 pt-12 text-center">
           <motion.div
             variants={badgeBounce}
             initial="hidden"
             animate="visible"
-            className="gift-banner"
+            className="mb-8 inline-flex items-center gap-2 rounded-full border border-border-purple bg-purple-50 px-4 py-2 text-sm text-purple-600"
           >
-            ✦ Nouveau - Export Shopify et Prestashop en 1 clic
+            ✦ Nouveau – Export Shopify et PrestaShop en un clic
           </motion.div>
-          <motion.h1 variants={titleReveal} initial="hidden" animate="visible">
-            <span className="highlight">Génère tes fiches produits</span>
+          <motion.h1
+            variants={titleReveal}
+            initial="hidden"
+            animate="visible"
+            className="mb-4 text-[clamp(1.8rem,4vw,3rem)] font-black leading-[1.15] text-text-primary"
+          >
+            <span className="bg-gradient-to-br from-purple-600 to-purple-400 bg-clip-text text-transparent">
+              Générez vos fiches produits et importez les
+            </span>
             <br />
-            en quelques secondes
+            en quelques secondes sur votre site
           </motion.h1>
           <motion.p
-            className="hero-sub"
+            className="mb-8 max-w-[560px] text-base text-text-secondary"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{
@@ -58,7 +82,7 @@ export function Home() {
               ease: [0.22, 1, 0.36, 1],
             }}
           >
-            Laisse-toi guider. Transforme ton catalogue en fiches produits optimisées SEO.
+            Laissez-vous guider. Transformez votre catalogue en fiches produits optimisées SEO.
           </motion.p>
 
           <motion.div
@@ -66,21 +90,30 @@ export function Home() {
             initial="hidden"
             animate="visible"
             transition={{ duration: prefersReduced ? 0 : 0.6, delay: prefersReduced ? 0 : 0.5 }}
-            className="search-container"
+            className="w-full"
           >
-            <HeroSearchForm
-              siteInput={landing.siteInput}
-              setSiteInput={landing.setSiteInput}
-              suggestionsLoading={landing.suggestionsLoading}
-              searchEmptyError={landing.searchEmptyError}
-              handleSubmit={landing.handleSubmit}
+            <UrlSearchForm
+              siteInput={search.input}
+              setSiteInput={search.setInput}
+              suggestionsLoading={search.suggestionsLoading}
+              searchEmptyError={search.inputEmptyError}
+              handleSubmit={() => {
+                void search.handleSubmit();
+              }}
             />
           </motion.div>
 
-          <motion.div variants={fadeUp} initial="hidden" animate="visible">
-            <LandingSuggestions
-              urls={landing.suggestedUrls}
-              onPick={landing.handlePickSuggestion}
+          <motion.div
+            variants={fadeUp}
+            initial="hidden"
+            animate="visible"
+            className="w-full flex justify-center"
+          >
+            <UrlsSuggestions
+              urls={search.suggestedUrls}
+              onPick={(url) => {
+                void search.handlePickSuggestion(url);
+              }}
             />
           </motion.div>
 
@@ -88,7 +121,7 @@ export function Home() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: prefersReduced ? 0 : 0.5, delay: prefersReduced ? 0 : 0.7 }}
-            style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}
+            className="text-xs text-text-muted"
           >
             Aucune carte bancaire - Résultats en 30 secondes - Annulation libre
           </motion.p>
@@ -99,7 +132,7 @@ export function Home() {
         <Testimonials />
         <ExpertiseGrid />
         <FinalCTA />
-        <LandingFooter />
+        {/* <LandingFooter /> */}
       </div>
     </>
   );

@@ -1,26 +1,21 @@
-import { Controller, Get } from '@nestjs/common';
-import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
-import type { HealthResponse } from './health.types';
-import { HealthService } from './health.service';
+import { Controller, Get } from "@nestjs/common";
+import { ApiOkResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
+import { HealthResponseDto } from "./dto/health-response.dto";
+import type { HealthResponse } from "./health.types";
+import { HealthService } from "./health.service";
 
-@ApiTags('Health')
+@ApiTags("Health")
 @Controller()
 export class HealthController {
   constructor(private readonly healthService: HealthService) {}
 
-  @Get('health')
-  @ApiOperation({ summary: 'Health check endpoint' })
+  @Get("health")
+  @ApiOperation({ summary: "Health check" })
   @ApiOkResponse({
-    description: 'Service is healthy',
-    schema: {
-      type: 'object',
-      properties: {
-        status: { type: 'string', example: 'ok' },
-        timestamp: { type: 'string', format: 'date-time' },
-      },
-    },
+    description: "État du service et des dépendances",
+    type: HealthResponseDto,
   })
-  getHealth(): HealthResponse {
+  getHealth(): Promise<HealthResponse> {
     return this.healthService.getHealth();
   }
 }

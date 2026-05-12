@@ -1,128 +1,135 @@
-import { useEffect, useRef } from 'react';
-import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router';
-import { useAuth } from '../../auth/useAuth';
-import { AnalyseResult } from '../../../components/analysis/AnalyseResult';
-import { GuestAnalysisSignupCta } from '../../../components/analysis/GuestAnalysisSignupCta';
-import { AnalysisProgress } from '../../landing/components/AnalysisProgress';
-import { EmptyAnalysis } from '../components/EmptyAnalysis';
-import {
-  clearLastAnalysisId,
-  isValidAnalysisId,
-  setLastAnalysisId,
-} from '../../../lib/lastAnalysisIdStorage';
-import { useSiteAnalysis } from '../../../shared/hooks/useSiteAnalysis';
-import { useLandingSearch } from '../../landing/hooks/useLandingSearch';
-import { useAnalysisDetail } from '../hooks/useAnalysisDetail';
-import { useResultTab } from '../hooks/useResultTab';
+import { Navigate, useNavigate } from 'react-router';
 
+import { useAuth } from '@shared/hooks/useAuth';
+
+import { EmptyAnalysis } from '../components/EmptyAnalysis';
+import { AnalysisResult } from '../components/AnalysisResult';
+import { useCatalogAnalysis } from '../hooks/useCatalogAnalysis';
+import { useCatalogAnalysisWorkflow } from '../hooks/useCatalogAnalysisWorkflow';
+import { useCatalogUrlInputFlow } from '../hooks/useCatalogUrlInputFlow';
+
+/**
+ * Catalogue privé de l'utilisateur connecté.
+ *
+ * Le rendu varie selon l'URL :
+ * - `/catalog` (sans id) : affiche la zone de saisie pour lancer une nouvelle analyse.
+ * - `/catalog/:analysisId` : affiche le détail d'une analyse existante.
+ */
 export function Catalog() {
   const navigate = useNavigate();
-  const { analysisId } = useParams<{ analysisId: string }>();
-  const [, setSearchParams] = useSearchParams();
-  const prevAnalysisIdRef = useRef<string | null>(null);
-  const { user, loading: authLoading } = useAuth();
-
-  const { runAnalysis, analysisOpen, siteAnalysis, dismissError } = useSiteAnalysis({
-    onSuccess: (summary) => navigate(`/catalog/${summary.id}?tab=catalog`),
-  });
-  const landing = useLandingSearch({ runAnalysis });
-
-  const hasValidAnalysisId = isValidAnalysisId(analysisId);
+  const { profile } = useAuth();
 
   const {
+    analysisId,
+    hasValidAnalysisId,
     analysis,
+    shop,
+    products,
     productPayload,
-    loading: detailLoading,
-    error: detailError,
-    analysisNotFound,
-  } = useAnalysisDetail(analysisId, user?.id, authLoading);
+    detailLoading,
+    detailError,
+    latestResolveLoading,
+    latestResolveError,
+  } = useCatalogAnalysis();
 
-  const { tab: resultTab, setTab: setResultTab } = useResultTab();
-
-  useEffect(() => {
-    if (!analysisId || !hasValidAnalysisId) return;
-    setLastAnalysisId(analysisId);
-  }, [analysisId, hasValidAnalysisId]);
-
-  useEffect(() => {
-    if (!analysisId || !hasValidAnalysisId || !analysisNotFound) return;
-    clearLastAnalysisId();
-    navigate('/catalog?tab=catalog', { replace: true });
-  }, [analysisId, hasValidAnalysisId, analysisNotFound, navigate]);
-
-  // Reset tab quand on navigue vers une autre analyse
-  useEffect(() => {
-    if (!analysisId || !hasValidAnalysisId) return;
-    const prev = prevAnalysisIdRef.current;
-    if (prev !== null && prev !== analysisId) {
-      setSearchParams(
-        (p) => {
-          const next = new URLSearchParams(p);
-          next.delete('tab');
-          return next;
-        },
-        { replace: true },
-      );
-    }
-    prevAnalysisIdRef.current = analysisId;
-  }, [analysisId, hasValidAnalysisId, setSearchParams]);
-
-  if (authLoading) {
-    return (
-      <div className="app-content dashboard-content">
-        <p className="analyses-status" aria-busy="true">
-          Chargement…
-        </p>
-      </div>
-    );
-  }
+  const {
+    run,
+    running,
+    currentAnalysis,
+    error: workflowError,
+    clearError,
+  } = useCatalogAnalysisWorkflow({
+    onSuccess: (nextAnalysis) => {
+      void navigate(`/catalog/${nextAnalysis.id}`);
+    },
+  });
+  const search = useCatalogUrlInputFlow({
+    analysisId,
+    defaultWebsiteUrl: profile?.website_url,
+    onSubmit: async (url) => {
+      await run(url);
+    },
+  });
 
   if (analysisId && !hasValidAnalysisId) {
     return <Navigate to="/catalog" replace />;
   }
 
   if (!analysisId) {
-    if (!user) return <Navigate to="/" replace />;
     return (
       <>
-        {analysisOpen && siteAnalysis ? (
-          <AnalysisProgress analysis={siteAnalysis} onDismiss={dismissError} />
-        ) : null}
-        <div className="app-content dashboard-content">
-          <header className="analyses-header">
-            <h1 className="analyses-title">Mon catalogue</h1>
+        <div className="relative z-[1] w-full px-12 pb-12 pt-9">
+          <header className="mb-5 flex flex-wrap items-center gap-4 text-left">
+            <h1 className="m-0 text-[1.75rem] font-extrabold text-text-primary">Mon catalogue</h1>
           </header>
-          <EmptyAnalysis
-            siteInput={landing.siteInput}
-            setSiteInput={landing.setSiteInput}
-            suggestionsLoading={landing.suggestionsLoading}
-            searchEmptyError={landing.searchEmptyError}
-            handleSubmit={landing.handleSubmit}
-            suggestedUrls={landing.suggestedUrls}
-            handlePickSuggestion={landing.handlePickSuggestion}
-          />
+          {running ? (
+            <p className="mb-4 text-sm text-text-secondary" aria-busy="true">
+              Analyse en cours... statut actuel : {currentAnalysis?.status ?? 'pending'}
+            </p>
+          ) : null}
+          {workflowError ? (
+            <div
+              className="mb-4 rounded-xl border border-red-500/35 bg-red-50 px-4 py-3 text-text-primary"
+              role="alert"
+            >
+              <p>{workflowError}</p>
+              <button
+                type="button"
+                className="mt-2 text-sm font-semibold text-purple-600 underline-offset-2 hover:underline"
+                onClick={clearError}
+              >
+                Fermer
+              </button>
+            </div>
+          ) : null}
+          {latestResolveLoading ? (
+            <p className="text-sm text-text-secondary" aria-busy="true">
+              Chargement…
+            </p>
+          ) : (
+            <>
+              {latestResolveError ? (
+                <div
+                  className="mb-4 rounded-xl border border-border-purple bg-purple-50 px-4 py-3 text-text-primary"
+                  role="alert"
+                >
+                  {latestResolveError}
+                </div>
+              ) : null}
+              <EmptyAnalysis
+                siteInput={search.input}
+                setSiteInput={search.setInput}
+                suggestionsLoading={search.suggestionsLoading}
+                searchEmptyError={search.inputEmptyError}
+                handleSubmit={() => {
+                  void search.handleSubmit();
+                }}
+                suggestedUrls={search.suggestedUrls}
+                handlePickSuggestion={(url) => {
+                  void search.handlePickSuggestion(url);
+                }}
+              />
+            </>
+          )}
         </div>
       </>
     );
   }
 
   return (
-    <div className="app-content dashboard-content">
-      <header className="analyses-header">
-        <h1 className="analyses-title">Mon catalogue</h1>
+    <div className="relative z-[1] w-full px-12 pb-12 pt-9">
+      <header className="mb-5 flex flex-wrap items-center gap-4 text-left">
+        <h1 className="m-0 text-[1.75rem] font-extrabold text-text-primary">Mon catalogue</h1>
       </header>
 
-      {!user && !detailLoading && !detailError && analysis?.status === 'completed' ? (
-        <GuestAnalysisSignupCta websiteUrl={analysis.url} />
-      ) : null}
-
-      <AnalyseResult
+      <AnalysisResult
+        isConnected={!!profile}
         loading={detailLoading}
         error={detailError}
         analysis={analysis}
+        shop={shop}
+        products={products}
         productPayload={productPayload}
-        activeTab={resultTab}
-        onActiveTabChange={setResultTab}
       />
     </div>
   );

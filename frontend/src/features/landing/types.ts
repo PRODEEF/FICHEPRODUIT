@@ -18,12 +18,12 @@ import {
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
-export type Universe = {
+export interface Universe {
   label: string;
   icon: LucideIcon;
   color: string;
   example: string;
-};
+}
 
 export const universes: Universe[] = [
   {
@@ -124,11 +124,11 @@ export const universes: Universe[] = [
   },
 ];
 
-export type Testimonial = {
+export interface Testimonial {
   quote: string;
   author: string;
   details: string;
-};
+}
 
 export const testimonials: Testimonial[] = [
   {

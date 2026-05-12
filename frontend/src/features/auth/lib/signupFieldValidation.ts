@@ -6,7 +6,7 @@ import type { SignupFieldErrors, SignupFieldKey, SignupValidatedPayload } from '
 export type { SignupFieldKey, SignupFieldErrors, SignupValidatedPayload } from '../types';
 export { signupSchema } from './authSchemas';
 
-export { MIN_PASSWORD_LENGTH, validatePasswordMinLength } from './authSchemas';
+export { validatePasswordMinLength } from './authSchemas';
 
 export function collectSignupFieldErrors(input: {
   email: string;
@@ -14,9 +14,7 @@ export function collectSignupFieldErrors(input: {
   websiteUrl: string;
   password: string;
   passwordConfirm: string;
-}):
-  | { ok: false; fieldErrors: SignupFieldErrors }
-  | { ok: true; payload: SignupValidatedPayload } {
+}): { ok: false; fieldErrors: SignupFieldErrors } | { ok: true; payload: SignupValidatedPayload } {
   const result = signupSchema.safeParse(input);
   if (!result.success) {
     return {

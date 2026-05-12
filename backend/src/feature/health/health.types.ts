@@ -1,3 +1,10 @@
-import type { components } from '../../generated/api';
+export type HealthStatus = "ok" | "degraded" | "error";
 
-export type HealthResponse = components['schemas']['HealthResponse'];
+export type HealthResponse = {
+  status: HealthStatus;
+  timestamp: string;
+  environment: string;
+  services: {
+    database: "ok" | "error";
+  };
+};

@@ -1,5 +1,5 @@
-// frontend/src/features/home/lib/suggestUrls.ts
-import { getApiBaseUrl } from '@lib/apiBase';
+import { getApiBaseUrl } from '@api/apiBase';
+import { requestNestJson } from '@api/nestHttpClient';
 
 function trimTrailingSlashes(s: string): string {
   return s.replace(/\/+$/, '');
@@ -12,7 +12,7 @@ function trimTrailingSlashes(s: string): string {
  */
 function suggestEndpoint(): string {
   const override = import.meta.env.VITE_SUGGEST_URLS_URL;
-  if (typeof override === 'string' && override.trim()) {
+  if (override !== undefined && override.trim() !== '') {
     return trimTrailingSlashes(override.trim());
   }
 
@@ -33,22 +33,13 @@ function resolveUrl(endpoint: string): string {
  */
 export async function fetchSuggestUrls(q: string): Promise<string[]> {
   const endpoint = resolveUrl(suggestEndpoint());
-  const res = await fetch(endpoint, {
+  const data = await requestNestJson<unknown>({
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ q }),
+    absoluteUrl: endpoint,
+    body: { q },
   });
-  if (!res.ok) {
-    throw new Error(`Suggest request failed: ${res.status}`);
-  }
-  const data: unknown = await res.json();
-  if (
-    data &&
-    typeof data === 'object' &&
-    'urls' in data &&
-    Array.isArray((data as { urls: unknown }).urls)
-  ) {
-    return (data as { urls: string[] }).urls.filter((u) => typeof u === 'string');
+  if (data && typeof data === 'object' && 'urls' in data && Array.isArray(data.urls)) {
+    return data.urls.filter((u) => typeof u === 'string');
   }
   return [];
 }

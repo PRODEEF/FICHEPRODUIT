@@ -1,55 +1,51 @@
-import { existsSync, readFileSync } from 'fs';
-import { join } from 'path';
-import { NestFactory } from '@nestjs/core';
-import {
-  FastifyAdapter,
-  NestFastifyApplication,
-} from '@nestjs/platform-fastify';
-import { OpenAPIObject, SwaggerModule } from '@nestjs/swagger';
-import { ValidationPipe } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { load } from 'js-yaml';
-import { AppModule } from './app.module';
+import { ConfigService } from "@nestjs/config";
+import { NestFactory } from "@nestjs/core";
+import { FastifyAdapter, NestFastifyApplication } from "@nestjs/platform-fastify";
+import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
+import cookie from "@fastify/cookie";
+import { cleanupOpenApiDoc } from "nestjs-zod";
+import { AppModule } from "./app.module";
+import { registerHttpSecurityPlugins } from "./core/http/fastify-security-plugins";
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create<NestFastifyApplication>(
-    AppModule,
-    new FastifyAdapter(),
-  );
+  const app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter());
+
+  const fastify = app.getHttpAdapter().getInstance();
+  await registerHttpSecurityPlugins(fastify);
+  await fastify.register(cookie);
 
   const configService = app.get(ConfigService);
 
-  const corsOrigin = configService.get<string>('corsOrigin', '*');
+  const corsOrigin = configService.get<string>("corsOrigin", "*");
   app.enableCors({
-    origin: corsOrigin === '*' ? true : corsOrigin.split(',').map((o) => o.trim()),
+    origin: corsOrigin === "*" ? true : corsOrigin.split(",").map((o) => o.trim()),
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "x-session-id", "Cookie"],
     preflightContinue: false,
     optionsSuccessStatus: 204,
   });
 
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-      transformOptions: {
-        enableImplicitConversion: true,
-      },
-    }),
-  );
+  const nodeEnv = configService.get<string>("nodeEnv", "development");
+  if (nodeEnv !== "production") {
+    const swaggerConfig = new DocumentBuilder()
+      .setTitle("FicheProduit API")
+      .setDescription(
+        "Documentation OpenAPI générée à partir des contrôleurs NestJS et des schémas Zod (nestjs-zod).",
+      )
+      .setVersion("1.0")
+      .addBearerAuth(
+        { type: "http", scheme: "bearer", bearerFormat: "JWT", in: "header" },
+        "bearerAuth",
+      )
+      .build();
 
-  const specPath = join(process.cwd(), '..', 'openapi', 'api.yaml');
-  if (existsSync(specPath)) {
-    const openApiDocument = load(
-      readFileSync(specPath, 'utf8'),
-    ) as OpenAPIObject;
-    SwaggerModule.setup('api/docs', app, openApiDocument);
+    const document = SwaggerModule.createDocument(app, swaggerConfig);
+    SwaggerModule.setup("api/docs", app, cleanupOpenApiDoc(document));
   }
 
-  const port = configService.get<number>('port', 3000);
-  await app.listen(port, '0.0.0.0');
+  const port = configService.get<number>("port", 3000);
+  await app.listen(port, "0.0.0.0");
 
   console.log(`Application is running on: ${await app.getUrl()}`);
 }

@@ -7,9 +7,9 @@ import { useScrollReveal } from '../hooks/useScrollReveal';
 const points = [
   {
     badge: 'Positionnement',
-    title: 'Adapté à ton univers',
+    title: 'Adapté à votre univers',
     description:
-      'Pas une IA générique — les descriptions sonnent comme un vrai rédacteur de ta niche.',
+      'Pas une IA générique — les descriptions sonnent comme un vrai rédacteur de votre niche.',
   },
   {
     badge: 'Performance',
@@ -142,17 +142,18 @@ export function SellingPoints() {
                           <span className="text-gray-400 font-mono">{score}</span>
                         </div>
                         <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                          <div className={`h-full ${color} rounded-full`} style={{ width: `${score}%` }} />
+                          <div
+                            className={`h-full ${color} rounded-full`}
+                            style={{ width: `${score}%` }}
+                          />
                         </div>
                       </div>
                     ))}
 
                     <div className="mt-4 bg-gray-50 rounded-lg p-3 font-mono text-xs">
-                      <span className="text-blue-500">&lt;title&gt;</span>
                       <span className="text-gray-600">
                         Aile Kitesurf Storm V3 10m² | Freeride & Wave
                       </span>
-                      <span className="text-blue-500">&lt;/title&gt;</span>
                     </div>
                   </div>
                 </>
@@ -198,9 +199,9 @@ export function SellingPoints() {
                             title: 'F-One Bandit 9m²',
                             tags: 'freestyle · light wind',
                           },
-                        ].map((row, i) => (
+                        ].map((row) => (
                           <tr
-                            key={i}
+                            key={row.handle}
                             className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors"
                           >
                             <td className="px-4 py-3 text-emerald-600 font-mono">{row.handle}</td>
@@ -211,7 +212,9 @@ export function SellingPoints() {
                       </tbody>
                     </table>
                     <div className="px-4 py-3 border-t border-gray-100 flex items-center justify-between bg-gray-50/50">
-                      <span className="text-xs text-gray-400">3 fiches générées · prêtes à importer</span>
+                      <span className="text-xs text-gray-400">
+                        3 fiches générées · prêtes à importer
+                      </span>
                       <div className="flex items-center gap-1.5 text-xs font-semibold text-purple-600 bg-purple-50 border border-purple-200 px-3 py-1.5 rounded-lg cursor-default">
                         <Download size={12} />
                         Télécharger CSV

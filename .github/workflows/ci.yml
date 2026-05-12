@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      SUPABASE_URL: https://test.supabase.co
+      SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiJ9.ci-anon
+      SUPABASE_SERVICE_ROLE_KEY: eyJhbGciOiJIUzI1NiJ9.ci-service
+      OPENAI_API_KEY: sk-ci-test
+      TAVILY_API_KEY: tvly-ci-test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: node ./node_modules/jest/bin/jest.js
+      - run: node ./node_modules/jest/bin/jest.js --config ./test/jest-e2e.json
+      - run: node ./node_modules/@nestjs/cli/bin/nest.js build
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run test
+      - run: npm run build

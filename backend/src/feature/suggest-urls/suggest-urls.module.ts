@@ -5,6 +5,5 @@ import { SuggestUrlsService } from './suggest-urls.service';
 @Module({
   controllers: [SuggestUrlsController],
   providers: [SuggestUrlsService],
-  exports: [SuggestUrlsService],
 })
 export class SuggestUrlsModule {}

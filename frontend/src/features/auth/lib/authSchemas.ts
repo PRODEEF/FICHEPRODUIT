@@ -11,13 +11,14 @@ export const USERNAME_MIN_LENGTH = 3;
 export const USERNAME_MAX_LENGTH = 30;
 
 export const PASSWORD_MIN = 8;
-/** Alias conservé pour le code existant (attributs HTML, autres modules). */
+
+/** Alias pour imports historiques (`loginFieldValidation`, etc.). */
 export const MIN_PASSWORD_LENGTH = PASSWORD_MIN;
 
 const USERNAME_REGEX = /^[a-zA-Z0-9_\- ]+$/;
 
 const WEBSITE_URL_INVALID_MESSAGE =
-  'URL du site invalide. Indique une adresse complète (ex. https://monsite.fr).';
+  'URL du site invalide. Indiquez une adresse complète (ex. https://monsite.fr).';
 
 const usernameField = z
   .string()
@@ -32,20 +33,19 @@ const usernameField = z
   )
   .regex(
     USERNAME_REGEX,
-    'Utilise uniquement des lettres, des chiffres, des espaces, des tirets et des underscores.',
+    'Utilisez uniquement des lettres, des chiffres, des espaces, des tirets et des underscores.',
   );
 
 const emailField = z
-  .string()
+  .email('Format d’e-mail invalide.')
   .trim()
-  .min(1, 'Veuillez entrer une adresse e-mail.')
-  .email('Format d’e-mail invalide.');
+  .min(1, 'Veuillez entrer une adresse e-mail.');
 
 /** Inscription : un seul message d’erreur (4 critères sur 5, dont la longueur). */
 const signupPasswordField = z.string().superRefine((val, ctx) => {
   if (getPasswordStrengthSnapshot(val, PASSWORD_MIN).isAcceptable) return;
   ctx.addIssue({
-    code: z.ZodIssueCode.custom,
+    code: 'custom',
     message: SIGNUP_PASSWORD_COMPLEXITY_MESSAGE,
   });
 });
@@ -55,11 +55,18 @@ const websiteUrlField = z
   .string()
   .transform((v) => v.trim())
   .refine((v) => v === '' || parseAsFullSiteUrl(v) !== null, WEBSITE_URL_INVALID_MESSAGE)
-  .transform((v) => (v === '' ? '' : parseAsFullSiteUrl(v)!));
+  .transform((v) => {
+    if (v === '') return '';
+    const parsed = parseAsFullSiteUrl(v);
+    if (parsed === null) {
+      throw new Error('Invariant Zod : URL invalide après refine.');
+    }
+    return parsed;
+  });
 
 export const loginSchema = z.object({
   email: emailField,
-  password: z.string().min(1, 'Indique ton mot de passe.'),
+  password: z.string().min(1, 'Indiquez votre mot de passe.'),
 });
 
 export const signupSchema = z
@@ -77,7 +84,6 @@ export const signupSchema = z
 
 export const profileSchema = z.object({
   username: usernameField,
-  websiteUrl: websiteUrlField,
 });
 
 export type LoginInput = z.input<typeof loginSchema>;

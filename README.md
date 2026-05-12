@@ -1,82 +1,73 @@
 # ficheprod
 
-**Génère tes fiches produits grace à l'IA** en quelques secondes. MVP compatible PrestaShop & Shopify.
+**Génère tes fiches produits grâce à l’IA** en quelques secondes. MVP compatible PrestaShop et Shopify.
 
-## Structure
+## Structure du dépôt
 
 ```
 FICHEPRODUIT/
-├── fiche-produit-front/    # Front React + TypeScript (Vite)
+├── frontend/          # React 19 + TypeScript + Vite + Tailwind
+│   └── src/
+├── backend/           # NestJS 11 + Fastify + Zod + Supabase
 │   ├── src/
-│   │   ├── App.tsx         # Composition racine (hooks + composants)
-│   │   ├── components/     # UI par responsabilité (layout, gate, search…)
-│   │   ├── domain/         # Logique pure (filtres, animation analyse)
-│   │   ├── hooks/          # État et effets réutilisables
-│   │   ├── lib/            # API client, stockage template, utilitaires
-│   │   ├── types/          # Types TypeScript
-│   │   ├── data/fallbackProducts.json
-│   │   └── index.css
-│   └── vite.config.ts      # Proxy /api → localhost:3000 en dev
-├── api/
-│   ├── analyze.js          # Serverless : analyse d’un site (URL, CMS, sitemap…)
-│   └── catalog.js          # Serverless : catalogue enrichi (JSON par secteur)
-├── scripts/
-│   └── enrich-kitesurf.js  # Génère catalogs/kitesurf/products.json (scraping)
-├── catalogs/
-│   └── kitesurf/
-│       ├── brands.json     # URLs catalogue par marque
-│       └── products.json   # Généré par npm run enrich:kitesurf (si absent du dépôt)
-├── package.json
-├── .gitignore
-├── DEPLOY.md
+│   ├── api/index.js   # Point d’entrée Vercel → dist/serverless.js
+│   └── vercel.json
+├── .github/workflows/ # CI (lint, tests, build)
 └── README.md
 ```
 
-L’ancienne entrée statique (`index.html`, `js/`, `css/`) a été **supprimée** au profit du front React.
-
 ## Développement local
 
-### API (`/api/*`)
-
-Les routes `/api/analyze` et `/api/catalog` sont des fonctions [Vercel](https://vercel.com/docs/functions).
+### Backend (port 3000)
 
 ```bash
-cd FICHEPRODUIT
+cd backend
+cp .env.example .env   # puis renseigner les clés
+npm install
+npm run start:dev
+```
+
+Variables obligatoires : voir [backend/.env.example](backend/.env.example).
+
+### Frontend (port 5173, proxy `/api` → 3000)
+
+```bash
+cd frontend
+cp .env.example .env
 npm install
 npm run dev
 ```
 
-Ouvre l’URL indiquée (souvent **http://localhost:3000**). La première fois, `vercel login` peut être nécessaire.
+Le proxy Vite envoie `/api` vers `http://localhost:3000` (voir [frontend/vite.config.ts](frontend/vite.config.ts)).
 
-**Catalogue enrichi** : si `catalogs/kitesurf/products.json` est absent, l’API catalogue renvoie une erreur et le front utilise `fallbackProducts.json`. Génération :
+### Tests
 
-```bash
-npm run enrich:kitesurf
-```
+- **Backend** : `cd backend && npm test` ; e2e : `npm run test:e2e` (variables d’environnement requises, voir [`.github/workflows/ci.yml`](.github/workflows/ci.yml)).
+- **Frontend** : `cd frontend && npm run test` (fichiers `*.vitest.ts` / `*.vitest.tsx` avec Vitest). Les tests existants au format `node:test` (`*.test.ts`) peuvent être lancés avec `node --test` sur les fichiers concernés.
 
-### Front React
+## CI
 
-```bash
-cd fiche-produit-front
-npm install
-npm run dev
-```
+Le workflow [`.github/workflows/ci.yml`](.github/workflows/ci.yml) exécute lint, tests et build sur `backend/` et `frontend/` à chaque push ou pull request sur `main` / `master`.
 
-UI souvent sur **http://localhost:5173**, avec proxy `/api` vers **http://127.0.0.1:3000** (voir [`fiche-produit-front/vite.config.ts`](fiche-produit-front/vite.config.ts)). Sans API, le front utilise le JSON de secours et l’analyse **démo**.
+## Déploiement (Vercel)
 
-Build : `cd fiche-produit-front && npm run build` → `dist/`.
+Détails pas à pas : **[backend/DEPLOY.md](backend/DEPLOY.md)**.
 
-## Déploiement sur Vercel
+Résumé :
 
-Voir **DEPLOY.md**. Chaque push sur `main` peut déclencher un déploiement. Pour le build SPA + `api/`, configure le répertoire de sortie du front et les réécritures si tout est dans le même projet.
+À configurer sur Vercel (entre autres) :
 
-## Récap des rôles
+| Variable                                                         | Rôle                                                                              |
+| ---------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` | Base et auth                                                                      |
+| `OPENAI_API_KEY`, `OPENAI_MODEL`                                 | IA (classification, export, templates)                                            |
+| `TAVILY_API_KEY`                                                 | Suggestions d’URLs                                                                |
+| `CORS_ORIGIN`                                                    | Origines autorisées, **séparées par des virgules** (en prod : ne pas laisser `*`) |
+| `NODE_ENV`                                                       | `production` en prod                                                              |
 
-| Zone | Rôle |
-|------|------|
-| `fiche-produit-front/src` | Application React (clean architecture légère : domain / hooks / components) |
-| `api/*.js` | Analyse site et catalogue (Vercel Functions) |
-| `scripts/enrich-kitesurf.js` | Génération `catalogs/kitesurf/products.json` |
+Le pipeline d’analyse s’enregistre avec `waitUntil` ([`@vercel/functions`](https://vercel.com/docs/functions/functions-api-reference/vercel-functions-package)) pour laisser le scrape et l’IA se terminer après la réponse HTTP. `maxDuration` est à **60** secondes dans `vercel.json` (ajuster selon le plan Vercel).
+
+Le frontend est une SPA Vite : build classique (`npm run build` dans `frontend/`), hébergement statique ou CDN, avec `VITE_API_URL` pointant vers l’URL du backend si le front et l’API ne sont pas sur la même origine.
 
 ---
 

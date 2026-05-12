@@ -1,7 +1,8 @@
-import { useEffect, useState, type FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router';
 
-import { getSupabaseClient } from '@lib/supabase';
+import { getSupabaseClient } from '../../../shared/supabase';
+import { Banner, Button, Card, PageSection, TextLink } from '@shared/ui';
 
 import { PasswordField } from '../components/PasswordField';
 import { updatePasswordAndSignOut } from '../lib/passwordAuth';
@@ -19,7 +20,9 @@ export function ResetPassword() {
   useEffect(() => {
     const supabase = getSupabaseClient();
     if (!supabase) {
-      setGate('invalid');
+      queueMicrotask(() => {
+        setGate('invalid');
+      });
       return;
     }
 
@@ -59,7 +62,7 @@ export function ResetPassword() {
     };
   }, []);
 
-  async function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
     const pwdMatch = validatePasswordMatch(password, passwordConfirm);
@@ -84,40 +87,36 @@ export function ResetPassword() {
         setError(result.message);
         return;
       }
-      navigate('/login', { replace: true });
+      void navigate('/login', { replace: true });
     } finally {
       setSubmitting(false);
     }
   }
 
   return (
-    <div className="auth-page">
-      <div className="auth-card">
-        <h1>Nouveau mot de passe</h1>
+    <PageSection className="max-w-2xl pt-8">
+      <Card className="mx-auto w-full max-w-[30rem]">
+        <h1 className="mb-2 text-center text-2xl font-extrabold text-text-primary">Nouveau mot de passe</h1>
         {gate === 'loading' ? (
-          <p className="auth-intro" aria-busy="true">
+          <p className="mb-5 text-center text-sm text-text-secondary" aria-busy="true">
             Vérification du lien…
           </p>
         ) : null}
         {gate === 'invalid' ? (
           <>
-            <p className="auth-banner auth-banner--error" role="alert">
-              Ce lien de réinitialisation est invalide ou expiré. Demande un nouveau lien depuis la
+            <Banner variant="error" role="alert">
+              Ce lien de réinitialisation est invalide ou expiré. Demandez un nouveau lien depuis la
               page de connexion.
-            </p>
-            <p className="auth-footer-link">
-              <Link to="/forgot-password" className="auth-inline-link">
-                Renvoyer un lien
-              </Link>
+            </Banner>
+            <p className="mt-5 text-center text-sm">
+              <TextLink to="/forgot-password">Renvoyer un lien</TextLink>
               {' · '}
-              <Link to="/login" className="auth-inline-link">
-                Connexion
-              </Link>
+              <TextLink to="/login">Connexion</TextLink>
             </p>
           </>
         ) : null}
         {gate === 'ready' ? (
-          <form className="auth-form" onSubmit={(e) => void handleSubmit(e)}>
+          <form className="flex flex-col gap-4" onSubmit={(e) => void handleSubmit(e)}>
             <PasswordField
               id="reset-password"
               label="Nouveau mot de passe"
@@ -126,7 +125,7 @@ export function ResetPassword() {
               required
               minLength={8}
               value={password}
-              onChange={(ev) => setPassword(ev.target.value)}
+              onChange={(ev) => void setPassword(ev.target.value)}
               disabled={submitting}
             />
             <PasswordField
@@ -137,20 +136,20 @@ export function ResetPassword() {
               required
               minLength={8}
               value={passwordConfirm}
-              onChange={(ev) => setPasswordConfirm(ev.target.value)}
+              onChange={(ev) => void setPasswordConfirm(ev.target.value)}
               disabled={submitting}
             />
             {error ? (
-              <p className="auth-error" role="alert">
+              <p className="m-0 text-sm text-red-500" role="alert">
                 {error}
               </p>
             ) : null}
-            <button type="submit" className="btn-auth-primary" disabled={submitting}>
+            <Button type="submit" variant="gradient" disabled={submitting}>
               {submitting ? 'Enregistrement…' : 'Enregistrer le mot de passe'}
-            </button>
+            </Button>
           </form>
         ) : null}
-      </div>
-    </div>
+      </Card>
+    </PageSection>
   );
 }

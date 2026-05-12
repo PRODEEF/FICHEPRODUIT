@@ -1,11 +1,10 @@
 {
   "name": "ficheproduct",
   "version": "1.0.0",
-  "description": "Enrichissement catalogues fabricants (kitesurf, vélo)",
+  "description": "Génération de fiches produits assistée par IA",
   "type": "module",
   "scripts": {
     "dev": "npx vercel dev",
-    "enrich:kitesurf": "node scripts/enrich-kitesurf.js",
     "devTest": "npm run dev:backend & npm run dev:frontend",
     "dev:backend": "npm run start:dev --prefix backend",
     "dev:frontend": "npm run dev --prefix frontend",

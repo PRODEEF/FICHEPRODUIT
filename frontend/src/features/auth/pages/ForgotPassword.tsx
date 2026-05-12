@@ -1,7 +1,6 @@
-import { useState, type FormEvent } from 'react';
-import { Link } from 'react-router';
-
-import { getSupabaseClient } from '@lib/supabase';
+import React, { useState } from 'react';
+import { getSupabaseClient } from '@shared/supabase';
+import { Banner, Button, Card, InputField, PageSection, TextLink } from '@shared/ui';
 
 import { getPasswordResetRedirectUrl, requestPasswordResetEmail } from '../lib/passwordAuth';
 
@@ -11,12 +10,12 @@ export function ForgotPassword() {
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
 
-  async function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
     const supabase = getSupabaseClient();
     if (!supabase) {
-      setError('Configuration Supabase manquante. Vérifie le fichier .env du frontend.');
+      setError('Configuration Supabase manquante. Vérifiez le fichier .env du frontend.');
       return;
     }
     setSubmitting(true);
@@ -26,7 +25,7 @@ export function ForgotPassword() {
         email,
         getPasswordResetRedirectUrl(),
       );
-      if (result.ok === false) {
+      if (!result.ok) {
         setError(result.message);
         return;
       }
@@ -37,45 +36,43 @@ export function ForgotPassword() {
   }
 
   return (
-    <div className="auth-page">
-      <div className="auth-card">
-        <h1>Mot de passe oublié</h1>
-        <p className="auth-intro">
-          <Link to="/login" className="auth-inline-link">
-            Retour à la connexion
-          </Link>
+    <PageSection className="max-w-2xl pt-8">
+      <Card className="mx-auto w-full max-w-[30rem]">
+        <h1 className="mb-2 text-center text-2xl font-extrabold text-text-primary">
+          Mot de passe oublié
+        </h1>
+        <p className="mb-5 text-center text-sm text-text-secondary">
+          <TextLink to="/login">Retour à la connexion</TextLink>
         </p>
         {done ? (
-          <p className="auth-banner auth-banner--success" role="status">
-            Si cette adresse est associée à un compte, tu recevras un e-mail avec un lien pour
+          <Banner variant="success" role="status">
+            Si cette adresse est associée à un compte, vous recevrez un e-mail avec un lien pour
             choisir un nouveau mot de passe.
-          </p>
+          </Banner>
         ) : (
-          <form className="auth-form" onSubmit={(e) => void handleSubmit(e)}>
-            <div className="auth-field">
-              <label htmlFor="forgot-email">E-mail</label>
-              <input
-                id="forgot-email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                value={email}
-                onChange={(ev) => setEmail(ev.target.value)}
-                disabled={submitting}
-              />
-            </div>
+          <form className="flex flex-col gap-4" onSubmit={(e) => void handleSubmit(e)}>
+            <InputField
+              id="forgot-email"
+              label="E-mail"
+              name="email"
+              type="email"
+              autoComplete="email"
+              required
+              value={email}
+              onChange={(ev) => void setEmail(ev.target.value)}
+              disabled={submitting}
+            />
             {error ? (
-              <p className="auth-error" role="alert">
+              <p className="m-0 text-sm text-red-500" role="alert">
                 {error}
               </p>
             ) : null}
-            <button type="submit" className="btn-auth-primary" disabled={submitting}>
+            <Button type="submit" variant="gradient" disabled={submitting}>
               {submitting ? 'Envoi…' : 'Envoyer le lien'}
-            </button>
+            </Button>
           </form>
         )}
-      </div>
-    </div>
+      </Card>
+    </PageSection>
   );
 }

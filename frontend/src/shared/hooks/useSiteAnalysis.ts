@@ -1,13 +1,14 @@
 import { useCallback, useState } from 'react';
-import type { SiteAnalysis } from '@lib/analysisApi';
-import { runSiteAnalysisWorkflow } from '@lib/runSiteAnalysisWorkflow';
-import type { SiteAnalysisSummary } from '../../types/siteAnalysis';
+import { toast } from 'sonner';
+
+import type { Analysis } from '@types-api';
+import { runAnalysisWorkflow } from '@api/runAnalysisWorkflow';
 
 export type RunAnalysisOutcome = 'success' | 'error_alert' | 'error_modal';
 
-type UseSiteAnalysisOptions = {
-  onSuccess?: (summary: SiteAnalysisSummary) => void;
-};
+interface UseSiteAnalysisOptions {
+  onSuccess?: (analysis: Analysis) => void;
+}
 
 /**
  * Orchestre le workflow d’analyse de site dans l’UI : suivi en direct, fermeture, erreurs soit en alerte soit en modale enrichie.
@@ -16,20 +17,20 @@ type UseSiteAnalysisOptions = {
 export function useSiteAnalysis(options: UseSiteAnalysisOptions = {}) {
   const { onSuccess } = options;
   const [analysisOpen, setAnalysisOpen] = useState(false);
-  const [siteAnalysis, setSiteAnalysis] = useState<SiteAnalysis | null>(null);
+  const [siteAnalysis, setSiteAnalysis] = useState<Analysis | null>(null);
 
   const runAnalysis = useCallback(
     async (urlInput: string): Promise<RunAnalysisOutcome> => {
-      const result = await runSiteAnalysisWorkflow(urlInput, {
+      const result = await runAnalysisWorkflow(urlInput, {
         onProgress: (a) => {
           setAnalysisOpen(true);
           setSiteAnalysis(a);
         },
       });
 
-      if (result.ok === false) {
+      if (!result.ok) {
         if (!result.partial) {
-          window.alert(result.error);
+          toast.error(result.error);
           setAnalysisOpen(false);
           setSiteAnalysis(null);
           return 'error_alert';
@@ -49,8 +50,7 @@ export function useSiteAnalysis(options: UseSiteAnalysisOptions = {}) {
         return 'error_modal';
       }
 
-      const summary = result.summary;
-      onSuccess?.(summary);
+      onSuccess?.(result.analysis);
       setAnalysisOpen(false);
       setSiteAnalysis(null);
       return 'success';
