@@ -5,8 +5,8 @@
 
 const ANALYSIS_DETAIL_CACHE = new Map<string, unknown>();
 
-/** UUID (RFC) — aligné sur les IDs générés côté backend. */
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+/** UUID (36 caractères hex + tirets) — aligné sur les IDs backend / Supabase (toutes variantes courantes). */
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function detailCacheKey(userId: string, analysisId: string): string {
   return `${userId}:${analysisId}`;

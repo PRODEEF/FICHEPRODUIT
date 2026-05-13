@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 import type { CatalogProduct } from '@types-api';
 import type { CatalogProductPayloadMetadata, ProductFilter } from '../types';
@@ -10,7 +11,8 @@ import { ProductResultsToolbar } from './ProductResultsToolbar';
 import { ProductTable } from './ProductTable';
 
 export interface CatalogProductsSectionProps {
-  shopName: string;
+  /** Nom affiché dans la prévisualisation produit (ex. nom de la boutique). */
+  shopName?: string | undefined;
   isConnected: boolean;
   products: CatalogProduct[];
   productPayload: CatalogProductPayloadMetadata | null;
@@ -18,10 +20,12 @@ export interface CatalogProductsSectionProps {
   shopBrands?: string[] | undefined;
   externalBrandFilter?: string | undefined;
   onBrandFilterChange?: ((brand: string) => void) | undefined;
+  /** Texte d’intro : périmètre lié au magasin ou parcours de tout le catalogue public. */
+  introVariant?: 'shop' | 'all' | undefined;
 }
 
 export function CatalogProductsSection({
-  shopName,
+  shopName = '',
   isConnected,
   products,
   productPayload,
@@ -29,6 +33,7 @@ export function CatalogProductsSection({
   shopBrands,
   externalBrandFilter,
   onBrandFilterChange,
+  introVariant = 'shop',
 }: CatalogProductsSectionProps) {
   const [removedIds, setRemovedIds] = useState<Set<string>>(() => new Set());
 
@@ -46,7 +51,7 @@ export function CatalogProductsSection({
     priceFilterErrors,
   } = useProductFilters(allProducts, productPayload, shopBrands);
 
-  // Keep hook filters in sync when brand is driven only from parent (e.g. AnalysisSummarySection chips)
+  // Keep hook filters in sync when brand is driven only from parent (e.g. ShopSummarySection chips)
   useEffect(() => {
     if (externalBrandFilter === undefined) return;
     setFilter('brand', externalBrandFilter);
@@ -86,11 +91,13 @@ export function CatalogProductsSection({
   return (
     <section aria-labelledby="catalog-products-heading">
       <h2 id="catalog-products-heading" className="mb-2 mt-5 text-lg font-bold text-text-primary">
-        Exemples de fiches produits
+        Catalogue de fiches produits
       </h2>
 
       <p className="mb-4 text-sm text-text-secondary">
-        Voici les fiches produits disponibles par rapport aux marques analysées de votre boutique.
+        {introVariant === 'all'
+          ? 'Voici des exemples issus du catalogue public (toutes marques disponibles).'
+          : 'Voici les fiches produits disponibles par rapport aux marques analysées de votre boutique.'}
       </p>
 
       <div className="flex flex-col gap-4">
@@ -117,7 +124,10 @@ export function CatalogProductsSection({
             selectedCount={selectedInViewCount}
             onDelete={deleteSelected}
             onExport={() => {
-              /* export catalogue — brancher l’API d’export */
+              toast.info('Export non disponible pour le moment', {
+                description:
+                  'L’export des fiches sélectionnées sera proposé ici dès que l’API d’export sera branchée.',
+              });
             }}
           />
         ) : null}

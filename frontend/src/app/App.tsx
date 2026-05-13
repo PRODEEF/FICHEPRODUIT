@@ -53,7 +53,10 @@ const MyStore = lazy(async () => {
 
 function RouteFallback() {
   return (
-    <div className="flex flex-1 items-center justify-center py-16 text-sm text-gray-600" role="status">
+    <div
+      className="flex flex-1 items-center justify-center py-16 text-sm text-gray-600"
+      role="status"
+    >
       Chargement…
     </div>
   );
@@ -91,6 +94,12 @@ function AppShellLayout({ userEmail }: { userEmail: string | null }) {
   const [drawerOpen, setDrawerOpen] = useState(true);
   const drawerExpanded = drawerOpen && Boolean(userEmail);
 
+  useEffect(() => {
+    if (userEmail) {
+      setDrawerOpen(true);
+    }
+  }, [userEmail]);
+
   return (
     <div
       className="flex min-h-screen flex-col bg-bg-main"
@@ -111,7 +120,7 @@ function AppShellLayout({ userEmail }: { userEmail: string | null }) {
 
 function AppShell() {
   const { userEmail } = useAuth();
-  return <AppShellLayout key={userEmail ?? 'guest'} userEmail={userEmail} />;
+  return <AppShellLayout userEmail={userEmail} />;
 }
 
 export function App() {
@@ -135,7 +144,6 @@ export function App() {
 
               <Route element={<RequireAuthRoute />}>
                 <Route path="/catalog" element={<Catalog />} />
-                <Route path="/catalog/:analysisId" element={<Catalog />} />
                 <Route path="/product-sheet" element={<ProductSheet />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/store" element={<MyStore />} />

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
 
 import { getAnalysis } from '@api/analysis';
+import { ApiHttpError } from '@api/apiAuth';
 import { getMyShop } from '@api/shop';
 import type { Analysis, CatalogProduct, Shop } from '@types-api';
 import {
@@ -23,13 +24,24 @@ interface UseAnalysisDetailResult {
   loading: boolean;
   error: string | null;
   analysisNotFound: boolean;
+  /** Chargement de l’analyse et de la boutique (hors fiches catalogue par IDs). */
+  analysisShopLoading: boolean;
+  /** Chargement des fiches produits liées à l’analyse (`fetchCatalogProductsByShopBrands`). */
+  catalogProductsLoading: boolean;
+}
+
+export interface UseAnalysisDetailOptions {
+  /** Par défaut `true`. Si `false`, ne charge pas les produits catalogue (évite un double fetch). */
+  loadProducts?: boolean;
 }
 
 export function useAnalysisDetail(
   analysisId: string | undefined,
   userId: string | undefined,
   authLoading: boolean,
+  options?: UseAnalysisDetailOptions,
 ): UseAnalysisDetailResult {
+  const loadProducts = options?.loadProducts !== false;
   const [searchParams] = useSearchParams();
   const cacheUserId = userId ?? CACHE_GUEST_KEY;
 
@@ -60,7 +72,7 @@ export function useAnalysisDetail(
     metadata: productPayload,
     loading: productsLoading,
     error: productsError,
-  } = useCatalogProductsByIds(shop, shouldLoadProducts, guestSessionForCatalog);
+  } = useCatalogProductsByIds(shop, shouldLoadProducts && loadProducts, guestSessionForCatalog);
 
   useEffect(() => {
     if (!analysisId || authLoading) return;
@@ -119,7 +131,10 @@ export function useAnalysisDetail(
         if (!isStale()) {
           const message = e instanceof Error ? e.message : 'Erreur de chargement.';
           const lowered = message.toLowerCase();
-          setAnalysisNotFound(lowered.includes('introuvable') || lowered.includes('not found'));
+          const http404 = e instanceof ApiHttpError && e.status === 404;
+          setAnalysisNotFound(
+            http404 || lowered.includes('introuvable') || lowered.includes('not found'),
+          );
           setError(message);
           const cached = getAnalysisDetailCache<Analysis, CatalogProductPayloadMetadata, Shop>(
             cacheUserId,
@@ -140,20 +155,22 @@ export function useAnalysisDetail(
     };
   }, [userId, analysisId, authLoading, cacheUserId, guestSessionFromQuery]);
 
-  const combinedLoading = loading || productsLoading;
+  const combinedLoading = loading || (loadProducts && productsLoading);
   const combinedError = useMemo(() => {
     if (error) return error;
-    if (productsError) return productsError;
+    if (loadProducts && productsError) return productsError;
     return null;
-  }, [error, productsError]);
+  }, [error, loadProducts, productsError]);
 
   return {
     analysis,
     shop,
-    productPayload,
-    products,
+    productPayload: loadProducts ? productPayload : null,
+    products: loadProducts ? products : null,
     loading: combinedLoading,
     error: combinedError,
     analysisNotFound,
+    analysisShopLoading: loading,
+    catalogProductsLoading: productsLoading,
   };
 }

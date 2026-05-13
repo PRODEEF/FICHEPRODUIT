@@ -1,4 +1,4 @@
-import { Inject, Injectable, NotFoundException } from "@nestjs/common";
+import { Inject, Injectable, InternalServerErrorException, NotFoundException } from "@nestjs/common";
 import type { CmsType } from "../../core/scraper/scraper.types";
 import type { AuthenticatedUser } from "../../core/auth/types/jwt-payload.types";
 import { SHOP_REPOSITORY, type IShopRepository } from "./shop.repository.interface";
@@ -67,9 +67,12 @@ export class ShopService {
     );
   }
 
-  async getMyShop(ownerId: string, accessToken: string): Promise<Shop | null> {
-    const shops = await this.shopRepo.findAllByOwner(ownerId, accessToken);
-    return shops[0] ?? null;
+  /**
+   * Magasin principal du compte : crée une fiche minimale (URL vide, CMS inconnu)
+   * si l’utilisateur n’en a encore aucune (ex. inscription sans analyse de site).
+   */
+  async getMyShop(ownerId: string, accessToken: string): Promise<Shop> {
+    return this.getOrCreateMyShop(ownerId, accessToken);
   }
 
   async updateMyShop(
@@ -84,12 +87,39 @@ export class ShopService {
     }>,
     accessToken: string,
   ): Promise<Shop> {
-    const shops = await this.shopRepo.findAllByOwner(ownerId, accessToken);
-    const shop = shops[0];
-    if (!shop) {
-      throw new NotFoundException("Shop not found");
-    }
+    const shop = await this.getOrCreateMyShop(ownerId, accessToken);
     return this.shopRepo.update(shop.id, dto, accessToken);
+  }
+
+  private async getOrCreateMyShop(ownerId: string, accessToken: string): Promise<Shop> {
+    const shops = await this.shopRepo.findAllByOwner(ownerId, accessToken);
+    const existing = shops[0];
+    if (existing) {
+      return existing;
+    }
+
+    try {
+      return await this.shopRepo.create(
+        {
+          name: "Mon magasin",
+          url: "",
+          cms: "inconnu",
+          sector: null,
+          brands: [],
+          categories: [],
+          ownerId,
+          sessionId: null,
+        },
+        accessToken,
+      );
+    } catch {
+      const again = await this.shopRepo.findAllByOwner(ownerId, accessToken);
+      const recovered = again[0];
+      if (recovered) {
+        return recovered;
+      }
+      throw new InternalServerErrorException("Failed to create default shop");
+    }
   }
 
   async getForUser(id: string, user: AuthenticatedUser): Promise<Shop> {

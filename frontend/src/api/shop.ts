@@ -19,14 +19,14 @@ function normalizeCms(raw: unknown): CmsType {
   return 'inconnu';
 }
 
-function normalizeShop(raw: unknown): Shop | null {
+export function normalizeShop(raw: unknown): Shop | null {
   if (typeof raw !== 'object' || raw === null) return null;
   const o = raw as Record<string, unknown>;
 
   const id = typeof o['id'] === 'string' ? o['id'] : null;
   const name = typeof o['name'] === 'string' ? o['name'] : null;
-  const url = typeof o['url'] === 'string' ? o['url'] : null;
-  if (!id || !name || !url) return null;
+  const url = typeof o['url'] === 'string' ? o['url'] : '';
+  if (!id || !name) return null;
 
   const sector = typeof o['sector'] === 'string' && o['sector'].trim() ? o['sector'].trim() : null;
   const rawOwner =

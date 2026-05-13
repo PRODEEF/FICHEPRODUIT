@@ -1,44 +1,38 @@
-import { useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router';
-
 import { isValidAnalysisId } from '@lib/analysis/analysisStorage';
 import { useAuth } from '@shared/hooks/useAuth';
 
 import { useLatestSiteAnalysisId } from './useLatestSiteAnalysisId';
 
-interface UseCatalogNavigationStateResult {
+export interface UseCatalogNavigationStateResult {
   analysisId: string | undefined;
   hasValidAnalysisId: boolean;
   latestResolveLoading: boolean;
   latestResolveError: string | null;
+  refetchLatestList: () => void;
 }
 
 /**
- * État d’URL du catalogue connecté : `/catalog` ou `/catalog/:analysisId`.
- * Sans id en URL, redirige vers la dernière analyse listée côté API (utilisateur connecté uniquement).
+ * Résout l’analyse affichée sur `/catalog` pour l’utilisateur connecté
+ * (dernière analyse côté API), sans segment d’URL dédié.
  */
 export function useCatalogNavigationState(): UseCatalogNavigationStateResult {
-  const navigate = useNavigate();
-  const { analysisId } = useParams<{ analysisId: string }>();
   const { user, loading: authLoading } = useAuth();
 
-  const hasValidAnalysisId = isValidAnalysisId(analysisId);
-  const shouldResolveLatest = Boolean(!analysisId && user?.id && !authLoading);
+  const enabled = Boolean(user?.id && !authLoading);
 
-  const { latestId, loading: latestLoading, error: latestError } = useLatestSiteAnalysisId({
+  const { latestId, loading: latestLoading, error: latestError, refetch } = useLatestSiteAnalysisId({
     userId: user?.id,
-    enabled: shouldResolveLatest,
+    enabled,
   });
 
-  useEffect(() => {
-    if (!shouldResolveLatest || latestLoading || !latestId) return;
-    void navigate(`/catalog/${latestId}`, { replace: true });
-  }, [latestId, latestLoading, navigate, shouldResolveLatest]);
+  const hasValidAnalysisId = isValidAnalysisId(latestId ?? undefined);
+  const analysisId = hasValidAnalysisId && latestId ? latestId : undefined;
 
   return {
     analysisId,
     hasValidAnalysisId,
-    latestResolveLoading: shouldResolveLatest && latestLoading,
-    latestResolveError: shouldResolveLatest ? latestError : null,
+    latestResolveLoading: enabled && latestLoading,
+    latestResolveError: enabled ? latestError : null,
+    refetchLatestList: refetch,
   };
 }

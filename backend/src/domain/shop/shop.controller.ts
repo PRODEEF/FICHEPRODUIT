@@ -41,7 +41,7 @@ export class ShopController {
   @ApiOperation({
     summary: "Récupérer le magasin",
     description:
-      "Avec JWT : le magasin du compte. Sans JWT : boutique invitée ; cookie de session invité requis et paramètre query `shopId` (UUID de la boutique liée à l’analyse).",
+      "Avec JWT : le magasin du compte (une fiche minimale est créée si l’utilisateur n’en a pas encore). Sans JWT : boutique invitée ; cookie de session invité requis et paramètre query `shopId` (UUID de la boutique liée à l’analyse).",
   })
   @ApiOkResponse({ description: "Détail du magasin", type: ShopResponseDto })
   @ApiNotFoundResponse({ description: "Aucun magasin ou boutique introuvable pour cette session" })
@@ -53,11 +53,7 @@ export class ShopController {
     @Req() req: FastifyRequest,
   ) {
     if (user) {
-      const shop = await this.shopService.getMyShop(user.id, user.accessToken);
-      if (!shop) {
-        throw new NotFoundException("Shop not found");
-      }
-      return shop;
+      return this.shopService.getMyShop(user.id, user.accessToken);
     }
     if (!shopId) {
       throw new BadRequestException("Query shopId is required for guest access");

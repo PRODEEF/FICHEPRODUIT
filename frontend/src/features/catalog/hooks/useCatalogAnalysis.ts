@@ -1,10 +1,14 @@
 import { useEffect } from 'react';
-import { useNavigate } from 'react-router';
 
 import { useAuth } from '@shared/hooks/useAuth';
 
 import { useAnalysisDetail } from './useAnalysisDetail';
 import { useCatalogNavigationState } from './useCatalogNavigationState';
+
+export interface UseCatalogAnalysisOptions {
+  /** Si `true`, le détail d’analyse ne déclenche pas `useCatalogProductsByIds` (page catalogue connectée). */
+  skipProductFetch?: boolean;
+}
 
 export interface UseCatalogAnalysisResult {
   analysisId: string | undefined;
@@ -23,13 +27,19 @@ export interface UseCatalogAnalysisResult {
 
 /**
  * Centralise la logique catalogue autour de l’analyse courante :
- * détail par URL, redirection vers la plus récente sur `/catalog`, nettoyage si introuvable.
+ * dernière analyse du compte sur `/catalog`, rafraîchissement de la liste si détail introuvable.
  */
-export function useCatalogAnalysis(): UseCatalogAnalysisResult {
-  const navigate = useNavigate();
+export function useCatalogAnalysis(options?: UseCatalogAnalysisOptions): UseCatalogAnalysisResult {
   const { user, loading: authLoading } = useAuth();
-  const { analysisId, hasValidAnalysisId, latestResolveLoading, latestResolveError } =
-    useCatalogNavigationState();
+  const {
+    analysisId,
+    hasValidAnalysisId,
+    latestResolveLoading,
+    latestResolveError,
+    refetchLatestList,
+  } = useCatalogNavigationState();
+
+  const loadProducts = !options?.skipProductFetch;
 
   const {
     analysis,
@@ -39,12 +49,12 @@ export function useCatalogAnalysis(): UseCatalogAnalysisResult {
     loading: detailLoading,
     error: detailError,
     analysisNotFound,
-  } = useAnalysisDetail(analysisId, user?.id, authLoading);
+  } = useAnalysisDetail(analysisId, user?.id, authLoading, { loadProducts });
 
   useEffect(() => {
     if (!analysisId || !hasValidAnalysisId || !analysisNotFound) return;
-    void navigate('/catalog', { replace: true });
-  }, [analysisId, hasValidAnalysisId, analysisNotFound, navigate]);
+    refetchLatestList();
+  }, [analysisId, hasValidAnalysisId, analysisNotFound, refetchLatestList]);
 
   return {
     analysisId,
@@ -58,6 +68,6 @@ export function useCatalogAnalysis(): UseCatalogAnalysisResult {
     analysisNotFound,
     latestResolveLoading,
     latestResolveError,
-    refetchLatestList: () => undefined,
+    refetchLatestList,
   };
 }

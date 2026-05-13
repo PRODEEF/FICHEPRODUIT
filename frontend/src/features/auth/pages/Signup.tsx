@@ -1,8 +1,10 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
+import { claimGuestSession } from '@api/user';
+import { clearGuestSessionId, getGuestSessionId } from '@lib/analysis/guestSessionStorage';
 import { parseAsFullSiteUrl } from '@lib/siteUrl';
 import { getSupabaseClient } from '@shared/supabase';
 import { AnalysisProgress } from '@shared/components/AnalysisProgress';
@@ -24,10 +26,11 @@ export function Signup() {
   const [signupUrlAnalysisActive, setSignupUrlAnalysisActive] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [verifyEmailSent, setVerifyEmailSent] = useState(false);
+  const signupPostAuthRef = useRef(false);
 
   const { runAnalysis, analysisOpen, siteAnalysis, dismissError } = useSiteAnalysis({
-    onSuccess: (summary) => {
-      void navigate(`/catalog/${summary.id}`);
+    onSuccess: () => {
+      void navigate('/catalog', { replace: true });
     },
   });
 
@@ -75,17 +78,20 @@ export function Signup() {
   useEffect(() => {
     if (authLoading || configError) return;
     if (!userEmail) return;
+    if (signupPostAuthRef.current) return;
     if (signupUrlAnalysisActive || analysisOpen) return;
-    void navigate('/', { replace: true });
+    void navigate('/catalog', { replace: true });
   }, [authLoading, configError, userEmail, signupUrlAnalysisActive, analysisOpen, navigate]);
 
   const onSubmit = useCallback(
     async (data: SignupInput) => {
+      signupPostAuthRef.current = true;
       setFormError(null);
       setVerifyEmailSent(false);
 
       const supabase = getSupabaseClient();
       if (!supabase) {
+        signupPostAuthRef.current = false;
         setFormError('Configuration Supabase manquante.');
         return;
       }
@@ -93,12 +99,18 @@ export function Signup() {
       const emailTrim = data.email.trim();
       const normalizedUsername = data.username.trim();
       const websiteUrl = data.websiteUrl;
+      const hasGuestSession = Boolean(getGuestSessionId());
+      const shouldRunSignupAnalysis = websiteUrl !== '' && !hasGuestSession;
+
+      if (shouldRunSignupAnalysis) {
+        setSignupUrlAnalysisActive(true);
+      }
 
       const { data: authData, error: signError } = await supabase.auth.signUp({
         email: emailTrim,
         password: data.password,
         options: {
-          emailRedirectTo: `${window.location.origin}/`,
+          emailRedirectTo: `${window.location.origin}/catalog`,
           data: {
             display_name: normalizedUsername,
             full_name: normalizedUsername,
@@ -107,6 +119,10 @@ export function Signup() {
       });
 
       if (signError) {
+        signupPostAuthRef.current = false;
+        if (shouldRunSignupAnalysis) {
+          setSignupUrlAnalysisActive(false);
+        }
         const message = authErrorMessage(signError);
         const code = signError.code?.toLowerCase() ?? '';
         if (code === 'user_already_registered') {
@@ -125,22 +141,35 @@ export function Signup() {
         await repo.updateProfile(userId, {
           username: normalizedUsername,
           website_url: websiteUrl === '' ? null : websiteUrl,
-          pending_auto_analyze: websiteUrl !== '',
+          pending_auto_analyze: hasGuestSession ? false : websiteUrl !== '',
         });
         await refreshProfile();
+
+        if (hasGuestSession) {
+          try {
+            await claimGuestSession(getGuestSessionId() ?? undefined);
+            clearGuestSessionId();
+          } catch {
+            // Le claim centralisé dans AuthContext peut compléter si le cookie est encore présent.
+          }
+          void navigate('/catalog', { replace: true });
+          return;
+        }
+
         if (websiteUrl) {
-          setSignupUrlAnalysisActive(true);
           try {
             const outcome = await runAnalysis(websiteUrl);
             if (outcome === 'error_alert') {
               setSignupUrlAnalysisActive(false);
+              signupPostAuthRef.current = false;
             }
           } finally {
             await clearPendingAutoAnalyzeForUser(userId);
+            setSignupUrlAnalysisActive(false);
           }
           return;
         }
-        void navigate('/', { replace: true });
+        void navigate('/store', { replace: true });
         return;
       }
 
@@ -149,12 +178,14 @@ export function Signup() {
           email: emailTrim,
           username: normalizedUsername,
           websiteUrl,
-          pendingAutoAnalyze: websiteUrl !== '',
+          pendingAutoAnalyze: hasGuestSession ? false : websiteUrl !== '',
         });
+        signupPostAuthRef.current = false;
         setVerifyEmailSent(true);
         return;
       }
 
+      signupPostAuthRef.current = false;
       setFormError('Inscription impossible pour le moment. Réessayez plus tard.');
     },
     [navigate, refreshProfile, runAnalysis, setError],

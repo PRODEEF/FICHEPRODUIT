@@ -4,6 +4,7 @@ import type { Session, User } from '@supabase/supabase-js';
 import { getSupabaseClient } from '@shared/supabase';
 
 import { AuthContext } from './auth-context';
+import { useClaimGuestSessionOnAuth } from './hooks/useClaimGuestSessionOnAuth';
 import { applyPendingSignupFromStorage } from './lib/pendingSignupStorage';
 import { createSupabaseUserRepository } from './supabaseUserRepository';
 import type { UserProfile } from './types';
@@ -23,6 +24,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const profile =
     user && profileBundle?.userId === user.id ? profileBundle.profile : null;
+
+  useClaimGuestSessionOnAuth(session, loading);
 
   useEffect(() => {
     const supabase = getSupabaseClient();

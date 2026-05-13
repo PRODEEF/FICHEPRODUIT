@@ -81,7 +81,7 @@ export function TagListEditor({
       <div className="mt-3 flex flex-wrap items-end gap-2">
         <InputField
           id={inputId}
-          label="Ajouter une nouvelle marque"
+          label={`Ajouter une nouvelle ${label.slice(0, -1)}`}
           value={input}
           onChange={(e) => void setInput(e.target.value)}
           onKeyDown={onKeyDown}
