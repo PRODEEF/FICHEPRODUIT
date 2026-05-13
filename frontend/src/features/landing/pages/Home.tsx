@@ -1,8 +1,9 @@
-import { useNavigate } from 'react-router';
+import { Navigate, useNavigate } from 'react-router';
 import { motion } from 'motion/react';
 import { useEffect, useState } from 'react';
 
 import { fadeUp, titleReveal, badgeBounce } from '@lib/motionVariants';
+import { setGuestSessionId } from '@lib/analysis/guestSessionStorage';
 import { AnalysisProgress } from '@shared/components/AnalysisProgress';
 import { UrlSearchForm } from '@shared/components/UrlSearchForm';
 import { UrlsSuggestions } from '@shared/components/UrlsSuggestions';
@@ -17,7 +18,6 @@ import { SellingPoints } from '../components/SellingPoints';
 import { SocialProofBar } from '../components/SocialProofBar';
 import { Testimonials } from '../components/Testimonials';
 import { useGuestSiteAnalysis } from '../hooks/useGuestSiteAnalysis';
-import { useSignupAutoAnalyze } from '../../auth/hooks/useSignupAutoAnalyze';
 
 export function Home() {
   const navigate = useNavigate();
@@ -26,6 +26,9 @@ export function Home() {
     onSuccess: (summary) => {
       // Les invités atterrissent sur la vue publique d'analyse,
       // les utilisateurs connectés sur leur catalogue privé.
+      if (!user && summary.sessionId) {
+        setGuestSessionId(summary.sessionId);
+      }
       const target = user
         ? '/catalog'
         : `/catalog/public/${summary.id}${summary.sessionId ? `?s=${encodeURIComponent(summary.sessionId)}` : ''}`;
@@ -35,7 +38,6 @@ export function Home() {
 
   const search = useUrlSearch({ onSubmit: runAnalysis });
 
-  useSignupAutoAnalyze({ runAnalysis });
   const [prefersReduced, setPrefersReduced] = useState(false);
   useEffect(() => {
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -44,6 +46,10 @@ export function Home() {
     mq.addEventListener('change', apply);
     return () => void mq.removeEventListener('change', apply);
   }, []);
+
+  if (user) {
+    return <Navigate to="/catalog" replace />;
+  }
 
   return (
     <>

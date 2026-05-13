@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Navigate, useNavigate, useParams } from 'react-router';
+import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router';
 
-import { isValidAnalysisId } from '@lib/analysis/analysisStorage';
+import { isValidAnalysisId, isValidGuestSessionId } from '@lib/analysis/analysisStorage';
+import { setGuestSessionId } from '@lib/analysis/guestSessionStorage';
 
 import { CatalogProductsSection } from '../components/CatalogProductsSection';
 import { EmptyProducts } from '../components/EmptyProducts';
@@ -20,6 +21,7 @@ import { resolveCatalogWorkflowStatus } from '../lib/catalogWorkflowStatus';
  */
 export function PublicCatalog() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { analysisId } = useParams<{ analysisId: string }>();
 
   const hasValidAnalysisId = isValidAnalysisId(analysisId);
@@ -74,6 +76,17 @@ export function PublicCatalog() {
   const isLoadingProducts = workflowStatus === 'loading_products';
 
   const signupWebsiteUrl = analysis?.url ?? shop?.url ?? '';
+
+  useEffect(() => {
+    const fromQuery = searchParams.get('s');
+    if (isValidGuestSessionId(fromQuery)) {
+      setGuestSessionId(fromQuery);
+      return;
+    }
+    if (analysis?.sessionId) {
+      setGuestSessionId(analysis.sessionId);
+    }
+  }, [searchParams, analysis?.sessionId]);
 
   useEffect(() => {
     if (!analysisId || !hasValidAnalysisId || !analysisNotFound) return;

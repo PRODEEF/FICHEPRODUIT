@@ -1,3 +1,4 @@
+import { getGuestSessionId } from '@lib/analysis/guestSessionStorage';
 import { TextLink } from '@shared/ui';
 
 interface GuestCatalogCTAProps {
@@ -5,7 +6,11 @@ interface GuestCatalogCTAProps {
 }
 
 export function GuestCatalogCTA({ websiteUrl }: GuestCatalogCTAProps) {
-  const signupHref = `/signup?${new URLSearchParams({ url: websiteUrl }).toString()}`;
+  const hasGuestSession = Boolean(getGuestSessionId());
+  const signupHref =
+    hasGuestSession || !websiteUrl.trim()
+      ? '/signup'
+      : `/signup?${new URLSearchParams({ url: websiteUrl }).toString()}`;
 
   return (
     <section

@@ -94,6 +94,12 @@ function AppShellLayout({ userEmail }: { userEmail: string | null }) {
   const [drawerOpen, setDrawerOpen] = useState(true);
   const drawerExpanded = drawerOpen && Boolean(userEmail);
 
+  useEffect(() => {
+    if (userEmail) {
+      setDrawerOpen(true);
+    }
+  }, [userEmail]);
+
   return (
     <div
       className="flex min-h-screen flex-col bg-bg-main"
@@ -114,7 +120,7 @@ function AppShellLayout({ userEmail }: { userEmail: string | null }) {
 
 function AppShell() {
   const { userEmail } = useAuth();
-  return <AppShellLayout key={userEmail ?? 'guest'} userEmail={userEmail} />;
+  return <AppShellLayout userEmail={userEmail} />;
 }
 
 export function App() {

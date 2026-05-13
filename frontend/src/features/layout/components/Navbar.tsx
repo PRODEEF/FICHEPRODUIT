@@ -30,6 +30,8 @@ export function Navbar({
   const authed = Boolean(userEmail);
   const navTitle = userLabel ?? userEmail ?? undefined;
   const drawerId = 'nav-user-drawer';
+  const logoClassName =
+    'border-0 bg-gradient-to-br from-purple-600 to-purple-400 bg-clip-text font-sans text-[1.3rem] font-extrabold text-transparent';
 
   return (
     <>
@@ -58,9 +60,13 @@ export function Navbar({
             </Button>
           ) : null}
 
-          <span className="border-0 bg-gradient-to-br from-purple-600 to-purple-400 bg-clip-text font-sans text-[1.3rem] font-extrabold text-transparent">
-            FicheProduct
-          </span>
+          {authed ? (
+            <span className={logoClassName}>FicheProduct</span>
+          ) : (
+            <NavLink to="/" className={cn(logoClassName, 'no-underline hover:opacity-90')}>
+              FicheProduct
+            </NavLink>
+          )}
           <Badge className="ml-2 shrink-0">BETA</Badge>
         </div>
         {center ?? null}

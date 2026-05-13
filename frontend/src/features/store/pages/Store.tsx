@@ -7,6 +7,7 @@ import { Banner } from '@shared/ui';
 
 import type { Shop } from '../types';
 import { ShopInfoSection } from '../components/ShopInfoSection';
+import { StoreUrlAnalysisBanner } from '../components/StoreUrlAnalysisBanner';
 import { TagListEditor } from '../components/TagListEditor';
 import { useShop } from '../hooks/useShop';
 
@@ -24,23 +25,27 @@ function LoadingState() {
 
 interface StoreLoadedProps {
   shop: Shop;
-  refetch: () => Promise<void>;
+  updateShop: (shop: Shop) => void;
+  onUrlSaved: (url: string) => void;
 }
 
-function StoreLoaded({ shop, refetch }: StoreLoadedProps) {
+function StoreLoaded({ shop, updateShop, onUrlSaved }: StoreLoadedProps) {
   const [patching, setPatching] = useState(false);
 
   const patchShop = useCallback(
     async (partial: PatchMyShopBody) => {
       setPatching(true);
       try {
-        await patchMyShop(partial);
-        await refetch();
+        const updated = await patchMyShop(partial);
+        updateShop(updated);
+        if (partial.url !== undefined) {
+          onUrlSaved(updated.url);
+        }
       } finally {
         setPatching(false);
       }
     },
-    [refetch],
+    [onUrlSaved, updateShop],
   );
 
   return (
@@ -77,7 +82,19 @@ function StoreLoaded({ shop, refetch }: StoreLoadedProps) {
 
 export function MyStore() {
   const navigate = useNavigate();
-  const { shop, loading, error, refetch } = useShop();
+  const { shop, loading, error, updateShop } = useShop();
+  const [urlAnalysisPrompt, setUrlAnalysisPrompt] = useState<string | null>(null);
+
+  const handleUrlSaved = useCallback((url: string) => {
+    if (url.trim()) {
+      setUrlAnalysisPrompt(url);
+    }
+  }, []);
+
+  const handleAnalysisSuccess = useCallback(() => {
+    setUrlAnalysisPrompt(null);
+    void navigate('/catalog', { replace: true });
+  }, [navigate]);
 
   useEffect(() => {
     if (!loading && shop === null && !error) {
@@ -115,7 +132,15 @@ export function MyStore() {
         </Banner>
       ) : null}
 
-      <StoreLoaded shop={shop} refetch={refetch} />
+      {urlAnalysisPrompt ? (
+        <StoreUrlAnalysisBanner
+          url={urlAnalysisPrompt}
+          onDismiss={() => void setUrlAnalysisPrompt(null)}
+          onAnalysisSuccess={handleAnalysisSuccess}
+        />
+      ) : null}
+
+      <StoreLoaded shop={shop} updateShop={updateShop} onUrlSaved={handleUrlSaved} />
     </div>
   );
 }
