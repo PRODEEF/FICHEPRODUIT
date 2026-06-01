@@ -81,7 +81,9 @@ describe("ShopService", () => {
     repo.findAllByOwner.mockResolvedValue([]);
     repo.create.mockRejectedValue(new Error("db"));
 
-    await expect(service.getMyShop("user-1", "tok")).rejects.toBeInstanceOf(InternalServerErrorException);
+    await expect(service.getMyShop("user-1", "tok")).rejects.toBeInstanceOf(
+      InternalServerErrorException,
+    );
   });
 
   it("updateMyShop assure un magasin puis met à jour", async () => {

@@ -96,6 +96,7 @@ describe("AnalysisPipelineService", () => {
         shopId: "shop-guest-1",
       }),
       "",
+      "session-1",
     );
   });
 });

@@ -57,6 +57,36 @@ export class ProductTemplateController {
     return this.service.listForShop(shopId, user);
   }
 
+  @Post("scrape-fields")
+  @ApiOperation({ summary: "Détecter les champs depuis une URL produit" })
+  @ApiParam({ name: "shopId", description: "UUID de la boutique", format: "uuid" })
+  @ApiOkResponse({ description: "Champs détectés et avertissements", type: ScrapeFieldsResultDto })
+  @ApiBadRequestResponse({ description: "URL invalide ou corps JSON invalide" })
+  @ApiUnauthorizedResponse({ description: "JWT manquant ou invalide" })
+  @ApiNotFoundResponse({ description: "Boutique introuvable" })
+  scrapeFields(
+    @Param("shopId", ParseUUIDPipe) shopId: string,
+    @Body() body: ScrapeFieldsDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.service.scrapeFromUrl(shopId, user, body.url);
+  }
+
+  @Post("refine-fields")
+  @ApiOperation({ summary: "Affiner les champs avec l'IA" })
+  @ApiParam({ name: "shopId", description: "UUID de la boutique", format: "uuid" })
+  @ApiOkResponse({ description: "Champs après raffinement", type: RefineFieldsResultDto })
+  @ApiBadRequestResponse({ description: "Corps JSON invalide (Zod)" })
+  @ApiUnauthorizedResponse({ description: "JWT manquant ou invalide" })
+  @ApiNotFoundResponse({ description: "Boutique introuvable" })
+  refineFields(
+    @Param("shopId", ParseUUIDPipe) shopId: string,
+    @Body() body: RefineFieldsDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.service.refineWithAi(shopId, user, body.fields, body.source, body.sampleValues);
+  }
+
   @Get(":id")
   @ApiOperation({ summary: "Récupérer un template" })
   @ApiParam({ name: "shopId", description: "UUID de la boutique", format: "uuid" })
@@ -118,26 +148,5 @@ export class ProductTemplateController {
     @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.service.deleteInShop(shopId, id, user);
-  }
-
-  @Post("scrape-fields")
-  @ApiOperation({ summary: "Détecter les champs depuis une URL produit" })
-  @ApiParam({ name: "shopId", description: "UUID de la boutique", format: "uuid" })
-  @ApiOkResponse({ description: "Champs détectés et avertissements", type: ScrapeFieldsResultDto })
-  @ApiBadRequestResponse({ description: "URL invalide ou corps JSON invalide" })
-  @ApiUnauthorizedResponse({ description: "JWT manquant ou invalide" })
-  scrapeFields(@Body() body: ScrapeFieldsDto) {
-    return this.service.scrapeFromUrl(body.url);
-  }
-
-  @Post("refine-fields")
-  @ApiOperation({ summary: "Affiner les champs avec l'IA" })
-  @ApiParam({ name: "shopId", description: "UUID de la boutique", format: "uuid" })
-  @ApiOkResponse({ description: "Champs après raffinement", type: RefineFieldsResultDto })
-  @ApiBadRequestResponse({ description: "Corps JSON invalide (Zod)" })
-  @ApiUnauthorizedResponse({ description: "JWT manquant ou invalide" })
-  refineFields(@Body() body: RefineFieldsDto, @CurrentUser() user: AuthenticatedUser) {
-    void user;
-    return this.service.refineWithAi(body.fields, body.source, body.sampleValues);
   }
 }

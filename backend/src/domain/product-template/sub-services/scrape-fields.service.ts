@@ -1,8 +1,10 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
-import axios, { AxiosError } from "axios";
 import * as cheerio from "cheerio";
 import type { Element } from "domhandler";
-import * as net from "net";
+import {
+  assertUrlSafeForServerFetch,
+  fetchHtmlSafeForServer,
+} from "../../../core/scraper/scrape-url-policy";
 import type {
   ProductTemplateField,
   ProductTemplateFieldType,
@@ -19,93 +21,31 @@ const USER_AGENT = "Mozilla/5.0 (compatible; FicheProduit/1.0; +https://example.
 
 @Injectable()
 export class ScrapeFieldsService {
-  scrape(rawUrl: string): Promise<ScrapeFieldsResult> {
-    const normalized = this.assertSafeUrl(rawUrl);
+  async scrape(rawUrl: string): Promise<ScrapeFieldsResult> {
+    const normalized = rawUrl.trim();
+    if (!normalized) {
+      throw new BadRequestException("URL invalide");
+    }
+    const safe = await assertUrlSafeForServerFetch(normalized);
+    if (!safe.ok) {
+      throw new BadRequestException(safe.reason);
+    }
     return this.fetchAndExtract(normalized);
-  }
-
-  private assertSafeUrl(rawUrl: string): string {
-    let parsed: URL;
-    try {
-      parsed = new URL(rawUrl.trim());
-    } catch {
-      throw new BadRequestException("Invalid URL");
-    }
-    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-      throw new BadRequestException("Only http and https URLs are allowed");
-    }
-    if (parsed.username || parsed.password) {
-      throw new BadRequestException("URLs with credentials are not allowed");
-    }
-    const host = parsed.hostname.toLowerCase();
-    if (
-      host === "localhost" ||
-      host.endsWith(".localhost") ||
-      host.endsWith(".local") ||
-      host === "metadata.google.internal"
-    ) {
-      throw new BadRequestException("Host is not allowed");
-    }
-    if (host === "169.254.169.254") {
-      throw new BadRequestException("Host is not allowed");
-    }
-    if (net.isIP(host) && this.isPrivateOrReservedIp(host)) {
-      throw new BadRequestException("IP target is not allowed");
-    }
-    return parsed.toString();
-  }
-
-  private isPrivateOrReservedIp(ip: string): boolean {
-    if (net.isIPv4(ip)) {
-      const [a, b] = ip.split(".").map((n) => Number(n));
-      if (a === 10) return true;
-      if (a === 127) return true;
-      if (a === 0) return true;
-      if (a === 169 && b === 254) return true;
-      if (a === 192 && b === 168) return true;
-      if (a === 172 && b >= 16 && b <= 31) return true;
-      if (a >= 224) return true;
-      return false;
-    }
-    if (net.isIPv6(ip)) {
-      const lower = ip.toLowerCase();
-      if (lower === "::1") return true;
-      if (lower.startsWith("::ffff:")) {
-        const v4 = lower.slice(7);
-        if (net.isIPv4(v4)) return this.isPrivateOrReservedIp(v4);
-      }
-      if (lower.startsWith("fc") || lower.startsWith("fd")) return true;
-      if (lower.startsWith("fe80:")) return true;
-      return false;
-    }
-    return false;
   }
 
   private async fetchAndExtract(url: string): Promise<ScrapeFieldsResult> {
     const warnings: ScrapeFieldWarning[] = [];
-    let html = "";
-    try {
-      const res = await axios.get<string>(url, {
-        responseType: "text",
-        timeout: FETCH_TIMEOUT_MS,
-        maxRedirects: 5,
-        validateStatus: (s) => s >= 200 && s < 400,
-        headers: {
-          "User-Agent": USER_AGENT,
-          Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        },
-      });
-      html = typeof res.data === "string" ? res.data : String(res.data);
-    } catch (err) {
-      const msg =
-        err instanceof AxiosError
-          ? err.message
-          : err instanceof Error
-            ? err.message
-            : "Request failed";
-      warnings.push({ code: "FETCH_FAILED", message: msg });
+    const fetched = await fetchHtmlSafeForServer(url, {
+      timeoutMs: FETCH_TIMEOUT_MS,
+      userAgent: USER_AGENT,
+    });
+
+    if (!fetched.ok) {
+      warnings.push({ code: "FETCH_FAILED", message: fetched.error });
       return { fields: [], warnings };
     }
+
+    const html = fetched.html;
 
     const $ = cheerio.load(html);
     const ldBundle = this.extractFieldsFromJsonLd($, warnings);

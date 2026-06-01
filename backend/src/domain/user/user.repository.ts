@@ -22,7 +22,7 @@ export class UserRepository implements IUserRepository {
 
     if (error) {
       this.logger.error(`findById(${id}) failed`, error);
-      throw new InternalServerErrorException("Failed to fetch user profile");
+      throw new InternalServerErrorException("Échec de la récupération du profil utilisateur");
     }
     return data ? this.toEntity(data as UserRow) : null;
   }
@@ -38,13 +38,13 @@ export class UserRepository implements IUserRepository {
 
     if (error && error.code !== "23505") {
       this.logger.error(`ensureRow insert(${id}) failed`, error);
-      throw new InternalServerErrorException("Failed to create user profile");
+      throw new InternalServerErrorException("Échec de la création du profil utilisateur");
     }
 
     const created = await this.findById(id, accessToken);
     if (!created) {
       this.logger.error(`ensureRow: missing row after insert (${id})`);
-      throw new InternalServerErrorException("Failed to load user profile");
+      throw new InternalServerErrorException("Échec du chargement du profil utilisateur");
     }
     return created;
   }
@@ -72,7 +72,7 @@ export class UserRepository implements IUserRepository {
 
     if (error) {
       this.logger.error(`update(${id}) failed`, error);
-      throw new InternalServerErrorException("Failed to update user profile");
+      throw new InternalServerErrorException("Échec de la mise à jour du profil utilisateur");
     }
     return this.toEntity(data as UserRow);
   }

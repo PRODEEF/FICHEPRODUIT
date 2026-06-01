@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query } from "@nestjs/common";
+import { Body, Controller, Get, Post, Query, UseGuards } from "@nestjs/common";
 import {
   ApiBadRequestResponse,
   ApiBody,
@@ -9,11 +9,13 @@ import {
 } from "@nestjs/swagger";
 import { SuggestUrlsResponseDto } from "./dto/suggest-urls-response.dto";
 import { SuggestUrlsDto } from "./dto/suggest-urls.dto";
+import { OptionalJwtGuard } from "../../core/auth/guards/optional-jwt.guard";
 import { SuggestUrlsService } from "./suggest-urls.service";
 import type { SuggestUrlsResponse } from "./suggest-urls.types";
 
 @ApiTags("Suggest URLs")
 @Controller("api/suggest-urls")
+@UseGuards(OptionalJwtGuard)
 export class SuggestUrlsController {
   constructor(private readonly suggestUrlsService: SuggestUrlsService) {}
 

@@ -3,7 +3,6 @@ import {
   Body,
   Controller,
   Get,
-  NotFoundException,
   ParseUUIDPipe,
   Patch,
   Query,
@@ -31,7 +30,7 @@ import { UpdateShopDto } from "./dto/update-shop.dto";
 import { ShopService } from "./shop.service";
 
 @ApiTags("Shop")
-@Controller("api/shop")
+@Controller(["api/shop", "api/shops"])
 export class ShopController {
   constructor(private readonly shopService: ShopService) {}
 
@@ -56,11 +55,11 @@ export class ShopController {
       return this.shopService.getMyShop(user.id, user.accessToken);
     }
     if (!shopId) {
-      throw new BadRequestException("Query shopId is required for guest access");
+      throw new BadRequestException("Le paramètre shopId est requis pour l'accès invité");
     }
     const sessionId = readGuestSessionId(req);
     if (!sessionId) {
-      throw new UnauthorizedException("Guest session required");
+      throw new UnauthorizedException("Session invité requise");
     }
     return this.shopService.getForGuest(shopId, sessionId);
   }

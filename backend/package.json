@@ -7,6 +7,7 @@
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
@@ -78,9 +79,27 @@
       "^@/(.*)$": "<rootDir>/$1"
     },
     "collectCoverageFrom": [
-      "**/*.(t|j)s"
+      "**/*.service.ts",
+      "!**/sub-services/**",
+      "**/*.repository.ts",
+      "**/guards/*.ts",
+      "**/filters/*.ts",
+      "core/scraper/scrape-url-policy.ts",
+      "core/http/guest-session.ts"
+    ],
+    "coveragePathIgnorePatterns": [
+      "\\.spec\\.ts$",
+      "database\\.types\\.ts$"
     ],
     "coverageDirectory": "../coverage",
+    "coverageThreshold": {
+      "global": {
+        "lines": 38,
+        "functions": 38,
+        "branches": 20,
+        "statements": 38
+      }
+    },
     "testEnvironment": "node"
   }
 }

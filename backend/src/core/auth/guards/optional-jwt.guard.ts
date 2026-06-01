@@ -15,7 +15,7 @@ export class OptionalJwtGuard implements CanActivate {
     if (!token) return true;
 
     const user = await this.supabase.getUser(token);
-    if (!user) throw new UnauthorizedException("Invalid or expired token");
+    if (!user) throw new UnauthorizedException("Token invalide ou expiré");
 
     req.user = { id: user.id, email: user.email ?? "", accessToken: token };
     return true;

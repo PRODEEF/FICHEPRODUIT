@@ -9,8 +9,7 @@ import type {
   UpdateProductTemplate,
 } from "./types/product-template.types";
 
-type ProductTemplatesUpdate =
-  Database["public"]["Tables"]["product_templates"]["Update"];
+type ProductTemplatesUpdate = Database["public"]["Tables"]["product_templates"]["Update"];
 
 type ProductTemplateRowDb = {
   id: string;
@@ -38,7 +37,7 @@ export class ProductTemplateRepository implements IProductTemplateRepository {
 
     if (error) {
       this.logger.error(`findById(${id}) failed`, error);
-      throw new InternalServerErrorException("Failed to fetch template");
+      throw new InternalServerErrorException("Échec de la récupération du gabarit");
     }
     return data ? this.toEntity(data as unknown as ProductTemplateRowDb) : null;
   }
@@ -53,11 +52,9 @@ export class ProductTemplateRepository implements IProductTemplateRepository {
 
     if (error) {
       this.logger.error(`findAllByShop(${shopId}) failed`, error);
-      throw new InternalServerErrorException("Failed to fetch templates");
+      throw new InternalServerErrorException("Échec de la récupération des gabarits");
     }
-    return (data ?? []).map((r) =>
-      this.toEntity(r as unknown as ProductTemplateRowDb),
-    );
+    return (data ?? []).map((r) => this.toEntity(r as unknown as ProductTemplateRowDb));
   }
 
   async create(
@@ -74,7 +71,7 @@ export class ProductTemplateRepository implements IProductTemplateRepository {
 
     if (error) {
       this.logger.error("create failed", error);
-      throw new InternalServerErrorException("Failed to create template");
+      throw new InternalServerErrorException("Échec de la création du gabarit");
     }
     return this.toEntity(row as unknown as ProductTemplateRowDb);
   }
@@ -107,7 +104,7 @@ export class ProductTemplateRepository implements IProductTemplateRepository {
 
     if (error) {
       this.logger.error(`update(${id}) failed`, error);
-      throw new InternalServerErrorException("Failed to update template");
+      throw new InternalServerErrorException("Échec de la mise à jour du gabarit");
     }
     return this.toEntity(row as unknown as ProductTemplateRowDb);
   }
@@ -121,7 +118,7 @@ export class ProductTemplateRepository implements IProductTemplateRepository {
 
     if (error) {
       this.logger.error(`delete(${id}) failed`, error);
-      throw new InternalServerErrorException("Failed to delete template");
+      throw new InternalServerErrorException("Échec de la suppression du gabarit");
     }
   }
 

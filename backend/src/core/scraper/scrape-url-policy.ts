@@ -9,7 +9,9 @@ const BLOCKED_HOSTNAMES = new Set(
  * Refuse les URL non HTTP(S), les IP / plages privées et quelques hôtes sensibles
  * avant un fetch serveur (mitigation SSRF de base).
  */
-export async function assertUrlSafeForServerFetch(url: string): Promise<{ ok: true } | { ok: false; reason: string }> {
+export async function assertUrlSafeForServerFetch(
+  url: string,
+): Promise<{ ok: true } | { ok: false; reason: string }> {
   let u: URL;
   try {
     u = new URL(url);
@@ -36,7 +38,9 @@ export async function assertUrlSafeForServerFetch(url: string): Promise<{ ok: tr
 
   const literalFamily = isIPv4(host) ? 4 : isIPv6(host) ? 6 : 0;
   if (literalFamily === 4 || literalFamily === 6) {
-    return isBlockedIpLiteral(host) ? { ok: false, reason: "Adresse IP non autorisée" } : { ok: true };
+    return isBlockedIpLiteral(host)
+      ? { ok: false, reason: "Adresse IP non autorisée" }
+      : { ok: true };
   }
 
   try {
@@ -100,6 +104,75 @@ function isPrivateOrReservedIpv6(addr: string): boolean {
   return false;
 }
 /** Extrait l’IPv4 pour les formes ::ffff:a.b.c.d ou ::ffff:0:a.b.c.d */
+const MAX_REDIRECT_HOPS = 5;
+const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
+
+export type SafeServerFetchHtmlResult =
+  | { ok: true; html: string; finalUrl: string }
+  | { ok: false; error: string };
+
+/**
+ * Fetch HTML avec validation DNS à chaque URL (y compris cibles de redirection).
+ * Les redirections sont suivies manuellement (`redirect: manual`) pour éviter le contournement SSRF.
+ */
+export async function fetchHtmlSafeForServer(
+  url: string,
+  options: {
+    timeoutMs: number;
+    userAgent: string;
+    accept?: string;
+    extraHeaders?: Record<string, string>;
+  },
+): Promise<SafeServerFetchHtmlResult> {
+  let current = url;
+
+  for (let hop = 0; hop <= MAX_REDIRECT_HOPS; hop++) {
+    const safe = await assertUrlSafeForServerFetch(current);
+    if (!safe.ok) {
+      return { ok: false, error: safe.reason };
+    }
+
+    let res: Response;
+    try {
+      res = await fetch(current, {
+        redirect: "manual",
+        headers: {
+          "User-Agent": options.userAgent,
+          Accept:
+            options.accept ?? "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+          ...options.extraHeaders,
+        },
+        signal: AbortSignal.timeout(options.timeoutMs),
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Fetch failed";
+      return { ok: false, error: message };
+    }
+
+    if (REDIRECT_STATUSES.has(res.status)) {
+      const location = res.headers.get("location");
+      if (!location?.trim()) {
+        return { ok: false, error: "Redirection HTTP sans en-tête Location" };
+      }
+      try {
+        current = new URL(location.trim(), current).href;
+      } catch {
+        return { ok: false, error: "URL de redirection invalide" };
+      }
+      continue;
+    }
+
+    if (!res.ok) {
+      return { ok: false, error: `HTTP ${res.status}` };
+    }
+
+    const html = await res.text();
+    return { ok: true, html, finalUrl: current };
+  }
+
+  return { ok: false, error: "Trop de redirections HTTP" };
+}
+
 function extractIpv4FromIpv6Mapped(addr: string): string | null {
   const marker = "::ffff:";
   const idx = addr.toLowerCase().indexOf(marker);

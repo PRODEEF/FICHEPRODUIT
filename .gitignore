@@ -1,5 +1,7 @@
 .DS_Store
 .cursor/
+.cursor/mcp.json
+.cursor/settings.json
 node_modules/
 *.log
 .env

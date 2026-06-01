@@ -1,7 +1,10 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import { normalizeShopSector, SHOP_SECTOR_VALUES } from "../../domain/shop/dto/shop-sector.schema";
 import type { CmsType, ClassifyResult } from "./scraper.types";
 import { HEURISTIC_RULES } from "./scraper.constants";
+
+const SHOP_SECTOR_LABELS_PROMPT = SHOP_SECTOR_VALUES.join(", ");
 
 @Injectable()
 export class SiteClassifierService {
@@ -65,8 +68,10 @@ export class SiteClassifierService {
             content:
               "You classify ecommerce homepages. Reply with JSON only: " +
               '{"verticalSummary":"short French phrase starting with des/du/de la",' +
-              '"catalogMatchCategories":["array of short French catalog labels; empty if unclear"],' +
-              '"brandsList":["optional known brand names"]}. No markdown.',
+              '"catalogMatchCategories":["exactly one sector label from the allowed list, or empty if unclear"],' +
+              '"brandsList":["optional known brand names"]}. ' +
+              `Allowed sector labels (use exact spelling): ${SHOP_SECTOR_LABELS_PROMPT}. ` +
+              "catalogMatchCategories[0] must be one of these labels or the array must be empty. No markdown.",
           },
           {
             role: "user",
@@ -112,12 +117,12 @@ export class SiteClassifierService {
 
       if (!verticalSummary) return null;
 
-      return {
+      return this.normalizeClassifyResult({
         sector: categories[0] ?? null,
         categories,
         brands,
         verticalSummary,
-      };
+      });
     } catch {
       return null;
     }
@@ -145,11 +150,16 @@ export class SiteClassifierService {
             .filter(Boolean)
             .join(" et de ")}`;
 
-    return {
+    return this.normalizeClassifyResult({
       sector: categories[0] ?? null,
       categories,
       brands: [],
       verticalSummary,
-    };
+    });
+  }
+
+  private normalizeClassifyResult(result: ClassifyResult): ClassifyResult {
+    const sector = normalizeShopSector(result.sector);
+    return { ...result, sector };
   }
 }

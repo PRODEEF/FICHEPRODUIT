@@ -41,7 +41,7 @@ export class CatalogService {
   async getById(id: string): Promise<CatalogProduct> {
     const product = await this.catalogRepo.findById(id);
     if (!product) {
-      throw new NotFoundException("Catalog product not found");
+      throw new NotFoundException("Produit catalogue introuvable");
     }
     return product;
   }
@@ -57,7 +57,10 @@ export class CatalogService {
    * @returns Empty array when the shop has no brands configured.
    * @throws NotFoundException When the shop does not exist or is not owned by `user`.
    */
-  async listCatalogProductsByShopBrands(shopId: string, user: AuthenticatedUser): Promise<CatalogProduct[]> {
+  async listCatalogProductsByShopBrands(
+    shopId: string,
+    user: AuthenticatedUser,
+  ): Promise<CatalogProduct[]> {
     const shop = await this.shopService.getForUser(shopId, user);
     if (shop.brands.length === 0) {
       this.logger.log(
@@ -86,7 +89,10 @@ export class CatalogService {
    * Même logique que {@link listCatalogProductsByShopBrands} pour une boutique invitée
    * (session cookie alignée sur `shop.session_id`).
    */
-  async listCatalogProductsByShopBrandsForGuest(shopId: string, sessionId: string): Promise<CatalogProduct[]> {
+  async listCatalogProductsByShopBrandsForGuest(
+    shopId: string,
+    sessionId: string,
+  ): Promise<CatalogProduct[]> {
     const shop = await this.shopService.getForGuest(shopId, sessionId);
     if (shop.brands.length === 0) {
       this.logger.log(
@@ -99,7 +105,9 @@ export class CatalogService {
       brands: shop.brands,
       limit: SHOP_BRANDS_CATALOG_LIMIT,
     };
-    this.logger.log(`[by-shop-brands] guest calling catalogRepo.search with ${JSON.stringify(criteria)}`);
+    this.logger.log(
+      `[by-shop-brands] guest calling catalogRepo.search with ${JSON.stringify(criteria)}`,
+    );
 
     const products = await this.search(criteria);
 

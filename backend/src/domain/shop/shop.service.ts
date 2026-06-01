@@ -1,4 +1,9 @@
-import { Inject, Injectable, InternalServerErrorException, NotFoundException } from "@nestjs/common";
+import {
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from "@nestjs/common";
 import type { CmsType } from "../../core/scraper/scraper.types";
 import type { AuthenticatedUser } from "../../core/auth/types/jwt-payload.types";
 import { SHOP_REPOSITORY, type IShopRepository } from "./shop.repository.interface";
@@ -118,21 +123,21 @@ export class ShopService {
       if (recovered) {
         return recovered;
       }
-      throw new InternalServerErrorException("Failed to create default shop");
+      throw new InternalServerErrorException("Échec de la création de la boutique par défaut");
     }
   }
 
   async getForUser(id: string, user: AuthenticatedUser): Promise<Shop> {
     const shop = await this.shopRepo.findById(id, user.accessToken);
     if (!shop || shop.ownerId !== user.id) {
-      throw new NotFoundException("Shop not found");
+      throw new NotFoundException("Boutique introuvable");
     }
     return shop;
   }
 
   async getForGuest(shopId: string, sessionId: string): Promise<Shop> {
     const shop = await this.shopRepo.findByIdForGuest(shopId, sessionId);
-    if (!shop) throw new NotFoundException("Shop not found");
+    if (!shop) throw new NotFoundException("Boutique introuvable");
     return shop;
   }
 

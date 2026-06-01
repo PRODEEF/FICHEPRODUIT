@@ -1,4 +1,14 @@
-import { Body, Controller, Get, Patch, Post, Req, Res, BadRequestException, UseGuards } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Get,
+  Patch,
+  Post,
+  Req,
+  Res,
+  BadRequestException,
+  UseGuards,
+} from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import {
   ApiBearerAuth,
@@ -79,9 +89,9 @@ export class UserController {
     if (!sid) {
       const bodySid = body.sessionId?.trim();
       if (bodySid && readGuestSessionCookie(req)) {
-        throw new BadRequestException("sessionId does not match guest session cookie");
+        throw new BadRequestException("Le sessionId ne correspond pas au cookie invité");
       }
-      throw new BadRequestException("Guest session cookie required");
+      throw new BadRequestException("Cookie de session invité requis");
     }
     const result = await this.userService.claimGuestSession(user, sid);
     const secure = this.config.get<string>("nodeEnv") === "production";

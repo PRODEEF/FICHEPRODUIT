@@ -1,4 +1,5 @@
 import { Module } from "@nestjs/common";
+import { AuthModule } from "../../core/auth/auth.module";
 import { ShopModule } from "../shop/shop.module";
 import { ProductTemplateController } from "./product-template.controller";
 import { ProductTemplateService } from "./product-template.service";
@@ -8,7 +9,7 @@ import { ScrapeFieldsService } from "./sub-services/scrape-fields.service";
 import { RefineFieldsService } from "./sub-services/refine-fields.service";
 
 @Module({
-  imports: [ShopModule],
+  imports: [AuthModule, ShopModule],
   controllers: [ProductTemplateController],
   providers: [
     ProductTemplateService,

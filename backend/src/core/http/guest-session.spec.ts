@@ -36,10 +36,7 @@ describe("resolveClaimGuestSessionId", () => {
 
   it("retourne null si le body ne correspond pas au cookie", () => {
     expect(
-      resolveClaimGuestSessionId(
-        reqWithCookie(SESSION_ID),
-        "660e8400-e29b-41d4-a716-446655440001",
-      ),
+      resolveClaimGuestSessionId(reqWithCookie(SESSION_ID), "660e8400-e29b-41d4-a716-446655440001"),
     ).toBeNull();
   });
 

@@ -38,7 +38,17 @@ export function ResetPassword() {
     }
 
     return subscribePasswordRecoveryGate(supabase, (ok) => {
-      setGate(ok ? 'ready' : 'invalid');
+      if (ok) {
+        setGate('ready');
+        return;
+      }
+      void supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session) {
+          void navigate('/profile', { replace: true });
+          return;
+        }
+        setGate('invalid');
+      });
     });
   }, []);
 

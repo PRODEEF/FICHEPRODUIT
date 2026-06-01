@@ -4,11 +4,13 @@ import { AnalysisService } from "./analysis.service";
 import { AnalysisRepository } from "./analysis.repository";
 import { ANALYSIS_REPOSITORY } from "./analysis.repository.interface";
 import { AnalysisPipelineService } from "./analysis-pipeline.service";
+import { AuthModule } from "../../core/auth/auth.module";
 import { ScraperModule } from "../../core/scraper/scraper.module";
 import { ShopModule } from "../shop/shop.module";
 
 @Module({
   imports: [
+    AuthModule,
     ScraperModule, // SiteScraperService + SiteClassifierService
     ShopModule, // ShopService.createOrUpdateFromAnalysis()
   ],

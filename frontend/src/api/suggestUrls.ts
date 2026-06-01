@@ -1,7 +1,7 @@
 /**
  * Client API — Suggest URLs
  *
- * Route NestJS : POST /api/suggest-urls  (pas d'auth requise)
+ * Route NestJS : POST /api/suggest-urls  (Bearer optionnel ; quota plus élevé si connecté)
  *
  * Prend un hint textuel ("Décathlon", "shop kitesurf bordelais") et retourne
  * une liste d'URLs de sites e-commerce candidates.
@@ -10,6 +10,7 @@
  */
 
 import { getApiBaseUrl } from './apiBase';
+import { getSupabaseSessionAuthHeaders } from './nestHttpClient';
 import type { SuggestUrlsBody, SuggestUrlsResponse } from './types/api.types';
 
 /**
@@ -24,7 +25,7 @@ export async function fetchSuggestUrls(q: string): Promise<string[]> {
 
   const res = await fetch(`${getApiBaseUrl()}/api/suggest-urls`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: await getSupabaseSessionAuthHeaders(),
     body: JSON.stringify(body),
   });
 

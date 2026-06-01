@@ -31,11 +31,15 @@ export class ProductTemplateService {
     return this.templateRepo.findAllByShop(shopId, user.accessToken);
   }
 
-  async getOneInShop(shopId: string, id: string, user: AuthenticatedUser): Promise<ProductTemplate> {
+  async getOneInShop(
+    shopId: string,
+    id: string,
+    user: AuthenticatedUser,
+  ): Promise<ProductTemplate> {
     await this.shopService.getForUser(shopId, user);
     const template = await this.templateRepo.findById(id, user.accessToken);
     if (!template || template.shopId !== shopId) {
-      throw new NotFoundException("Template not found");
+      throw new NotFoundException("Gabarit introuvable");
     }
     return template;
   }
@@ -71,15 +75,23 @@ export class ProductTemplateService {
     return this.templateRepo.delete(id, user.accessToken);
   }
 
-  async scrapeFromUrl(url: string): Promise<ScrapeFieldsResult> {
+  async scrapeFromUrl(
+    shopId: string,
+    user: AuthenticatedUser,
+    url: string,
+  ): Promise<ScrapeFieldsResult> {
+    await this.shopService.getForUser(shopId, user);
     return this.scrapeFields.scrape(url);
   }
 
   async refineWithAi(
+    shopId: string,
+    user: AuthenticatedUser,
     fields: Array<Pick<ProductTemplateField, "name" | "type" | "required"> & { order?: number }>,
     source: "csv_import" | "product_page" | "manual",
     sampleValues?: Record<string, string>,
   ): Promise<RefineFieldsResult> {
+    await this.shopService.getForUser(shopId, user);
     const withOrder: ProductTemplateField[] = fields.map((f, i) => ({
       name: f.name,
       type: f.type,

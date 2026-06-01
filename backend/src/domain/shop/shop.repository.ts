@@ -22,7 +22,7 @@ export class ShopRepository implements IShopRepository {
 
     if (error) {
       this.logger.error(`findById(${id}) failed`, error);
-      throw new InternalServerErrorException("Failed to fetch shop");
+      throw new InternalServerErrorException("Échec de la récupération de la boutique");
     }
     return data ? this.toEntity(data as ShopRow) : null;
   }
@@ -37,7 +37,7 @@ export class ShopRepository implements IShopRepository {
 
     if (error) {
       this.logger.error(`findByIdForGuest(${id}) failed`, error);
-      throw new InternalServerErrorException("Failed to fetch shop");
+      throw new InternalServerErrorException("Échec de la récupération de la boutique");
     }
     return data ? this.toEntity(data as ShopRow) : null;
   }
@@ -52,7 +52,7 @@ export class ShopRepository implements IShopRepository {
 
     if (error) {
       this.logger.error(`findAllByOwner(${ownerId}) failed`, error);
-      throw new InternalServerErrorException("Failed to fetch shops");
+      throw new InternalServerErrorException("Échec de la récupération des boutiques");
     }
     return (data ?? []).map((row) => this.toEntity(row as ShopRow));
   }
@@ -60,7 +60,7 @@ export class ShopRepository implements IShopRepository {
   async create(data: CreateShop, accessToken: string): Promise<Shop> {
     if (!data.ownerId) {
       this.logger.error("create: ownerId manquant");
-      throw new InternalServerErrorException("Missing ownerId for shop creation");
+      throw new InternalServerErrorException("ownerId manquant pour la création de boutique");
     }
 
     const { data: row, error } = await this.supabase
@@ -81,7 +81,7 @@ export class ShopRepository implements IShopRepository {
 
     if (error) {
       this.logger.error("create failed", error);
-      throw new InternalServerErrorException("Failed to create shop");
+      throw new InternalServerErrorException("Échec de la création de la boutique");
     }
     return this.toEntity(row as ShopRow);
   }
@@ -97,7 +97,7 @@ export class ShopRepository implements IShopRepository {
 
     if (error) {
       this.logger.error(`update(${id}) failed`, error);
-      throw new InternalServerErrorException("Failed to update shop");
+      throw new InternalServerErrorException("Échec de la mise à jour de la boutique");
     }
     return this.toEntity(row as ShopRow);
   }
@@ -108,12 +108,14 @@ export class ShopRepository implements IShopRepository {
 
     if (isUserFlow && !accessToken) {
       this.logger.error("upsertFromAnalysis: token manquant pour user flow");
-      throw new InternalServerErrorException("Missing token for shop upsert");
+      throw new InternalServerErrorException("Token manquant pour l'upsert boutique");
     }
 
     if (!data.ownerId && !data.sessionId) {
       this.logger.error("upsertFromAnalysis: ownerId/sessionId manquants");
-      throw new InternalServerErrorException("Missing ownerId or sessionId for shop upsert");
+      throw new InternalServerErrorException(
+        "ownerId ou sessionId manquant pour l'upsert boutique",
+      );
     }
 
     const existingQuery = client.from("shops").select("*").eq("url", data.url);
@@ -126,7 +128,7 @@ export class ShopRepository implements IShopRepository {
         `upsertFromAnalysis find failed (${isUserFlow ? data.ownerId : data.sessionId})`,
         existing.error,
       );
-      throw new InternalServerErrorException("Failed to fetch shop");
+      throw new InternalServerErrorException("Échec de la récupération de la boutique");
     }
 
     const prev = existing.data as ShopRow | null;
@@ -147,7 +149,7 @@ export class ShopRepository implements IShopRepository {
 
       if (error) {
         this.logger.error(`upsertFromAnalysis update(${prev.id}) failed`, error);
-        throw new InternalServerErrorException("Failed to update shop");
+        throw new InternalServerErrorException("Échec de la mise à jour de la boutique");
       }
       return this.toEntity(updated as ShopRow);
     }
@@ -169,7 +171,7 @@ export class ShopRepository implements IShopRepository {
 
     if (error) {
       this.logger.error("upsertFromAnalysis insert failed", error);
-      throw new InternalServerErrorException("Failed to create shop");
+      throw new InternalServerErrorException("Échec de la création de la boutique");
     }
     return this.toEntity(inserted as ShopRow);
   }
@@ -185,7 +187,7 @@ export class ShopRepository implements IShopRepository {
 
     if (error) {
       this.logger.error(`transferToUser(${sessionId}) failed`, error);
-      throw new InternalServerErrorException("Failed to transfer guest shops");
+      throw new InternalServerErrorException("Échec du transfert des boutiques invité");
     }
   }
 
@@ -201,7 +203,7 @@ export class ShopRepository implements IShopRepository {
 
     if (error) {
       this.logger.error(`purgeGuestDataOlderThan(${hours}) failed`, error);
-      throw new InternalServerErrorException("Failed to purge guest shops");
+      throw new InternalServerErrorException("Échec de la purge des boutiques invité");
     }
 
     return data?.length ?? 0;

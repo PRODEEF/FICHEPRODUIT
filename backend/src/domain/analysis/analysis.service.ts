@@ -30,7 +30,7 @@ export class AnalysisService {
   async getForUser(id: string, user: AuthenticatedUser): Promise<Analysis> {
     const analysis = await this.analysisRepo.findById(id, user.accessToken);
     if (!analysis || analysis.userId !== user.id) {
-      throw new NotFoundException("Analysis not found");
+      throw new NotFoundException("Analyse introuvable");
     }
     return analysis;
   }
@@ -48,7 +48,7 @@ export class AnalysisService {
 
   async getForGuest(id: string, sessionId: string): Promise<Analysis> {
     const analysis = await this.analysisRepo.findByIdForGuest(id, sessionId);
-    if (!analysis) throw new NotFoundException("Analysis not found");
+    if (!analysis) throw new NotFoundException("Analyse introuvable");
     return analysis;
   }
 

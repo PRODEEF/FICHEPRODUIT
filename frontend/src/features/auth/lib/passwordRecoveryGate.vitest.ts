@@ -1,19 +1,34 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { isPasswordRecoveryUrl } from './passwordRecoveryGate';
+import { clearPasswordRecoveryHash } from './passwordRecoveryGate';
 
-describe('isPasswordRecoveryUrl', () => {
+describe('clearPasswordRecoveryHash', () => {
+  const replaceState = vi.fn();
+
   afterEach(() => {
     vi.unstubAllGlobals();
+    replaceState.mockReset();
   });
 
-  it('retourne true si le hash contient type=recovery', () => {
-    vi.stubGlobal('window', { location: { hash: '#access_token=x&type=recovery' } });
-    expect(isPasswordRecoveryUrl()).toBe(true);
+  it('retire le fragment recovery de l’URL', () => {
+    vi.stubGlobal('window', {
+      location: {
+        hash: '#access_token=x&type=recovery',
+        pathname: '/auth/reset-password',
+        search: '',
+      },
+      history: { replaceState },
+    });
+    clearPasswordRecoveryHash();
+    expect(replaceState).toHaveBeenCalledWith(null, '', '/auth/reset-password');
   });
 
-  it('retourne false sans fragment recovery', () => {
-    vi.stubGlobal('window', { location: { hash: '' } });
-    expect(isPasswordRecoveryUrl()).toBe(false);
+  it('ne modifie pas l’URL sans fragment recovery', () => {
+    vi.stubGlobal('window', {
+      location: { hash: '', pathname: '/auth/reset-password', search: '' },
+      history: { replaceState },
+    });
+    clearPasswordRecoveryHash();
+    expect(replaceState).not.toHaveBeenCalled();
   });
 });

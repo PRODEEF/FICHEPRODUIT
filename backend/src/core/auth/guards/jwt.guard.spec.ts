@@ -22,9 +22,7 @@ describe("JwtGuard", () => {
   });
 
   it("rejette sans token", async () => {
-    await expect(guard.canActivate(createContext())).rejects.toBeInstanceOf(
-      UnauthorizedException,
-    );
+    await expect(guard.canActivate(createContext())).rejects.toBeInstanceOf(UnauthorizedException);
   });
 
   it("rejette si le token est invalide", async () => {

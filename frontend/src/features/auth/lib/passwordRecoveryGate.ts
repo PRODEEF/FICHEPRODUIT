@@ -1,50 +1,47 @@
-import type { AuthChangeEvent, Session, SupabaseClient } from '@supabase/supabase-js';
+import type { AuthChangeEvent, SupabaseClient } from '@supabase/supabase-js';
 
-/** Détecte un lien Supabase recovery dans le fragment d’URL (#access_token=…&type=recovery). */
-export function isPasswordRecoveryUrl(): boolean {
-  if (typeof window === 'undefined') return false;
-  return window.location.hash.includes('type=recovery');
+/** Retire le fragment recovery (#access_token=…&type=recovery) de l’URL après prise en charge. */
+export function clearPasswordRecoveryHash(): void {
+  if (typeof window === 'undefined') return;
+  if (!window.location.hash.includes('type=recovery')) return;
+  const path = `${window.location.pathname}${window.location.search}`;
+  window.history.replaceState(null, '', path);
 }
 
-function isRecoverySession(event: AuthChangeEvent, session: Session | null): boolean {
-  if (!session) return false;
-  if (event === 'PASSWORD_RECOVERY') return true;
-  return event === 'INITIAL_SESSION' && isPasswordRecoveryUrl();
+function isPasswordRecoveryEvent(event: AuthChangeEvent): boolean {
+  return event === 'PASSWORD_RECOVERY';
 }
 
 /**
- * Attend une session recovery (`PASSWORD_RECOVERY` ou hash recovery) puis appelle `onState`.
- * @returns fonction de nettoyage (désabonnement + timeout).
+ * Attend l’événement Supabase `PASSWORD_RECOVERY` puis appelle `onState(true)`.
+ * Ne s’appuie pas sur le hash d’URL ni sur une session existante (évite le bypass reset).
+ * @returns fonction de nettoyage (désabonnement + timeout d’échec).
  */
 export function subscribePasswordRecoveryGate(
   supabase: SupabaseClient,
   onState: (ready: boolean) => void,
   options: { timeoutMs?: number } = {},
 ): () => void {
-  const timeoutMs = options.timeoutMs ?? 6000;
+  const timeoutMs = options.timeoutMs ?? 12_000;
   let resolved = false;
 
   const finish = (ok: boolean) => {
     if (resolved) return;
     resolved = true;
+    if (ok) clearPasswordRecoveryHash();
     onState(ok);
   };
-
-  void supabase.auth.getSession().then(({ data: { session } }) => {
-    if (session && isPasswordRecoveryUrl()) finish(true);
-  });
 
   const {
     data: { subscription },
   } = supabase.auth.onAuthStateChange((event, session) => {
-    if (isRecoverySession(event, session)) finish(true);
+    if (isPasswordRecoveryEvent(event) && session) {
+      finish(true);
+    }
   });
 
   const t = window.setTimeout(() => {
-    if (resolved) return;
-    void supabase.auth.getSession().then(({ data: { session } }) => {
-      finish(Boolean(session && isPasswordRecoveryUrl()));
-    });
+    if (!resolved) finish(false);
   }, timeoutMs);
 
   return () => {
