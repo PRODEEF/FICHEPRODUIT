@@ -10,7 +10,7 @@ export interface IProductTemplateRepository {
   create(
     data: CreateProductTemplate,
     accessToken: string,
-    clientId: string,
+    userId: string,
   ): Promise<ProductTemplate>;
   update(id: string, data: UpdateProductTemplate, accessToken: string): Promise<ProductTemplate>;
   delete(id: string, accessToken: string): Promise<void>;

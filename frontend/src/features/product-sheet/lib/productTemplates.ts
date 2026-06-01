@@ -1,27 +1,5 @@
 import type { ProductTemplateFieldType } from '@types-api';
 
-export type { ProductTemplateFieldType };
-
-// ─── Types (absorbe productTemplateTypes.ts) ──────────────────────────────────
-
-export interface ProductTemplateField {
-  name: string;
-  type: ProductTemplateFieldType;
-  required: boolean;
-  order?: number;
-}
-
-export interface ProductTemplateRow {
-  id: string;
-  user_id: string;
-  name: string;
-  fields: ProductTemplateField[];
-  created_at: string;
-  updated_at: string;
-}
-
-// ─── Labels et options (absorbe productTemplateFieldLabels.ts) ────────────────
-
 const LABELS: Record<ProductTemplateFieldType, string> = {
   text: 'Texte court',
   long_text: 'Texte long',

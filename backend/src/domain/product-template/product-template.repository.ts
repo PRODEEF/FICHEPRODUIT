@@ -15,7 +15,7 @@ type ProductTemplateRowDb = {
   id: string;
   name: string;
   shop_id: string;
-  client_id: string;
+  user_id: string;
   fields: Json;
   created_at: string;
   updated_at: string;
@@ -60,12 +60,12 @@ export class ProductTemplateRepository implements IProductTemplateRepository {
   async create(
     data: CreateProductTemplate,
     accessToken: string,
-    clientId: string,
+    userId: string,
   ): Promise<ProductTemplate> {
     const { data: row, error } = await this.supabase
       .forUser(accessToken)
       .from("product_templates")
-      .insert(this.toRow(data, clientId))
+      .insert(this.toRow(data, userId))
       .select()
       .single();
 
@@ -137,11 +137,11 @@ export class ProductTemplateRepository implements IProductTemplateRepository {
     };
   }
 
-  private toRow(data: CreateProductTemplate, clientId: string) {
+  private toRow(data: CreateProductTemplate, userId: string) {
     return {
       name: data.name,
       shop_id: data.shopId,
-      client_id: clientId,
+      user_id: userId,
       fields: data.fields.map((f, i) => ({ ...f, order: i })) as Json,
     };
   }

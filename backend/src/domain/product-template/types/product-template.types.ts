@@ -59,6 +59,8 @@ export type UpdateProductTemplate = {
 
 export type ScrapeFieldsResult = {
   fields: ProductTemplateField[];
+  /** Valeurs exemple extraites de la page, indexées par nom de champ. */
+  sampleValues: Record<string, string>;
   warnings: { code: string; message: string }[];
 };
 

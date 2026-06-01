@@ -16,14 +16,9 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { PRODUCT_TEMPLATE_FIELD_TYPE_OPTIONS, type ProductTemplateFieldType } from '../lib/productTemplates';
-
-export interface TemplateFieldRow {
-  id: string;
-  name: string;
-  type: ProductTemplateFieldType;
-  required: boolean;
-}
+import { PRODUCT_TEMPLATE_FIELD_TYPE_OPTIONS } from '../lib/productTemplates';
+import type { TemplateFieldRow } from '../types';
+import type { ProductTemplateFieldType } from '@api/types/api.types';
 
 function SortableFieldRow({
   row,
@@ -61,7 +56,9 @@ function SortableFieldRow({
         ::
       </button>
       <label className="flex min-w-40 flex-1 flex-col gap-1.5">
-        <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">Nom du champ</span>
+        <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">
+          Nom du champ
+        </span>
         <input
           type="text"
           className="rounded-xl border border-soft bg-bg-white px-3 py-2 text-sm text-text-primary outline-none transition focus:border-purple-400 focus:shadow-[0_0_0_3px_rgba(168,85,247,0.2)]"
@@ -141,7 +138,7 @@ export function TemplateFieldsEditor({ rows, onChange }: TemplateFieldsEditorPro
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
       <SortableContext items={ids} strategy={verticalListSortingStrategy}>
-        <div className="flex max-w-[52rem] flex-col gap-2.5">
+        <div className="flex w-full flex-col gap-2.5">
           {rows.map((row) => (
             <SortableFieldRow key={row.id} row={row} onPatch={patchRow} onRemove={removeRow} />
           ))}

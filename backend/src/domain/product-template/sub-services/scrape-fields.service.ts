@@ -16,6 +16,10 @@ type FieldDraft = Omit<ProductTemplateField, "order">;
 
 type ScrapeFieldWarning = ScrapeFieldsResult["warnings"][number];
 
+type SampleValues = Record<string, string>;
+
+const SAMPLE_VALUE_MAX_LEN = 500;
+
 const FETCH_TIMEOUT_MS = 18_000;
 const USER_AGENT = "Mozilla/5.0 (compatible; FicheProduit/1.0; +https://example.com/bot)";
 
@@ -42,7 +46,7 @@ export class ScrapeFieldsService {
 
     if (!fetched.ok) {
       warnings.push({ code: "FETCH_FAILED", message: fetched.error });
-      return { fields: [], warnings };
+      return { fields: [], sampleValues: {}, warnings };
     }
 
     const html = fetched.html;
@@ -51,31 +55,35 @@ export class ScrapeFieldsService {
     const ldBundle = this.extractFieldsFromJsonLd($, warnings);
     const fromVariants = this.extractPrestaShopVariantFields($);
     const fromDetails = this.extractProductDetailFields($);
-    const fromFeat = this.extractFeatureFields($, warnings);
+    const featBundle = this.extractFeatureFields($, warnings);
     const merged = this.mergeFields([
       ...ldBundle.fields,
       ...fromVariants,
       ...fromDetails,
-      ...fromFeat,
+      ...featBundle.fields,
     ]);
     const fields: ProductTemplateField[] = merged.map((f, i) => ({
       ...f,
       order: i,
     }));
-    return { fields, warnings };
+    const sampleValues = this.pickSamplesForFields(
+      fields,
+      this.mergeSampleMaps(ldBundle.samples, featBundle.samples),
+    );
+    return { fields, sampleValues, warnings };
   }
 
   private extractFieldsFromJsonLd(
     $: cheerio.CheerioAPI,
     warnings: ScrapeFieldWarning[],
-  ): { fields: FieldDraft[] } {
+  ): { fields: FieldDraft[]; samples: SampleValues } {
     const scripts = $('script[type="application/ld+json"]');
     if (scripts.length === 0) {
       warnings.push({
         code: "NO_JSONLD",
         message: "No application/ld+json scripts found on the page",
       });
-      return { fields: [] };
+      return { fields: [], samples: {} };
     }
 
     const productNodes: Record<string, unknown>[] = [];
@@ -104,24 +112,38 @@ export class ScrapeFieldsService {
         code: "NO_PRODUCT_IN_SCHEMA",
         message: "No Product or ProductGroup node found in JSON-LD",
       });
-      return { fields: [] };
+      return { fields: [], samples: {} };
     }
 
     const node = productNodes[0]!;
     const fields: FieldDraft[] = [];
+    const samples: SampleValues = {};
+    const putSample = (fieldName: string, value: string | undefined): void => {
+      if (!value) return;
+      samples[fieldName] = this.trimSampleValue(value);
+    };
+
     const name = this.asNonEmptyString(node["name"]);
-    if (name) fields.push({ name: "Product name", type: "text", required: false });
+    if (name) {
+      fields.push({ name: "Product name", type: "text", required: false });
+      putSample("Product name", name);
+    }
 
     const sku = this.asNonEmptyString(node["sku"]);
-    if (sku) fields.push({ name: "SKU", type: "reference", required: false });
+    if (sku) {
+      fields.push({ name: "SKU", type: "reference", required: false });
+      putSample("SKU", sku);
+    }
 
     const { price, currency } = this.pickOfferPrice(node["offers"]);
     if (price !== undefined && !Number.isNaN(price)) {
+      const priceFieldName = currency ? `Price (${currency})` : "Price";
       fields.push({
-        name: currency ? `Price (${currency})` : "Price",
+        name: priceFieldName,
         type: "price",
         required: false,
       });
+      putSample(priceFieldName, String(price));
     }
 
     const desc = this.asNonEmptyString(node["description"]);
@@ -131,16 +153,20 @@ export class ScrapeFieldsService {
         type: desc.includes("<") ? "rich_text" : "long_text",
         required: false,
       });
+      putSample("Description", desc);
     }
 
     const imageUrl = this.firstImageUrl(node["image"]);
     if (imageUrl) {
       fields.push({ name: "Image URL", type: "image", required: false });
+      putSample("Image URL", imageUrl);
     }
 
-    fields.push(...this.extractJsonLdVariantsAndProperties(productNodes));
+    const variantBundle = this.extractJsonLdVariantsAndProperties(productNodes);
+    fields.push(...variantBundle.fields);
+    Object.assign(samples, variantBundle.samples);
 
-    return { fields };
+    return { fields, samples };
   }
 
   /**
@@ -148,14 +174,19 @@ export class ScrapeFieldsService {
    */
   private extractJsonLdVariantsAndProperties(
     productNodes: Record<string, unknown>[],
-  ): FieldDraft[] {
+  ): { fields: FieldDraft[]; samples: SampleValues } {
     const out: FieldDraft[] = [];
+    const samples: SampleValues = {};
     const seen = new Set<string>();
-    const add = (label: string, type: ProductTemplateFieldType) => {
-      const k = label.trim().toLowerCase();
+    const add = (label: string, type: ProductTemplateFieldType, sample?: string) => {
+      const trimmed = label.trim();
+      const k = trimmed.toLowerCase();
       if (!k || seen.has(k)) return;
       seen.add(k);
-      out.push({ name: label.trim(), type, required: false });
+      out.push({ name: trimmed, type, required: false });
+      if (sample) {
+        samples[trimmed] = this.trimSampleValue(sample);
+      }
     };
 
     const walkAdditionalProperty = (ap: unknown): void => {
@@ -165,13 +196,15 @@ export class ScrapeFieldsService {
         if (!item || typeof item !== "object") continue;
         const o = item as Record<string, unknown>;
         const propName = this.asNonEmptyString(o["name"]);
+        const propValue = this.propertyValueToString(o["value"]);
         if (propName) {
-          add(propName, "text");
+          add(propName, "text", propValue);
           continue;
         }
         if (this.isPropertyValueNode(o)) {
           const n = this.asNonEmptyString(o["propertyID"]);
-          if (n) add(n, "text");
+          const v = this.propertyValueToString(o["value"]);
+          if (n) add(n, "text", v);
         }
       }
     };
@@ -181,11 +214,12 @@ export class ScrapeFieldsService {
       const vo = v as Record<string, unknown>;
       walkAdditionalProperty(vo["additionalProperty"]);
       const color = this.asNonEmptyString(vo["color"]);
-      if (color) add("Couleur", "color");
+      if (color) add("Couleur", "color", color);
       const size = this.asNonEmptyString(vo["size"]);
-      if (size) add("Taille", "size");
-      if (this.asNonEmptyString(vo["sku"])) {
-        add("SKU (variante)", "reference");
+      if (size) add("Taille", "size", size);
+      const variantSku = this.asNonEmptyString(vo["sku"]);
+      if (variantSku) {
+        add("SKU (variante)", "reference", variantSku);
       }
     };
 
@@ -199,7 +233,7 @@ export class ScrapeFieldsService {
       }
     }
 
-    return out;
+    return { fields: out, samples };
   }
 
   private isPropertyValueNode(o: Record<string, unknown>): boolean {
@@ -379,8 +413,9 @@ export class ScrapeFieldsService {
   private extractFeatureFields(
     $: cheerio.CheerioAPI,
     warnings: ScrapeFieldWarning[],
-  ): FieldDraft[] {
+  ): { fields: FieldDraft[]; samples: SampleValues } {
     const labels = new Set<string>();
+    const samples: SampleValues = {};
     const rowSelectors = [
       ".product-features tr",
       "table.table-product tr",
@@ -398,6 +433,10 @@ export class ScrapeFieldsService {
         if (!label || label.length > 120) return;
         if (/^[\d.,]+$/.test(label)) return;
         labels.add(label);
+        const value = $(cells[1]).text().replace(/\s+/g, " ").trim();
+        if (value) {
+          samples[label] = this.trimSampleValue(value);
+        }
       });
     }
 
@@ -413,6 +452,13 @@ export class ScrapeFieldsService {
         const label = $(dt).text().replace(/\s+/g, " ").trim();
         if (!label || label.length > 120) return;
         labels.add(label);
+        const dd = $(dt).next("dd");
+        if (dd.length) {
+          const value = dd.text().replace(/\s+/g, " ").trim();
+          if (value) {
+            samples[label] = this.trimSampleValue(value);
+          }
+        }
       });
     });
 
@@ -421,14 +467,62 @@ export class ScrapeFieldsService {
         code: "NO_FEATURES_TABLE",
         message: "No PrestaShop-style feature rows detected (table/dl heuristics)",
       });
-      return [];
+      return { fields: [], samples: {} };
     }
 
-    return [...labels].map((name) => ({
+    const fields = [...labels].map((name) => ({
       name,
       type: "text" as const,
       required: false,
     }));
+    return { fields, samples };
+  }
+
+  private mergeSampleMaps(...maps: SampleValues[]): SampleValues {
+    const out: SampleValues = {};
+    for (const map of maps) {
+      for (const [key, value] of Object.entries(map)) {
+        if (!out[key]) {
+          out[key] = value;
+        }
+      }
+    }
+    return out;
+  }
+
+  private pickSamplesForFields(
+    fields: ProductTemplateField[],
+    samples: SampleValues,
+  ): SampleValues {
+    const out: SampleValues = {};
+    for (const field of fields) {
+      const value = samples[field.name];
+      if (value) {
+        out[field.name] = value;
+      }
+    }
+    return out;
+  }
+
+  private trimSampleValue(value: string): string {
+    const s = value.replace(/\s+/g, " ").trim();
+    if (s.length <= SAMPLE_VALUE_MAX_LEN) return s;
+    return `${s.slice(0, SAMPLE_VALUE_MAX_LEN)}…`;
+  }
+
+  private propertyValueToString(value: unknown): string | undefined {
+    if (typeof value === "string") {
+      return this.asNonEmptyString(value);
+    }
+    if (typeof value === "number" || typeof value === "boolean") {
+      return String(value);
+    }
+    if (value && typeof value === "object") {
+      const o = value as Record<string, unknown>;
+      const nested = this.asNonEmptyString(o["value"]) ?? this.asNonEmptyString(o["name"]);
+      return nested;
+    }
+    return undefined;
   }
 
   private mergeFields(rows: FieldDraft[]): FieldDraft[] {

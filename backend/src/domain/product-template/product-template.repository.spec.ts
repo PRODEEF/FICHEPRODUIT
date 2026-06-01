@@ -27,7 +27,7 @@ describe("ProductTemplateRepository", () => {
       id: "tpl-1",
       name: "Presta",
       shop_id: "shop-1",
-      client_id: "user-1",
+      user_id: "user-1",
       fields: [{ name: "Nom", type: "text", required: true }],
       created_at: "2024-01-01T00:00:00.000Z",
       updated_at: "2024-01-01T00:00:00.000Z",

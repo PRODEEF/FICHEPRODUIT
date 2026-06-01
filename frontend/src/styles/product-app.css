@@ -255,8 +255,7 @@ a.product-sheet-save-btn {
 
 .product-templates-workspace {
   padding-bottom: 2rem;
-  width: 50vw;
-  margin-inline: auto;
+  width: 100%;
   box-sizing: border-box;
 }
 
@@ -409,8 +408,7 @@ a.product-sheet-save-btn {
 .product-templates-url-search {
   flex: 1 1 18rem;
   min-width: 12rem;
-  max-width: 620px;
-  margin-bottom: 0;
+  margin-bottom: 5px;
 }
 
 .product-templates-url-error {
@@ -530,5 +528,3 @@ a.product-sheet-save-btn {
     animation: none;
   }
 }
-
-

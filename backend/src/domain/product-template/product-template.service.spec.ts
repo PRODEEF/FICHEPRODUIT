@@ -81,7 +81,7 @@ describe("ProductTemplateService", () => {
   });
 
   it("scrapeFromUrl exige l'accès au shop", async () => {
-    scrapeFields.scrape.mockResolvedValue({ fields: [], warnings: [] });
+    scrapeFields.scrape.mockResolvedValue({ fields: [], sampleValues: {}, warnings: [] });
 
     await service.scrapeFromUrl(shopId, user, "https://product.test");
 

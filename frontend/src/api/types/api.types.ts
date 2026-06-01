@@ -175,6 +175,7 @@ export interface ScrapeFieldsBody {
 
 export interface ScrapeFieldsResponse {
   fields: ProductTemplateField[];
+  sampleValues: Record<string, string>;
   warnings: { code: string; message: string }[];
 }
 

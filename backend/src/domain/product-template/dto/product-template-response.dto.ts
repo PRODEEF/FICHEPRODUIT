@@ -29,6 +29,9 @@ const scrapeWarningSchema = z.object({
 /** Résultat de la détection de champs depuis une page produit */
 export const scrapeFieldsResultSchema = z.object({
   fields: z.array(productTemplateFieldResponseSchema).describe("Champs détectés"),
+  sampleValues: z
+    .record(z.string(), z.string())
+    .describe("Valeurs exemple extraites de la page, par nom de champ"),
   warnings: z.array(scrapeWarningSchema).describe("Avertissements non bloquants"),
 });
 

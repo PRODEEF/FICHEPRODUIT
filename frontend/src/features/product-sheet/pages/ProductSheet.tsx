@@ -13,10 +13,10 @@ export function ProductSheet() {
       <header className="mb-5 flex flex-wrap items-center justify-start gap-4 text-left">
         <div>
           <h1 className="m-0 text-[1.75rem] font-extrabold text-text-primary">
-            Fiche produit type
+            Fiches produits types
           </h1>
           <p className="mt-1 text-sm text-text-muted">
-            Structure des champs pour imports PrestaShop (CSV à venir)
+            Structurez vos champs pour vos imports PrestaShop ou Shopify
           </p>
         </div>
       </header>
