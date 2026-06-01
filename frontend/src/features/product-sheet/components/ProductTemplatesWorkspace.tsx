@@ -132,7 +132,7 @@ export function ProductTemplatesWorkspace({
     const { data, error } = await supabase
       .from('product_templates')
       .select('*')
-      .eq('client_id', user.id)
+      .eq('user_id', user.id)
       .order('updated_at', { ascending: false });
 
     if (error) {
@@ -189,11 +189,11 @@ export function ProductTemplatesWorkspace({
           updated_at: new Date().toISOString(),
         })
         .eq('id', templateId)
-        .eq('client_id', user.id);
+        .eq('user_id', user.id);
       if (error) throw new Error(error.message);
     } else {
       const { error } = await supabase.from('product_templates').insert({
-        client_id: user.id,
+        user_id: user.id,
         name: trimmedName,
         fields,
       });

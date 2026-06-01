@@ -3,7 +3,8 @@ import type { User } from '@supabase/supabase-js';
 import type { UserRepository } from '../userRepository';
 
 /**
- * Intent de profil après inscription (sans localStorage) : conservé en mémoire pour l’onglet courant.
+ * Filet de secours si la session s’ouvre dans le même onglet avant que le trigger DB ne soit visible.
+ * Le signup envoie `website_url` / `pending_auto_analyze` dans `user_metadata` (trigger `handle_new_auth_user`).
  */
 export interface PendingSignupPayload {
   email?: string;
@@ -44,12 +45,24 @@ export async function applyPendingSignupFromStorage(
 ): Promise<boolean> {
   const pending = readPendingSignup();
   if (!pending || !payloadMatchesUser(pending, user)) return false;
+
+  const existing = await repo.getProfile(user.id);
+  const needsUsername =
+    !existing?.username || existing.username === 'Pseudo' || existing.username.trim() === '';
+  const needsWebsite = pending.websiteUrl && !existing?.website_url;
+  const needsPendingFlag =
+    pending.pendingAutoAnalyze && existing && !existing.pending_auto_analyze;
+  if (!needsUsername && !needsWebsite && !needsPendingFlag) {
+    clearPendingSignupMemory();
+    return false;
+  }
+
   try {
-    await repo.updateProfile(user.id, {
-      username: pending.username,
-      website_url: pending.websiteUrl ? pending.websiteUrl : null,
-      pending_auto_analyze: pending.pendingAutoAnalyze,
-    });
+    const patch: Parameters<UserRepository['updateProfile']>[1] = {};
+    if (needsUsername) patch.username = pending.username;
+    if (needsWebsite) patch.website_url = pending.websiteUrl;
+    if (needsPendingFlag) patch.pending_auto_analyze = pending.pendingAutoAnalyze;
+    await repo.updateProfile(user.id, patch);
     clearPendingSignupMemory();
     return true;
   } catch {

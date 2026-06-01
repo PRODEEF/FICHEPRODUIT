@@ -13,7 +13,7 @@ export interface ProductTemplateField {
 
 export interface ProductTemplateRow {
   id: string;
-  client_id: string;
+  user_id: string;
   name: string;
   fields: ProductTemplateField[];
   created_at: string;

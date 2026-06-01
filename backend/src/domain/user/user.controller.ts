@@ -12,7 +12,11 @@ import {
 import type { FastifyReply, FastifyRequest } from "fastify";
 import { JwtGuard } from "../../core/auth/guards/jwt.guard";
 import { CurrentUser } from "../../core/auth/decorators/current-user.decorator";
-import { clearGuestSessionCookie, readGuestSessionId } from "../../core/http/guest-session";
+import {
+  clearGuestSessionCookie,
+  readGuestSessionCookie,
+  resolveClaimGuestSessionId,
+} from "../../core/http/guest-session";
 import type { AuthenticatedUser } from "../../core/auth/types/jwt-payload.types";
 import { ClaimGuestSessionDto } from "./dto/claim-guest-session.dto";
 import { UpdateUserProfileDto } from "./dto/update-user-profile.dto";
@@ -57,20 +61,27 @@ export class UserController {
   @ApiOperation({
     summary: "Rattacher les analyses invitées à ce compte",
     description:
-      "Met à jour les analyses dont `session_id` correspond : elles passent sous `user_id` du porteur du JWT. Efface le cookie invité en réponse.",
+      "Met à jour les analyses dont `session_id` correspond : elles passent sous `user_id` du porteur du JWT. " +
+      "Requiert le cookie invité httpOnly ; un `sessionId` body optionnel doit être identique au cookie.",
   })
   @ApiCreatedResponse({ type: UserMeResponseDto })
   @ApiUnauthorizedResponse({ description: "JWT manquant ou invalide" })
-  @ApiBadRequestResponse({ description: "Aucun sessionId (body ou cookie invité)" })
+  @ApiBadRequestResponse({
+    description: "Cookie invité manquant ou sessionId body ne correspond pas au cookie",
+  })
   async claimGuestSession(
     @CurrentUser() user: AuthenticatedUser,
     @Body() body: ClaimGuestSessionDto,
     @Req() req: FastifyRequest,
     @Res({ passthrough: true }) reply: FastifyReply,
   ) {
-    const sid = body.sessionId?.trim() || readGuestSessionId(req);
+    const sid = resolveClaimGuestSessionId(req, body.sessionId);
     if (!sid) {
-      throw new BadRequestException("sessionId or guest session cookie required");
+      const bodySid = body.sessionId?.trim();
+      if (bodySid && readGuestSessionCookie(req)) {
+        throw new BadRequestException("sessionId does not match guest session cookie");
+      }
+      throw new BadRequestException("Guest session cookie required");
     }
     const result = await this.userService.claimGuestSession(user, sid);
     const secure = this.config.get<string>("nodeEnv") === "production";

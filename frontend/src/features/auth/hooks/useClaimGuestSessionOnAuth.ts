@@ -1,10 +1,7 @@
 import { useEffect, useRef } from 'react';
 
 import { claimGuestSession } from '@api/user';
-import {
-  clearGuestSessionId,
-  getGuestSessionId,
-} from '@lib/analysis/guestSessionStorage';
+import { clearGuestSessionId } from '@lib/analysis/guestSessionStorage';
 
 import type { Session } from '@supabase/supabase-js';
 
@@ -24,7 +21,7 @@ export function useClaimGuestSessionOnAuth(session: Session | null, authLoading:
 
     void (async () => {
       try {
-        await claimGuestSession(getGuestSessionId() ?? undefined);
+        await claimGuestSession();
         clearGuestSessionId();
       } catch {
         // Pas de session invité ou erreur réseau : le parcours continue sans claim.

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router';
-import { useForm } from 'react-hook-form';
+import { useNavigate, useSearchParams } from 'react-router';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import { useAuth } from '@shared/hooks/useAuth';
@@ -8,11 +8,13 @@ import { getSupabaseClient } from '@shared/supabase';
 import { Banner, Button, Card, InputField, PageSection, TextLink } from '@ui';
 
 import { PasswordField } from '../components/PasswordField';
+import { buildAuthEmailQuery, parseAuthEmailFromQuery } from '../lib/authEmailQuery';
 import { signInWithEmailPassword } from '../lib/credentialsAuth';
 import { loginSchema, type LoginInput } from '../lib/authSchemas';
 
 export function Login() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { userEmail, loading: authLoading, configError } = useAuth();
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -21,11 +23,25 @@ export function Login() {
     watch,
     handleSubmit,
     setError,
+    setValue,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: '', password: '' },
   });
+
+  const loginEmail = useWatch({ control, name: 'email', defaultValue: '' });
+
+  const emailFromQuery = searchParams.get('email');
+  useEffect(() => {
+    const parsed = parseAuthEmailFromQuery(emailFromQuery);
+    if (parsed) {
+      queueMicrotask(() => {
+        void setValue('email', parsed);
+      });
+    }
+  }, [emailFromQuery, setValue]);
 
   useEffect(() => {
     if (authLoading || configError) return;
@@ -116,7 +132,9 @@ export function Login() {
           </Button>
         </form>
         <p className="mt-5 text-center text-sm">
-          <TextLink to="/forgot-password">Mot de passe oublié ?</TextLink>
+          <TextLink to={`/forgot-password${buildAuthEmailQuery(loginEmail)}`}>
+            Mot de passe oublié ?
+          </TextLink>
         </p>
       </Card>
     </PageSection>

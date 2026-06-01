@@ -5,7 +5,9 @@ export const claimGuestSessionSchema = z.object({
   sessionId: z
     .uuid()
     .optional()
-    .describe("Identifiant de session invité (optionnel si le cookie invité est envoyé avec la requête)"),
+    .describe(
+      "Optionnel : doit correspondre au cookie invité httpOnly si fourni (sinon ignoré, le cookie fait foi)",
+    ),
 });
 
 export class ClaimGuestSessionDto extends createZodDto(claimGuestSessionSchema) {}

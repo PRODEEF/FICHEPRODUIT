@@ -36,17 +36,42 @@ export async function requestPasswordResetEmail(
 
 export type UpdatePasswordResult = { ok: true } | { ok: false; message: string };
 
+/** Met à jour le mot de passe sans déconnecter (profil connecté). */
+export async function updatePassword(
+  supabase: SupabaseClient,
+  password: string,
+): Promise<UpdatePasswordResult> {
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) return { ok: false, message: authErrorMessage(error) };
+  return { ok: true };
+}
+
 /**
- * Applies the new password then ends the local session (`signOut`).
+ * Vérifie l’ancien mot de passe puis applique le nouveau (utilisateur connecté).
+ */
+export async function changePasswordWithVerification(
+  supabase: SupabaseClient,
+  email: string,
+  currentPassword: string,
+  newPassword: string,
+): Promise<UpdatePasswordResult> {
+  const { error: signInError } = await supabase.auth.signInWithPassword({
+    email: email.trim(),
+    password: currentPassword,
+  });
+  if (signInError) return { ok: false, message: authErrorMessage(signInError) };
+  return updatePassword(supabase, newPassword);
+}
+
+/**
+ * Applique le nouveau mot de passe puis termine la session locale (`signOut`).
  */
 export async function updatePasswordAndSignOut(
   supabase: SupabaseClient,
   password: string,
 ): Promise<UpdatePasswordResult> {
-  const { error: updateError } = await supabase.auth.updateUser({ password });
-  if (updateError) {
-    return { ok: false, message: authErrorMessage(updateError) };
-  }
+  const result = await updatePassword(supabase, password);
+  if (!result.ok) return result;
   await supabase.auth.signOut();
   return { ok: true };
 }
