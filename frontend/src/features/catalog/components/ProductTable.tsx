@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
 import type { CatalogProduct } from '@types-api';
+import { cn } from '@shared/lib/cn';
 import { Button } from '@shared/ui';
 
 import { formatPrice } from '../lib/productUtils';
@@ -63,7 +64,10 @@ export function ProductTable({
                 <th
                   key={h}
                   scope="col"
-                  className="whitespace-nowrap bg-bg-main px-3 py-2 text-left font-bold text-text-secondary border-b border-soft"
+                  className={cn(
+                    'align-middle bg-bg-main px-3 py-2 font-bold text-text-secondary border-b border-soft',
+                    h === 'Prix' ? 'whitespace-nowrap text-right' : 'whitespace-nowrap text-left',
+                  )}
                 >
                   {h}
                 </th>
@@ -97,10 +101,10 @@ export function ProductTable({
                     </span>
                   )}
                 </td>
-                <td className="max-w-56 px-3 py-2 font-semibold text-text-primary border-b border-soft">
+                <td className="max-w-56 align-middle px-3 py-2 font-semibold text-text-primary border-b border-soft">
                   {p.name}
                 </td>
-                <td className="px-3 py-2 border-b border-soft">
+                <td className="align-middle px-3 py-2 border-b border-soft">
                   {p.year ? (
                     <span className="inline-block rounded-md bg-bg-main px-2 py-0.5 text-xs font-bold text-text-secondary">
                       {p.year}
@@ -109,16 +113,16 @@ export function ProductTable({
                     '—'
                   )}
                 </td>
-                <td className="px-3 py-2 border-b border-soft">{p.brand}</td>
-                <td className="px-3 py-2 border-b border-soft">{p.category}</td>
-                <td className="px-3 py-2 border-b border-soft">{p.subCategory ?? '—'}</td>
-                <td className="max-w-48 line-clamp-3 break-words px-3 py-2 border-b border-soft">
-                  {p.description || '—'}
+                <td className="align-middle px-3 py-2 border-b border-soft">{p.brand}</td>
+                <td className="align-middle px-3 py-2 border-b border-soft">{p.category}</td>
+                <td className="align-middle px-3 py-2 border-b border-soft">{p.subCategory ?? '—'}</td>
+                <td className="align-middle px-3 py-2 border-b border-soft">
+                  <span className="line-clamp-3 block break-words">{p.description || '—'}</span>
                 </td>
-                <td className="px-3 py-2 border-b border-soft">
+                <td className="align-middle whitespace-nowrap px-3 py-2 text-right border-b border-soft">
                   <strong>{formatPrice(p.price)}</strong>
                 </td>
-                <td className="px-3 py-2 border-b border-soft">
+                <td className="align-middle whitespace-nowrap px-3 py-2 border-b border-soft">
                   <Button
                     type="button"
                     variant="secondary"

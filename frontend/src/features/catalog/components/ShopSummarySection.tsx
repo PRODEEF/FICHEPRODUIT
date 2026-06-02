@@ -58,7 +58,7 @@ export function ShopSummarySection({ shop, activeBrand, onBrandClick }: ShopSumm
         </p>
         {shop.sector?.trim() ? (
           <p className="text-xs text-gray-500">
-            Périmètre détecté&nbsp;: vous vendez {shop.sector.trim()}.
+            Votre univers&nbsp;: {shop.sector.trim()}.
           </p>
         ) : null}
       </div>

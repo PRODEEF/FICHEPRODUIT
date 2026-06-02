@@ -1,16 +1,15 @@
-import { getGuestSessionId } from '@lib/analysis/guestSessionStorage';
-import { TextLink } from '@shared/ui';
+import { Button } from '@shared/ui';
 
 interface GuestCatalogCTAProps {
   websiteUrl: string;
 }
 
 export function GuestCatalogCTA({ websiteUrl }: GuestCatalogCTAProps) {
-  const hasGuestSession = Boolean(getGuestSessionId());
+  const trimmedUrl = websiteUrl.trim();
   const signupHref =
-    hasGuestSession || !websiteUrl.trim()
+    trimmedUrl === ''
       ? '/signup'
-      : `/signup?${new URLSearchParams({ url: websiteUrl }).toString()}`;
+      : `/signup?${new URLSearchParams({ url: trimmedUrl }).toString()}`;
 
   return (
     <section
@@ -26,12 +25,9 @@ export function GuestCatalogCTA({ websiteUrl }: GuestCatalogCTAProps) {
         retrouver votre historique d&apos;analyses et aller plus loin.
       </p>
       <div className="flex flex-wrap items-center gap-3">
-        <TextLink
-          to={signupHref}
-          className="text-sm font-semibold text-purple-600 no-underline hover:underline"
-        >
-          Créer un compte
-        </TextLink>
+        <Button href={signupHref} variant="primary" size="sm" glow>
+          S&apos;inscrire gratuitement
+        </Button>
       </div>
     </section>
   );

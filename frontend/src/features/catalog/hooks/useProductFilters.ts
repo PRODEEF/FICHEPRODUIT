@@ -1,101 +1,181 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import type { CatalogProduct } from '@types-api';
-import { parseZodFieldErrors } from '@lib/parseZodErrors';
 
 import type { CatalogProductPayloadMetadata, ProductFilter } from '../types';
-import { catalogPriceFilterSchema, type CatalogPriceFilterFieldKey } from '../lib/catalogFilterSchemas';
+import {
+  createCatalogDefaultFilters,
+  resolveDefaultShopSector,
+} from '../lib/catalogFilterDefaults';
+import {
+  buildBrandOptions,
+  buildCategoryOptions,
+  buildSubCategoryOptions,
+  buildYearOptions,
+} from '../lib/catalogFilterOptions';
 import { uniqueSorted } from '../lib/productUtils';
-
-export const DEFAULT_FILTERS: ProductFilter = {
-  search: '',
-  brand: '',
-  category: '',
-  subCategory: '',
-  year: '',
-  priceMin: '',
-  priceMax: '',
-};
 
 interface UseProductFiltersResult {
   filters: ProductFilter;
   setFilter: <K extends keyof ProductFilter>(key: K, value: ProductFilter[K]) => void;
-  /** Vrai dès qu’au moins un critère (recherche ou filtre structuré) est non vide. */
+  /** Remet tous les critères à leur valeur par défaut (secteur = secteur boutique). */
+  resetFilters: () => void;
+  /** Vrai dès qu’au moins un critère diffère du défaut boutique. */
   hasActiveFilters: boolean;
   filteredProducts: CatalogProduct[];
   brandOptions: string[];
   categoryOptions: string[];
   subCategoryOptions: string[];
   yearOptions: string[];
-  /** Erreurs Zod sur les champs prix (saisie invalide ou min supérieur au max). */
-  priceFilterErrors: Partial<Record<CatalogPriceFilterFieldKey, string>>;
+}
+
+function matchesSector(product: CatalogProduct, sector: string): boolean {
+  return product.sector.trim().toLowerCase() === sector.trim().toLowerCase();
 }
 
 export function useProductFilters(
   products: CatalogProduct[],
-  productPayload: CatalogProductPayloadMetadata | null,
+  _productPayload: CatalogProductPayloadMetadata | null,
   shopBrands?: string[],
+  defaultShopSector?: string | null,
 ): UseProductFiltersResult {
-  const [filters, setFilters] = useState<ProductFilter>(DEFAULT_FILTERS);
+  const defaultSector = useMemo(
+    () => resolveDefaultShopSector(defaultShopSector),
+    [defaultShopSector],
+  );
+
+  const [filters, setFilters] = useState<ProductFilter>(() =>
+    createCatalogDefaultFilters(defaultSector),
+  );
+
+  const previousDefaultSectorRef = useRef(defaultSector);
+
+  useEffect(() => {
+    const previousDefault = previousDefaultSectorRef.current;
+    if (defaultSector === previousDefault) {
+      return;
+    }
+    previousDefaultSectorRef.current = defaultSector;
+
+    setFilters((prev) => {
+      if (prev.sector !== previousDefault) {
+        return prev;
+      }
+      return createCatalogDefaultFilters(defaultSector);
+    });
+  }, [defaultSector]);
 
   const setFilter = useCallback(<K extends keyof ProductFilter>(key: K, value: ProductFilter[K]) => {
-    setFilters((prev) => ({ ...prev, [key]: value }));
+    setFilters((prev) => {
+      const next = { ...prev, [key]: value };
+
+      if (key === 'sector' && value !== prev.sector) {
+        next.category = '';
+        next.subCategory = '';
+        next.brand = '';
+        next.year = '';
+      } else if (key === 'category' && value !== prev.category) {
+        next.subCategory = '';
+        next.brand = '';
+        next.year = '';
+      } else if (key === 'subCategory' && value !== prev.subCategory) {
+        next.brand = '';
+        next.year = '';
+      } else if (key === 'brand' && value !== prev.brand) {
+        next.year = '';
+      }
+
+      return next;
+    });
   }, []);
 
+  const resetFilters = useCallback(() => {
+    setFilters(createCatalogDefaultFilters(defaultSector));
+  }, [defaultSector]);
+
+  const parentFilters = useMemo(
+    () => ({
+      sector: filters.sector,
+      category: filters.category,
+      subCategory: filters.subCategory,
+      brand: filters.brand,
+    }),
+    [filters.sector, filters.category, filters.subCategory, filters.brand],
+  );
+
+  const categoryOptions = useMemo(
+    () => buildCategoryOptions(products, parentFilters),
+    [products, parentFilters],
+  );
+
+  const subCategoryOptions = useMemo(
+    () => buildSubCategoryOptions(products, parentFilters),
+    [products, parentFilters],
+  );
+
   const brandOptions = useMemo(() => {
-    if (shopBrands !== undefined) {
-      return uniqueSorted(shopBrands);
+    const fromScope = buildBrandOptions(products, parentFilters);
+    if (shopBrands === undefined) {
+      return fromScope;
     }
-    const fromApi = productPayload?.brands ?? [];
-    if (fromApi.length) return uniqueSorted(fromApi);
-    return uniqueSorted(products.map((p) => p.brand).filter(Boolean));
-  }, [shopBrands, productPayload?.brands, products]);
+    const shopLower = new Set(shopBrands.map((b) => b.trim().toLowerCase()).filter(Boolean));
+    if (shopLower.size === 0) {
+      return fromScope;
+    }
+    return fromScope.filter((b) => shopLower.has(b.toLowerCase()));
+  }, [products, parentFilters, shopBrands]);
 
-  const categoryOptions = useMemo(() => {
-    const fromApi = productPayload?.categories ?? [];
-    if (fromApi.length) return uniqueSorted(fromApi);
-    return uniqueSorted(products.map((p) => p.category).filter(Boolean));
-  }, [productPayload?.categories, products]);
+  const yearOptions = useMemo(
+    () => buildYearOptions(products, parentFilters),
+    [products, parentFilters],
+  );
 
-  const subCategoryOptions = useMemo(() => {
-    const fromApi = productPayload?.subCategories ?? [];
-    if (fromApi.length) return uniqueSorted(fromApi);
-    return uniqueSorted(products.map((p) => p.subCategory).filter(Boolean) as string[]);
-  }, [productPayload?.subCategories, products]);
+  useEffect(() => {
+    setFilters((prev) => {
+      let category = prev.category;
+      let subCategory = prev.subCategory;
+      let brand = prev.brand;
+      let year = prev.year;
 
-  const yearOptions = useMemo(() => {
-    const fromApi = productPayload?.years ?? [];
-    if (fromApi.length) return uniqueSorted(fromApi);
-    return uniqueSorted(products.map((p) => String(p.year)).filter(Boolean));
-  }, [productPayload?.years, products]);
+      if (category && !categoryOptions.includes(category)) {
+        category = '';
+        subCategory = '';
+        brand = '';
+        year = '';
+      } else if (subCategory && !subCategoryOptions.includes(subCategory)) {
+        subCategory = '';
+        brand = '';
+        year = '';
+      } else if (brand && !brandOptions.includes(brand)) {
+        brand = '';
+        year = '';
+      } else if (year && !yearOptions.includes(year)) {
+        year = '';
+      }
 
-  const { priceBounds, priceFilterErrors } = useMemo(() => {
-    const parsed = catalogPriceFilterSchema.safeParse({
-      priceMin: filters.priceMin,
-      priceMax: filters.priceMax,
+      if (
+        category === prev.category &&
+        subCategory === prev.subCategory &&
+        brand === prev.brand &&
+        year === prev.year
+      ) {
+        return prev;
+      }
+
+      return { ...prev, category, subCategory, brand, year };
     });
-    if (parsed.success) {
-      return { priceBounds: parsed.data, priceFilterErrors: {} };
-    }
-    return {
-      priceBounds: null,
-      priceFilterErrors: parseZodFieldErrors<CatalogPriceFilterFieldKey>(parsed.error),
-    };
-  }, [filters.priceMin, filters.priceMax]);
+  }, [categoryOptions, subCategoryOptions, brandOptions, yearOptions]);
 
   const filteredProducts = useMemo(() => {
     const q = filters.search.trim().toLowerCase();
     return products.filter((p) => {
-      if (filters.brand && p.brand.toLowerCase() !== filters.brand.toLowerCase()) return false;
+      if (filters.sector && !matchesSector(p, filters.sector)) return false;
       if (filters.category && p.category !== filters.category) return false;
       if (filters.subCategory && p.subCategory !== filters.subCategory) return false;
+      if (filters.brand && p.brand.toLowerCase() !== filters.brand.toLowerCase()) return false;
       if (filters.year && String(p.year) !== filters.year) return false;
-      if (priceBounds) {
-        if (priceBounds.min !== undefined && p.price < priceBounds.min) return false;
-        if (priceBounds.max !== undefined && p.price > priceBounds.max) return false;
-      }
       if (q) {
-        const haystack = [p.brand, p.category, p.subCategory, p.name, p.description]
+        const haystack = [p.sector, p.brand, p.category, p.subCategory, p.name, p.description]
           .filter(Boolean)
           .join(' ')
           .toLowerCase();
@@ -103,31 +183,29 @@ export function useProductFilters(
       }
       return true;
     });
-  }, [products, filters, priceBounds]);
+  }, [products, filters]);
 
-  const hasActiveFilters = useMemo(
-    () =>
-      Boolean(
-        filters.search.trim() ||
-          filters.brand ||
-          filters.category ||
-          filters.subCategory ||
-          filters.year ||
-          filters.priceMin.trim() ||
-          filters.priceMax.trim(),
-      ),
-    [filters],
-  );
+  const hasActiveFilters = useMemo(() => {
+    const sectorDiffersFromDefault = filters.sector !== defaultSector;
+    return Boolean(
+      filters.search.trim() ||
+        sectorDiffersFromDefault ||
+        filters.category ||
+        filters.subCategory ||
+        filters.brand ||
+        filters.year,
+    );
+  }, [filters, defaultSector]);
 
   return {
     filters,
     setFilter,
+    resetFilters,
     hasActiveFilters,
     filteredProducts,
     brandOptions,
     categoryOptions,
     subCategoryOptions,
     yearOptions,
-    priceFilterErrors,
   };
 }
