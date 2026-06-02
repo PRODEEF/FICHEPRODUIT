@@ -10,7 +10,6 @@ export interface EditTemplateViewProps {
   onFieldRowsChange: (rows: TemplateFieldRow[]) => void;
   refiningAi: boolean;
   refineDisabled: boolean;
-  aiRefineHint: string | null;
   saving: boolean;
   actionError: string | null;
   onRefine: () => void;
@@ -25,7 +24,6 @@ export function EditTemplateView({
   onFieldRowsChange,
   refiningAi,
   refineDisabled,
-  aiRefineHint,
   saving,
   actionError,
   onRefine,
@@ -59,11 +57,6 @@ export function EditTemplateView({
           ])
         }
       />
-      {aiRefineHint ? (
-        <p className="product-templates-ai-hint" role="status">
-          {aiRefineHint}
-        </p>
-      ) : null}
       <TemplateFieldsEditor rows={fieldRows} onChange={onFieldRowsChange} />
 
       {actionError ? (

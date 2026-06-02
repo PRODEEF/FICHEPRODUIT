@@ -1,4 +1,4 @@
-import type { ProductTemplateFieldType } from './productTemplates';
+import type { ProductTemplateFieldType } from '@types-api';
 
 export function stripBom(text: string): string {
   if (text.length > 0 && text.charCodeAt(0) === 0xfeff) {

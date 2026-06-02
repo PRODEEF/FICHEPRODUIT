@@ -20,7 +20,6 @@ export interface NewTemplatePanelProps {
   onDraftChange: (draft: TemplateDraftState) => void;
   refiningAi: boolean;
   refineDisabled: boolean;
-  aiRefineHint: string | null;
   draftSaving: boolean;
   onRefineDraft: () => void;
   onSaveDraft: () => void;
@@ -51,7 +50,6 @@ export function NewTemplatePanel({
   onDraftChange,
   refiningAi,
   refineDisabled,
-  aiRefineHint,
   draftSaving,
   onRefineDraft,
   onSaveDraft,
@@ -135,7 +133,6 @@ export function NewTemplatePanel({
           onDraftChange={onDraftChange}
           refiningAi={refiningAi}
           refineDisabled={refineDisabled}
-          aiRefineHint={aiRefineHint}
           saving={draftSaving}
           onRefine={onRefineDraft}
           onSave={onSaveDraft}

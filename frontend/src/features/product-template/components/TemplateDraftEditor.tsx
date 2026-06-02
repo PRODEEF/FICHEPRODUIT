@@ -8,7 +8,6 @@ export interface TemplateDraftEditorProps {
   onDraftChange: (draft: TemplateDraftState) => void;
   refiningAi: boolean;
   refineDisabled: boolean;
-  aiRefineHint: string | null;
   saving: boolean;
   onRefine: () => void;
   onSave: () => void;
@@ -20,7 +19,6 @@ export function TemplateDraftEditor({
   onDraftChange,
   refiningAi,
   refineDisabled,
-  aiRefineHint,
   saving,
   onRefine,
   onSave,
@@ -53,11 +51,6 @@ export function TemplateDraftEditor({
           })
         }
       />
-      {aiRefineHint ? (
-        <p className="product-templates-ai-hint" role="status">
-          {aiRefineHint}
-        </p>
-      ) : null}
       <TemplateFieldsEditor
         rows={draft.fieldRows}
         onChange={(fieldRows) => void onDraftChange({ ...draft, fieldRows })}

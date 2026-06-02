@@ -39,7 +39,7 @@ const Catalog = lazy(async () => {
   return { default: m.Catalog };
 });
 const ProductSheet = lazy(async () => {
-  const m = await import('../features/product-sheet/pages/ProductSheet');
+  const m = await import('../features/product-template/pages/ProductSheet');
   return { default: m.ProductSheet };
 });
 const Profile = lazy(async () => {

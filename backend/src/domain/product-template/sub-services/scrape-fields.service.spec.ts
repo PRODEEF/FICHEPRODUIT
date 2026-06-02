@@ -4,6 +4,8 @@ import {
   fetchHtmlSafeForServer,
 } from "../../../core/scraper/scrape-url-policy";
 import { ScrapeFieldsService } from "./scrape-fields.service";
+import { ScrapeFieldsTraceService } from "./scrape-fields-trace.service";
+import { ConfigService } from "@nestjs/config";
 
 jest.mock("../../../core/scraper/scrape-url-policy", () => ({
   assertUrlSafeForServerFetch: jest.fn(),
@@ -50,10 +52,14 @@ const PRESTASHOP_FEATURES_HTML = `<!DOCTYPE html>
 
 describe("ScrapeFieldsService", () => {
   let service: ScrapeFieldsService;
+  let traceService: ScrapeFieldsTraceService;
+  let emitTraceSpy: jest.SpyInstance;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    service = new ScrapeFieldsService();
+    traceService = new ScrapeFieldsTraceService(new ConfigService<Record<string, unknown>>({}));
+    emitTraceSpy = jest.spyOn(traceService, "emitTrace").mockResolvedValue(undefined);
+    service = new ScrapeFieldsService(traceService);
     assertUrlSafe.mockResolvedValue({ ok: true });
   });
 
@@ -97,6 +103,20 @@ describe("ScrapeFieldsService", () => {
     expect(result.sampleValues["Description"]).toBe("Chaise ergonomique réglable.");
     expect(result.sampleValues["Image URL"]).toBe("https://cdn.example.com/chair.jpg");
     expect(result.sampleValues["Matière"]).toBe("Mesh");
+    expect(emitTraceSpy).toHaveBeenCalledWith(
+      "https://shop.example.com/product/1",
+      "https://shop.example.com/product/1",
+      expect.objectContaining({
+        fields: expect.any(Array),
+        sampleValues: expect.any(Object),
+        warnings: expect.any(Array),
+      }),
+      expect.any(Array),
+      expect.objectContaining({
+        json_ld: expect.any(Number),
+        prestashop_features: expect.any(Number),
+      }),
+    );
   });
 
   it("ajoute un avertissement NO_JSONLD et extrait les caractéristiques PrestaShop", async () => {
@@ -114,6 +134,15 @@ describe("ScrapeFieldsService", () => {
     );
     expect(result.sampleValues["Poids"]).toBe("12 kg");
     expect(result.sampleValues["Couleur"]).toBe("Noir");
+    expect(emitTraceSpy).toHaveBeenCalledWith(
+      "https://prestashop.example.com/p/1",
+      "https://prestashop.example.com/p/1",
+      expect.any(Object),
+      expect.any(Array),
+      expect.objectContaining({
+        prestashop_features: expect.any(Number),
+      }),
+    );
   });
 
   it("retourne des listes vides si le fetch échoue", async () => {
@@ -124,5 +153,6 @@ describe("ScrapeFieldsService", () => {
     expect(result.fields).toEqual([]);
     expect(result.sampleValues).toEqual({});
     expect(result.warnings).toEqual([{ code: "FETCH_FAILED", message: "timeout" }]);
+    expect(emitTraceSpy).not.toHaveBeenCalled();
   });
 });

@@ -10,6 +10,11 @@ import type {
   ProductTemplateFieldType,
   ScrapeFieldsResult,
 } from "../types/product-template.types";
+import { ScrapeFieldsTraceService } from "./scrape-fields-trace.service";
+import type {
+  ScrapeFieldExtractorId,
+  ScrapeFieldMapping,
+} from "../types/scrape-fields-trace.types";
 
 /** Champs enrichis hors JSON-LD : pas d’index `order` tant qu’ils ne sont pas fusionnés. */
 type FieldDraft = Omit<ProductTemplateField, "order">;
@@ -17,6 +22,12 @@ type FieldDraft = Omit<ProductTemplateField, "order">;
 type ScrapeFieldWarning = ScrapeFieldsResult["warnings"][number];
 
 type SampleValues = Record<string, string>;
+type TracedFieldDraft = FieldDraft & {
+  extractor: ScrapeFieldExtractorId;
+  sitePath?: string;
+  siteLabel?: string;
+  domHint?: string;
+};
 
 const SAMPLE_VALUE_MAX_LEN = 500;
 
@@ -25,6 +36,8 @@ const USER_AGENT = "Mozilla/5.0 (compatible; FicheProduit/1.0; +https://example.
 
 @Injectable()
 export class ScrapeFieldsService {
+  constructor(private readonly traceService: ScrapeFieldsTraceService) {}
+
   async scrape(rawUrl: string): Promise<ScrapeFieldsResult> {
     const normalized = rawUrl.trim();
     if (!normalized) {
@@ -56,13 +69,35 @@ export class ScrapeFieldsService {
     const fromVariants = this.extractPrestaShopVariantFields($);
     const fromDetails = this.extractProductDetailFields($);
     const featBundle = this.extractFeatureFields($, warnings);
-    const merged = this.mergeFields([
-      ...ldBundle.fields,
-      ...fromVariants,
-      ...fromDetails,
-      ...featBundle.fields,
-    ]);
-    const fields: ProductTemplateField[] = merged.map((f, i) => ({
+
+    const tracedRows: TracedFieldDraft[] = [
+      ...ldBundle.fields.map((field) => ({
+        ...field,
+        extractor: "json_ld" as const,
+        sitePath: this.jsonLdSitePathForFieldName(field.name),
+      })),
+      ...fromVariants.map((field) => ({
+        ...field,
+        extractor: "prestashop_variants" as const,
+        siteLabel: field.name,
+        domHint: ".product-variants",
+      })),
+      ...fromDetails.map((field) => ({
+        ...field,
+        extractor: "prestashop_details" as const,
+        siteLabel: field.name,
+        domHint: "#description,.product-tabs,#product-details",
+      })),
+      ...featBundle.fields.map((field) => ({
+        ...field,
+        extractor: "prestashop_features" as const,
+        siteLabel: field.name,
+        domHint: ".product-features tr, table.data-sheet tr, dl dt",
+      })),
+    ];
+
+    const merged = this.mergeFieldsWithTrace(tracedRows);
+    const fields: ProductTemplateField[] = merged.fields.map((f, i) => ({
       ...f,
       order: i,
     }));
@@ -70,7 +105,15 @@ export class ScrapeFieldsService {
       fields,
       this.mergeSampleMaps(ldBundle.samples, featBundle.samples),
     );
-    return { fields, sampleValues, warnings };
+    const result: ScrapeFieldsResult = { fields, sampleValues, warnings };
+    await this.traceService.emitTrace(
+      url,
+      fetched.finalUrl,
+      result,
+      this.buildMappings(merged.traceRows, sampleValues),
+      this.countByExtractor(merged.traceRows),
+    );
+    return result;
   }
 
   private extractFieldsFromJsonLd(
@@ -525,16 +568,85 @@ export class ScrapeFieldsService {
     return undefined;
   }
 
-  private mergeFields(rows: FieldDraft[]): FieldDraft[] {
+  private mergeFieldsWithTrace(rows: TracedFieldDraft[]): {
+    fields: FieldDraft[];
+    traceRows: Array<TracedFieldDraft & { mergeStatus: "kept" | "dropped_duplicate"; keptBy?: ScrapeFieldExtractorId }>;
+  } {
     const seen = new Set<string>();
     const out: FieldDraft[] = [];
+    const traceRows: Array<
+      TracedFieldDraft & { mergeStatus: "kept" | "dropped_duplicate"; keptBy?: ScrapeFieldExtractorId }
+    > = [];
+    const winners = new Map<string, ScrapeFieldExtractorId>();
+
     for (const f of rows) {
       const key = f.name.trim().toLowerCase();
       if (!key || seen.has(key)) continue;
       seen.add(key);
       out.push({ ...f, name: f.name.trim() });
+      winners.set(key, f.extractor);
+      traceRows.push({ ...f, name: f.name.trim(), mergeStatus: "kept" });
     }
-    return out;
+
+    for (const f of rows) {
+      const key = f.name.trim().toLowerCase();
+      if (!key) continue;
+      const winner = winners.get(key);
+      if (!winner || winner === f.extractor) continue;
+      traceRows.push({
+        ...f,
+        name: f.name.trim(),
+        mergeStatus: "dropped_duplicate",
+        keptBy: winner,
+      });
+    }
+    return { fields: out, traceRows };
+  }
+
+  private buildMappings(
+    traceRows: Array<
+      TracedFieldDraft & { mergeStatus: "kept" | "dropped_duplicate"; keptBy?: ScrapeFieldExtractorId }
+    >,
+    sampleValues: SampleValues,
+  ): ScrapeFieldMapping[] {
+    return traceRows.map((row) => ({
+      fieldName: row.name,
+      fieldType: row.type,
+      extractor: row.extractor,
+      sitePath: row.sitePath,
+      siteLabel: row.siteLabel,
+      domHint: row.domHint,
+      sampleValue: sampleValues[row.name],
+      mergeStatus: row.mergeStatus,
+      keptBy: row.keptBy,
+    }));
+  }
+
+  private countByExtractor(
+    traceRows: Array<TracedFieldDraft & { mergeStatus: "kept" | "dropped_duplicate"; keptBy?: ScrapeFieldExtractorId }>,
+  ): Record<ScrapeFieldExtractorId, number> {
+    const counts: Record<ScrapeFieldExtractorId, number> = {
+      json_ld: 0,
+      prestashop_features: 0,
+      prestashop_variants: 0,
+      prestashop_details: 0,
+    };
+    for (const row of traceRows) {
+      if (row.mergeStatus === "kept") {
+        counts[row.extractor] += 1;
+      }
+    }
+    return counts;
+  }
+
+  private jsonLdSitePathForFieldName(fieldName: string): string {
+    const key = fieldName.toLowerCase();
+    if (key === "product name") return "Product.name";
+    if (key === "sku") return "Product.sku";
+    if (key.startsWith("price")) return "Product.offers.price";
+    if (key === "description") return "Product.description";
+    if (key === "image url") return "Product.image";
+    return "Product.additionalProperty";
   }
 
   private flattenJsonLd(data: unknown): Record<string, unknown>[] {

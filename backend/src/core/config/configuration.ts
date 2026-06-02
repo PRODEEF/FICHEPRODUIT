@@ -35,6 +35,10 @@ export default () => {
       optional("GUEST_SESSION_COOKIE_MAX_AGE_SEC", String(60 * 60 * 24 * 30)),
       10,
     ),
+    /** Active la génération de traces scrape-fields (désactivée en production). */
+    scrapeFieldsTraceEnabled: nodeEnv !== "production",
+    /** Dossier local des traces scrape-fields (relatif au backend). */
+    scrapeFieldsTraceDir: optional("SCRAPE_FIELDS_TRACE_DIR", "logs/scrape-fields"),
 
     // Supabase
     supabaseUrl: required("SUPABASE_URL"),

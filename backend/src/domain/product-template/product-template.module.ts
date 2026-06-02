@@ -7,6 +7,7 @@ import { ProductTemplateRepository } from "./product-template.repository";
 import { PRODUCT_TEMPLATE_REPOSITORY } from "./product-template.repository.interface";
 import { ScrapeFieldsService } from "./sub-services/scrape-fields.service";
 import { RefineFieldsService } from "./sub-services/refine-fields.service";
+import { ScrapeFieldsTraceService } from "./sub-services/scrape-fields-trace.service";
 
 @Module({
   imports: [AuthModule, ShopModule],
@@ -14,6 +15,7 @@ import { RefineFieldsService } from "./sub-services/refine-fields.service";
   providers: [
     ProductTemplateService,
     ScrapeFieldsService,
+    ScrapeFieldsTraceService,
     RefineFieldsService,
     {
       provide: PRODUCT_TEMPLATE_REPOSITORY,

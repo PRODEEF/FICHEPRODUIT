@@ -42,8 +42,7 @@ export function ProductTemplatesWorkspace({
     useProductTemplates(shopId);
 
   const urlAnalysis = useProductPageAnalysis(shopId, profile?.website_url);
-  const { refiningAi, aiRefineHint, clearAiRefineHint, refineRows } =
-    useRefineTemplateFields(shopId);
+  const { refiningAi, clearAiRefineHint, refineRows } = useRefineTemplateFields(shopId);
   const csvImport = useCsvTemplateImport();
 
   const [view, setView] = useState<View>({ kind: 'list' });
@@ -238,7 +237,6 @@ export function ProductTemplatesWorkspace({
           onFieldRowsChange={setFieldRows}
           refiningAi={refiningAi}
           refineDisabled={refineDisabled || saving}
-          aiRefineHint={aiRefineHint}
           saving={saving}
           actionError={actionError}
           onRefine={() => void handleRefineEdit()}
@@ -306,7 +304,6 @@ export function ProductTemplatesWorkspace({
           onDraftChange={setDraft}
           refiningAi={refiningAi}
           refineDisabled={refineDisabled || draftSaving}
-          aiRefineHint={aiRefineHint}
           draftSaving={draftSaving}
           onRefineDraft={() => void handleRefineDraft()}
           onSaveDraft={() => void handleSaveDraft()}
