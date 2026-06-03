@@ -66,4 +66,6 @@ export type ScrapeFieldsResult = {
 
 export type RefineFieldsResult = {
   fields: ProductTemplateField[];
+  refinedWithAi: boolean;
+  message?: string;
 };

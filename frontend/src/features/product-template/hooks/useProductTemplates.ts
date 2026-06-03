@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import {
   createTemplate,
+  deleteTemplate as deleteTemplateApi,
   listTemplates,
   updateTemplate,
 } from '@api/template';
@@ -20,6 +21,7 @@ export interface UseProductTemplatesResult {
     name: string,
     rows: TemplateFieldRow[],
   ) => Promise<void>;
+  deleteTemplate: (templateId: string) => Promise<void>;
 }
 
 export function useProductTemplates(shopId: string | undefined): UseProductTemplatesResult {
@@ -76,5 +78,16 @@ export function useProductTemplates(shopId: string | undefined): UseProductTempl
     [shopId, refetch],
   );
 
-  return { templates, loading, error, refetch, saveTemplate };
+  const deleteTemplate = useCallback(
+    async (templateId: string) => {
+      if (!shopId) {
+        throw new Error('Boutique introuvable. Analysez d’abord votre site.');
+      }
+      await deleteTemplateApi(shopId, templateId);
+      await refetch();
+    },
+    [shopId, refetch],
+  );
+
+  return { templates, loading, error, refetch, saveTemplate, deleteTemplate };
 }

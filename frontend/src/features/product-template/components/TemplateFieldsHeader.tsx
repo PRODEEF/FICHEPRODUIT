@@ -17,7 +17,7 @@ export function TemplateFieldsHeader({
     <div className="product-templates-fields-header">
       <h3 className="analyses-section-title">Champs</h3>
       <div className="product-templates-fields-header-actions">
-        {showRefine && onRefine ? (
+        {/* {showRefine && onRefine ? (
           <button
             type="button"
             className="product-sheet-analyze-btn"
@@ -26,7 +26,7 @@ export function TemplateFieldsHeader({
           >
             {refiningAi ? 'IA…' : 'Affiner avec l’IA'}
           </button>
-        ) : null}
+        ) : null} */}
         <button type="button" className="product-sheet-analyze-btn" onClick={onAddField}>
           Ajouter un champ
         </button>

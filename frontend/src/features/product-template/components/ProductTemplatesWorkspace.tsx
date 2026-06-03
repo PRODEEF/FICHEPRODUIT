@@ -38,8 +38,13 @@ export function ProductTemplatesWorkspace({
   const shopId = shop?.id;
   const shopReady = Boolean(shopId);
 
-  const { templates, loading: templatesLoading, error: templatesError, saveTemplate } =
-    useProductTemplates(shopId);
+  const {
+    templates,
+    loading: templatesLoading,
+    error: templatesError,
+    saveTemplate,
+    deleteTemplate,
+  } = useProductTemplates(shopId);
 
   const urlAnalysis = useProductPageAnalysis(shopId, profile?.website_url);
   const { refiningAi, clearAiRefineHint, refineRows } = useRefineTemplateFields(shopId);
@@ -76,6 +81,15 @@ export function ProductTemplatesWorkspace({
     (draft !== null
       ? draft.fieldRows.length === 0 || draft.fieldRows.some((r) => !r.name.trim())
       : fieldRows.length === 0 || fieldRows.some((r) => !r.name.trim()));
+
+  const handleDeleteTemplate = async (t: ProductTemplate) => {
+    setActionError(null);
+    await deleteTemplate(t.id);
+    if (view.kind === 'edit' && view.templateId === t.id) {
+      setView({ kind: 'list' });
+      onEditModeChange?.(false);
+    }
+  };
 
   const openEdit = (t: ProductTemplate) => {
     setActionError(null);
@@ -276,7 +290,11 @@ export function ProductTemplatesWorkspace({
             </button>
           </div>
         ) : (
-          <ProductTemplatesList templates={templates} onEdit={openEdit} />
+          <ProductTemplatesList
+            templates={templates}
+            onEdit={openEdit}
+            onDelete={handleDeleteTemplate}
+          />
         )}
       </div>
 

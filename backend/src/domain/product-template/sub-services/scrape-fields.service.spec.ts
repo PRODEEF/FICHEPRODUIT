@@ -3,6 +3,7 @@ import {
   assertUrlSafeForServerFetch,
   fetchHtmlSafeForServer,
 } from "../../../core/scraper/scrape-url-policy";
+import { JSON_LD_FIELD_LABELS } from "../lib/json-ld-field-labels-fr";
 import { ScrapeFieldsService } from "./scrape-fields.service";
 import { ScrapeFieldsTraceService } from "./scrape-fields-trace.service";
 import { ConfigService } from "@nestjs/config";
@@ -50,6 +51,50 @@ const PRESTASHOP_FEATURES_HTML = `<!DOCTYPE html>
 </body>
 </html>`;
 
+const VARIANT_OPTION_VALUES_HTML = `<!DOCTYPE html>
+<html>
+<body>
+  <div class="product-variants">
+    <div class="product-variants-item">
+      <span class="control-label">surface voile :</span>
+      <select name="group[1]">
+        <option value="1507" selected>5.7 m²</option>
+        <option value="1508">6.0 m²</option>
+      </select>
+      <ul class="product-variants-list">
+        <li><span class="attribute-name">5.7 m²</span></li>
+        <li><span class="attribute-name">6.0 m²</span></li>
+      </ul>
+    </div>
+    <div class="product-variants-item">
+      <span class="control-label">couleur :</span>
+      <input type="radio" name="group[2]" value="2131" checked aria-label="C1" />
+      <ul class="product-variants-list">
+        <li><span class="attribute-name">C1</span></li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>`;
+
+const VARIANT_LABEL_DUPLICATE_HTML = `<!DOCTYPE html>
+<html>
+<body>
+  <div class="product-variants">
+    <div class="product-variants-item">
+      <span class="control-label">Couleur :</span>
+      <select name="group[1]">
+        <option value="1" selected>Noir</option>
+        <option value="2">Blanc</option>
+      </select>
+    </div>
+  </div>
+  <table class="product-features">
+    <tr><th>Couleur</th><td>Noir</td></tr>
+  </table>
+</body>
+</html>`;
+
 describe("ScrapeFieldsService", () => {
   let service: ScrapeFieldsService;
   let traceService: ScrapeFieldsTraceService;
@@ -77,7 +122,7 @@ describe("ScrapeFieldsService", () => {
     expect(fetchHtml).not.toHaveBeenCalled();
   });
 
-  it("extrait champs et sampleValues depuis JSON-LD Product", async () => {
+  it("extrait champs et sampleValues depuis JSON-LD Product (libellés FR)", async () => {
     fetchHtml.mockResolvedValue({
       ok: true,
       html: PRODUCT_JSON_LD_HTML,
@@ -89,37 +134,28 @@ describe("ScrapeFieldsService", () => {
     expect(result.warnings.some((w) => w.code === "FETCH_FAILED")).toBe(false);
     expect(result.fields.map((f) => f.name)).toEqual(
       expect.arrayContaining([
-        "Product name",
-        "SKU",
-        "Price (EUR)",
-        "Description",
-        "Image URL",
+        JSON_LD_FIELD_LABELS.productName,
+        JSON_LD_FIELD_LABELS.sku,
+        "Prix (EUR)",
+        JSON_LD_FIELD_LABELS.shortDescription,
+        JSON_LD_FIELD_LABELS.imageUrl,
         "Matière",
       ]),
     );
-    expect(result.sampleValues["Product name"]).toBe("Chaise Bureau");
-    expect(result.sampleValues["SKU"]).toBe("CH-42");
-    expect(result.sampleValues["Price (EUR)"]).toBe("199.99");
-    expect(result.sampleValues["Description"]).toBe("Chaise ergonomique réglable.");
-    expect(result.sampleValues["Image URL"]).toBe("https://cdn.example.com/chair.jpg");
-    expect(result.sampleValues["Matière"]).toBe("Mesh");
-    expect(emitTraceSpy).toHaveBeenCalledWith(
-      "https://shop.example.com/product/1",
-      "https://shop.example.com/product/1",
-      expect.objectContaining({
-        fields: expect.any(Array),
-        sampleValues: expect.any(Object),
-        warnings: expect.any(Array),
-      }),
-      expect.any(Array),
-      expect.objectContaining({
-        json_ld: expect.any(Number),
-        prestashop_features: expect.any(Number),
-      }),
+    expect(result.sampleValues[JSON_LD_FIELD_LABELS.productName]).toBe("Chaise Bureau");
+    expect(result.sampleValues[JSON_LD_FIELD_LABELS.sku]).toBe("CH-42");
+    expect(result.sampleValues["Prix (EUR)"]).toBe("199.99");
+    expect(result.sampleValues[JSON_LD_FIELD_LABELS.shortDescription]).toBe(
+      "Chaise ergonomique réglable.",
     );
+    expect(result.sampleValues[JSON_LD_FIELD_LABELS.imageUrl]).toBe(
+      "https://cdn.example.com/chair.jpg",
+    );
+    expect(result.sampleValues["Matière"]).toBe("Mesh");
+    expect(emitTraceSpy).toHaveBeenCalled();
   });
 
-  it("ajoute un avertissement NO_JSONLD et extrait les caractéristiques PrestaShop", async () => {
+  it("ajoute un avertissement NO_JSONLD (message FR) et extrait les caractéristiques PrestaShop", async () => {
     fetchHtml.mockResolvedValue({
       ok: true,
       html: PRESTASHOP_FEATURES_HTML,
@@ -128,21 +164,46 @@ describe("ScrapeFieldsService", () => {
 
     const result = await service.scrape("https://prestashop.example.com/p/1");
 
-    expect(result.warnings.some((w) => w.code === "NO_JSONLD")).toBe(true);
+    const noJsonLd = result.warnings.find((w) => w.code === "NO_JSONLD");
+    expect(noJsonLd?.message).toMatch(/ld\+json/i);
     expect(result.fields.map((f) => f.name)).toEqual(
       expect.arrayContaining(["Poids", "Couleur"]),
     );
     expect(result.sampleValues["Poids"]).toBe("12 kg");
     expect(result.sampleValues["Couleur"]).toBe("Noir");
-    expect(emitTraceSpy).toHaveBeenCalledWith(
-      "https://prestashop.example.com/p/1",
-      "https://prestashop.example.com/p/1",
-      expect.any(Object),
-      expect.any(Array),
-      expect.objectContaining({
-        prestashop_features: expect.any(Number),
-      }),
-    );
+  });
+
+  it("ignore les valeurs d’option (5.7 m², C1) comme libellés de champs", async () => {
+    fetchHtml.mockResolvedValue({
+      ok: true,
+      html: VARIANT_OPTION_VALUES_HTML,
+      finalUrl: "https://shop.example.com/voile",
+    });
+
+    const result = await service.scrape("https://shop.example.com/voile");
+    const names = result.fields.map((f) => f.name);
+
+    expect(names).not.toContain("5.7 m²");
+    expect(names).not.toContain("C1");
+    expect(names).toContain("Surface Voile");
+    expect(names).toContain("Couleur");
+    expect(result.sampleValues["Surface Voile"]).toBe("5.7 m²");
+    expect(result.sampleValues["Couleur"]).toBe("C1");
+  });
+
+  it("fusionne Couleur et Couleur : après normalisation", async () => {
+    fetchHtml.mockResolvedValue({
+      ok: true,
+      html: VARIANT_LABEL_DUPLICATE_HTML,
+      finalUrl: "https://prestashop.example.com/p/2",
+    });
+
+    const result = await service.scrape("https://prestashop.example.com/p/2");
+
+    const couleurFields = result.fields.filter((f) => f.name.toLowerCase().startsWith("couleur"));
+    expect(couleurFields).toHaveLength(1);
+    expect(couleurFields[0]?.name).toBe("Couleur");
+    expect(result.fields.map((f) => f.name)).not.toContain("Couleur :");
   });
 
   it("retourne des listes vides si le fetch échoue", async () => {

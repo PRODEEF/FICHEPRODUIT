@@ -218,17 +218,41 @@ body {
   font: inherit;
   font-weight: 600;
   font-size: 0.9rem;
+  line-height: 1.25;
   padding: 0.5rem 1rem;
   border-radius: 10px;
   border: 1px solid var(--border-color);
   background: var(--bg-white);
   color: var(--text-primary);
   cursor: pointer;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .product-sheet-analyze-btn:hover,
 .product-sheet-save-btn:hover {
   border-color: var(--purple-400);
+}
+
+.product-sheet-analyze-btn--danger {
+  color: #ef4444;
+}
+
+.product-sheet-analyze-btn--danger:hover {
+  border-color: rgb(239 68 68 / 0.35);
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.product-sheet-analyze-btn--icon-only {
+  padding-inline: 0.625rem;
+  align-self: stretch;
+}
+
+.product-templates-card-actions .product-sheet-analyze-btn {
+  min-height: calc(1rem + 0.9rem * 1.25 + 2px);
 }
 
 .product-sheet-save-btn {

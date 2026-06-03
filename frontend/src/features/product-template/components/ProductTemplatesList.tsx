@@ -1,16 +1,21 @@
 import { useState } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Trash2 } from 'lucide-react';
 import type { ProductTemplate } from '@types-api';
 
 import { productTemplateFieldTypeLabel } from '../lib/productTemplates';
+import { DeleteTemplateConfirmModal } from './DeleteTemplateConfirmModal';
 
 export interface ProductTemplatesListProps {
   templates: ProductTemplate[];
   onEdit: (template: ProductTemplate) => void;
+  onDelete: (template: ProductTemplate) => Promise<void>;
 }
 
-export function ProductTemplatesList({ templates, onEdit }: ProductTemplatesListProps) {
+export function ProductTemplatesList({ templates, onEdit, onDelete }: ProductTemplatesListProps) {
   const [expandedTemplateIds, setExpandedTemplateIds] = useState<Set<string>>(new Set());
+  const [templateToDelete, setTemplateToDelete] = useState<ProductTemplate | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const toggleTemplatePreview = (templateId: string): void => {
     setExpandedTemplateIds((prev) => {
@@ -24,11 +29,45 @@ export function ProductTemplatesList({ templates, onEdit }: ProductTemplatesList
     });
   };
 
+  const closeDeleteModal = (): void => {
+    if (deleting) return;
+    setTemplateToDelete(null);
+    setDeleteError(null);
+  };
+
+  const confirmDelete = async (): Promise<void> => {
+    if (!templateToDelete) return;
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      await onDelete(templateToDelete);
+      setExpandedTemplateIds((prev) => {
+        const next = new Set(prev);
+        next.delete(templateToDelete.id);
+        return next;
+      });
+      setTemplateToDelete(null);
+    } catch (e) {
+      setDeleteError(e instanceof Error ? e.message : 'Suppression impossible.');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   if (templates.length === 0) {
     return null;
   }
 
   return (
+    <>
+    <DeleteTemplateConfirmModal
+      open={templateToDelete !== null}
+      templateName={templateToDelete?.name ?? ''}
+      deleting={deleting}
+      error={deleteError}
+      onConfirm={() => void confirmDelete()}
+      onClose={closeDeleteModal}
+    />
     <ul className="product-templates-list">
       <p className="product-sheet-intro product-templates-new-fiche-intro">
         Retrouvez et gérez vos fiches produit types.
@@ -43,7 +82,7 @@ export function ProductTemplatesList({ templates, onEdit }: ProductTemplatesList
                 {new Date(t.updatedAt).toLocaleString()}
               </p>
             </div>
-            <div className="inline-flex items-center gap-1">
+            <div className="product-templates-card-actions inline-flex items-stretch gap-1">
               <button
                 type="button"
                 className="product-sheet-analyze-btn"
@@ -53,7 +92,7 @@ export function ProductTemplatesList({ templates, onEdit }: ProductTemplatesList
               </button>
               <button
                 type="button"
-                className="product-sheet-analyze-btn inline-flex items-center gap-1.5"
+                className="product-sheet-analyze-btn gap-1.5"
                 onClick={() => toggleTemplatePreview(t.id)}
                 aria-expanded={expandedTemplateIds.has(t.id)}
                 aria-controls={`template-preview-${t.id}`}
@@ -66,6 +105,18 @@ export function ProductTemplatesList({ templates, onEdit }: ProductTemplatesList
                   }`}
                   aria-hidden="true"
                 />
+              </button>
+              <button
+                type="button"
+                className="product-sheet-analyze-btn product-sheet-analyze-btn--danger product-sheet-analyze-btn--icon-only"
+                aria-label={`Supprimer la fiche ${t.name}`}
+                title="Supprimer la fiche"
+                onClick={() => {
+                  setDeleteError(null);
+                  setTemplateToDelete(t);
+                }}
+              >
+                <Trash2 size={16} aria-hidden="true" />
               </button>
             </div>
           </div>
@@ -101,5 +152,6 @@ export function ProductTemplatesList({ templates, onEdit }: ProductTemplatesList
         </li>
       ))}
     </ul>
+    </>
   );
 }

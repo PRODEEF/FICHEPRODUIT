@@ -90,7 +90,7 @@ describe("ProductTemplateService", () => {
   });
 
   it("refineWithAi exige l'accès au shop", async () => {
-    refineFields.refine.mockResolvedValue({ fields: [] });
+    refineFields.refine.mockResolvedValue({ fields: [], refinedWithAi: false });
 
     await service.refineWithAi(
       shopId,

@@ -50,8 +50,9 @@ export function useProductPageAnalysis(
     setScrapeNotes(null);
     try {
       const res = await scrapeFields(shopId, { url });
-      if (res.warnings.length > 0) {
-        setScrapeNotes(res.warnings.map((w) => `${w.code}: ${w.message}`).join(' · '));
+      const userWarnings = res.warnings.filter((w) => w.code !== "DUPLICATE_MERGED");
+      if (userWarnings.length > 0) {
+        setScrapeNotes(userWarnings.map((w) => `${w.code}: ${w.message}`).join(' · '));
       }
       const sampleValues =
         Object.keys(res.sampleValues).length > 0 ? res.sampleValues : {};

@@ -40,6 +40,8 @@ export class ScrapeFieldsResultDto extends createZodDto(scrapeFieldsResultSchema
 /** Résultat du raffinement des champs par l’IA */
 export const refineFieldsResultSchema = z.object({
   fields: z.array(productTemplateFieldResponseSchema).describe("Champs après raffinement"),
+  refinedWithAi: z.boolean().describe("True si le modèle a effectivement affiné les champs"),
+  message: z.string().optional().describe("Message informatif (succès, échec ou clé API absente)"),
 });
 
 export class RefineFieldsResultDto extends createZodDto(refineFieldsResultSchema) {}
