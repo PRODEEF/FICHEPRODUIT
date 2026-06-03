@@ -14,6 +14,8 @@ interface ShopInfoSectionProps {
   shop: Shop;
   onSavePartial: (patch: PatchMyShopBody) => Promise<void>;
   saving?: boolean;
+  /** Masque la ligne URL lorsque la zone d’analyse hero est affichée. */
+  hideUrlRow?: boolean;
 }
 
 type RowKey = 'name' | 'url' | 'cms' | 'sector';
@@ -45,7 +47,12 @@ function isLegacySector(value: string): boolean {
   return trimmed.length > 0 && !isShopSectorLabel(trimmed);
 }
 
-export function ShopInfoSection({ shop, onSavePartial, saving = false }: ShopInfoSectionProps) {
+export function ShopInfoSection({
+  shop,
+  onSavePartial,
+  saving = false,
+  hideUrlRow = false,
+}: ShopInfoSectionProps) {
   const idBase = useId();
   const [editing, setEditing] = useState<RowKey | null>(null);
   const [draft, setDraft] = useState<Buffers | null>(null);
@@ -190,18 +197,20 @@ export function ShopInfoSection({ shop, onSavePartial, saving = false }: ShopInf
             className="w-full max-w-md rounded-md border border-gray-200 px-2 py-1 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-400"
           />,
         )}
-        {row(
-          'url',
-          'URL',
-          shop.url.trim() ? shop.url : <span className="text-gray-500">Non renseignée</span>,
-          <input
-            id={`${idBase}-url`}
-            type="url"
-            value={buffers.url}
-            onChange={(e) => void setBuffersPatch({ url: e.target.value })}
-            className="w-full max-w-md rounded-md border border-gray-200 px-2 py-1 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-400"
-          />,
-        )}
+        {hideUrlRow
+          ? null
+          : row(
+              'url',
+              'URL',
+              shop.url.trim() ? shop.url : <span className="text-gray-500">Non renseignée</span>,
+              <input
+                id={`${idBase}-url`}
+                type="url"
+                value={buffers.url}
+                onChange={(e) => void setBuffersPatch({ url: e.target.value })}
+                className="w-full max-w-md rounded-md border border-gray-200 px-2 py-1 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-400"
+              />,
+            )}
         {row(
           'cms',
           'CMS',

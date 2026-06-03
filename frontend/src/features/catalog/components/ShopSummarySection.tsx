@@ -1,6 +1,7 @@
 import type { Shop } from '@types-api';
 import { TextLink } from '@shared/ui/TextLink';
 
+import { needsShopSetup } from '../../store/lib/shop-setup-status';
 import { BrandChips } from './BrandChips';
 import { formatCmsLabel } from '../lib/productUtils';
 
@@ -22,7 +23,7 @@ export interface ShopSummarySectionProps {
  * Résumé du site analysé et marques (boutique enregistrée ou dérivées des exemples catalogue).
  */
 export function ShopSummarySection({ shop, activeBrand, onBrandClick }: ShopSummarySectionProps) {
-  const emptyShop = shop.brands.length === 0 && shop.sector === null && shop.url.trim() === '';
+  const emptyShop = needsShopSetup(shop);
   const topBrands = getTopBrands(shop.brands, TOP_BRANDS_CHIP_LIMIT);
   const urlLabel = shop.url.trim() ? shop.url : 'Url non fournie';
 

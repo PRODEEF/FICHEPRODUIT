@@ -1,3 +1,7 @@
+import { Loader2 } from 'lucide-react';
+
+import { cn } from '@shared/lib/cn';
+
 export interface UrlSearchFormProps {
   siteInput: string;
   setSiteInput: (value: string) => void;
@@ -27,7 +31,10 @@ export function UrlSearchForm({
         }}
       >
         <input
-          className="w-full rounded-2xl border border-soft bg-bg-white px-6 py-[18px] pr-[140px] font-sans text-base text-text-primary outline-none transition focus:border-purple-400 focus:shadow-[0_0_0_3px_rgba(139,92,246,0.12)] disabled:cursor-not-allowed disabled:bg-bg-main disabled:opacity-85 aria-[invalid=true]:border-red-500 aria-[invalid=true]:shadow-[0_0_0_3px_rgba(239,68,68,0.15)]"
+          className={cn(
+            'w-full rounded-2xl border border-soft bg-bg-white px-6 py-[18px] font-sans text-base text-text-primary outline-none transition focus:border-purple-400 focus:shadow-[0_0_0_3px_rgba(139,92,246,0.12)] disabled:cursor-not-allowed disabled:bg-bg-main disabled:opacity-85 aria-[invalid=true]:border-red-500 aria-[invalid=true]:shadow-[0_0_0_3px_rgba(239,68,68,0.15)]',
+            suggestionsLoading ? 'pr-[220px]' : 'pr-[140px]',
+          )}
           placeholder="Indiquez l’adresse de votre site internet"
           value={siteInput}
           onChange={(e) => void setSiteInput(e.target.value)}
@@ -38,10 +45,24 @@ export function UrlSearchForm({
         />
         <button
           type="submit"
-          className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-xl border-0 bg-gradient-to-br from-purple-600 to-purple-500 px-6 py-3 font-sans text-base font-bold text-white disabled:cursor-not-allowed disabled:opacity-65"
+          className={cn(
+            'absolute right-1.5 top-1/2 -translate-y-1/2 rounded-xl border-0 bg-gradient-to-br from-purple-600 to-purple-500 py-3 font-sans text-base font-bold text-white disabled:cursor-not-allowed disabled:opacity-65',
+            suggestionsLoading ? 'px-4' : 'px-6',
+          )}
           disabled={suggestionsLoading}
+          aria-busy={suggestionsLoading}
         >
-          {suggestionsLoading ? '…' : 'Analyser'}
+          {suggestionsLoading ? (
+            <span className="inline-flex items-center gap-2 whitespace-nowrap">
+              <Loader2
+                className="h-4 w-4 shrink-0 animate-spin motion-reduce:animate-none"
+                aria-hidden
+              />
+              Recherche en cours
+            </span>
+          ) : (
+            'Analyser'
+          )}
         </button>
       </form>
 
