@@ -47,9 +47,11 @@ export function EditTemplateView({
       </label>
 
       <TemplateFieldsHeader
-        refiningAi={refiningAi}
-        refineDisabled={refineDisabled}
-        onRefine={onRefine}
+        onRefine={{
+          onClick: onRefine,
+          loading: refiningAi,
+          disabled: refineDisabled,
+        }}
         onAddField={() =>
           void onFieldRowsChange([
             ...fieldRows,

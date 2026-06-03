@@ -13,14 +13,11 @@ import {
   buildSubCategoryOptions,
   buildYearOptions,
 } from '../lib/catalogFilterOptions';
-import { uniqueSorted } from '../lib/productUtils';
 
 interface UseProductFiltersResult {
   filters: ProductFilter;
   setFilter: <K extends keyof ProductFilter>(key: K, value: ProductFilter[K]) => void;
-  /** Remet tous les critères à leur valeur par défaut (secteur = secteur boutique). */
   resetFilters: () => void;
-  /** Vrai dès qu’au moins un critère diffère du défaut boutique. */
   hasActiveFilters: boolean;
   filteredProducts: CatalogProduct[];
   brandOptions: string[];
@@ -65,29 +62,32 @@ export function useProductFilters(
     });
   }, [defaultSector]);
 
-  const setFilter = useCallback(<K extends keyof ProductFilter>(key: K, value: ProductFilter[K]) => {
-    setFilters((prev) => {
-      const next = { ...prev, [key]: value };
+  const setFilter = useCallback(
+    <K extends keyof ProductFilter>(key: K, value: ProductFilter[K]) => {
+      setFilters((prev) => {
+        const next = { ...prev, [key]: value };
 
-      if (key === 'sector' && value !== prev.sector) {
-        next.category = '';
-        next.subCategory = '';
-        next.brand = '';
-        next.year = '';
-      } else if (key === 'category' && value !== prev.category) {
-        next.subCategory = '';
-        next.brand = '';
-        next.year = '';
-      } else if (key === 'subCategory' && value !== prev.subCategory) {
-        next.brand = '';
-        next.year = '';
-      } else if (key === 'brand' && value !== prev.brand) {
-        next.year = '';
-      }
+        if (key === 'sector' && value !== prev.sector) {
+          next.category = '';
+          next.subCategory = '';
+          next.brand = '';
+          next.year = '';
+        } else if (key === 'category' && value !== prev.category) {
+          next.subCategory = '';
+          next.brand = '';
+          next.year = '';
+        } else if (key === 'subCategory' && value !== prev.subCategory) {
+          next.brand = '';
+          next.year = '';
+        } else if (key === 'brand' && value !== prev.brand) {
+          next.year = '';
+        }
 
-      return next;
-    });
-  }, []);
+        return next;
+      });
+    },
+    [],
+  );
 
   const resetFilters = useCallback(() => {
     setFilters(createCatalogDefaultFilters(defaultSector));
@@ -189,11 +189,11 @@ export function useProductFilters(
     const sectorDiffersFromDefault = filters.sector !== defaultSector;
     return Boolean(
       filters.search.trim() ||
-        sectorDiffersFromDefault ||
-        filters.category ||
-        filters.subCategory ||
-        filters.brand ||
-        filters.year,
+      sectorDiffersFromDefault ||
+      filters.category ||
+      filters.subCategory ||
+      filters.brand ||
+      filters.year,
     );
   }, [filters, defaultSector]);
 

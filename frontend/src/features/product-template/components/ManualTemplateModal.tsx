@@ -50,9 +50,6 @@ export function ManualTemplateModal({
           />
         </label>
         <TemplateFieldsHeader
-          refiningAi={false}
-          refineDisabled
-          showRefine={false}
           onAddField={() =>
             void onDraftChange({
               ...draft,
