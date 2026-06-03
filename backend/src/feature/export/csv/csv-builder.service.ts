@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import type { MappedProduct } from "../types/export.types";
-import type { ProductTemplateField } from "@/domain/product-template/types/product-template.types";
+
+import type { ProductTemplateField } from "../../../domain/product-template/types/product-template.types";
 
 /**
  * Construction d’un document CSV RFC‑4180 simplifié : guillemets si nécessaire, échappement des `"`.

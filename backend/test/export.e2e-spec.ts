@@ -2,16 +2,17 @@ import { CanActivate, ExecutionContext, Injectable } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 import { FastifyAdapter, NestFastifyApplication } from "@nestjs/platform-fastify";
 import { ConfigModule } from "@nestjs/config";
+
 import { ExportModule } from "../src/feature/export/export.module";
 import { JwtGuard } from "../src/core/auth/guards/jwt.guard";
 import { OptionalJwtGuard } from "../src/core/auth/guards/optional-jwt.guard";
 import { AiContentService } from "../src/feature/export/mapper/ai-content.service";
 import { SupabaseModule } from "../src/core/supabase/supabase.module";
 import configuration from "../src/core/config/configuration";
-import { CatalogService } from "@/domain/catalog/catalog.service";
-import { ProductTemplateService } from "@/domain/product-template/product-template.service";
-import type { CatalogProduct } from "@/domain/catalog/types/catalog.types";
-import type { ProductTemplate } from "@/domain/product-template/types/product-template.types";
+import { CatalogService } from "../src/domain/catalog/catalog.service";
+import { ProductTemplateService } from "../src/domain/product-template/product-template.service";
+import type { CatalogProduct } from "../src/domain/catalog/types/catalog.types";
+import type { ProductTemplate } from "../src/domain/product-template/types/product-template.types";
 
 /** Remplace JwtGuard pour les e2e : injecte un utilisateur sans appeler Supabase. */
 @Injectable()

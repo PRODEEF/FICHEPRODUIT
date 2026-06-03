@@ -1,13 +1,14 @@
 import { NotFoundException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
+
 import { ExportService } from "./export.service";
-import { CatalogService } from "@/domain/catalog/catalog.service";
-import { ProductTemplateService } from "@/domain/product-template/product-template.service";
+import { CatalogService } from "../../domain/catalog/catalog.service";
+import { ProductTemplateService } from "../../domain/product-template/product-template.service";
 import { FieldMapperService } from "./mapper/field-mapper.service";
 import { AiContentService } from "./mapper/ai-content.service";
 import { CsvBuilderService } from "./csv/csv-builder.service";
-import type { CatalogProduct } from "@/domain/catalog/types/catalog.types";
-import type { ProductTemplate } from "@/domain/product-template/types/product-template.types";
+import type { CatalogProduct } from "../../domain/catalog/types/catalog.types";
+import type { ProductTemplate } from "../../domain/product-template/types/product-template.types";
 import type { AuthenticatedUser } from "../../core/auth/types/jwt-payload.types";
 
 const user: AuthenticatedUser = {

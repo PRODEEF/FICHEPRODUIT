@@ -1,6 +1,6 @@
 import { CsvBuilderService } from "./csv-builder.service";
 import type { MappedProduct } from "../types/export.types";
-import type { ProductTemplateField } from "@/domain/product-template/types/product-template.types";
+import type { ProductTemplateField } from "../../../domain/product-template/types/product-template.types";
 
 const field = (
   name: string,
