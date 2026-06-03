@@ -34,10 +34,10 @@ export class ExportService {
       req.shopId,
       user,
     );
-    if (!template) throw new NotFoundException("Template not found");
+    if (!template) throw new NotFoundException("Gabarit introuvable");
 
     const products = await this.catalogService.findByIds(req.productIds);
-    if (products.length === 0) throw new NotFoundException("No products found");
+    if (products.length === 0) throw new NotFoundException("Aucun produit trouvé");
 
     const mappedProducts: MappedProduct[] = await Promise.all(
       products.map((product) => this.mapProduct(product, template.fields)),

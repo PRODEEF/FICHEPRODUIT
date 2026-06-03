@@ -1,4 +1,4 @@
-import { CanActivate, ExecutionContext, Injectable } from "@nestjs/common";
+import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from "@nestjs/common";
 import { FastifyRequest } from "fastify";
 import { extractBearerToken } from "../extract-bearer-token";
 import { SupabaseService } from "../../supabase/supabase.service";
@@ -15,7 +15,7 @@ export class OptionalJwtGuard implements CanActivate {
     if (!token) return true;
 
     const user = await this.supabase.getUser(token);
-    if (!user) return true;
+    if (!user) throw new UnauthorizedException("Token invalide ou expiré");
 
     req.user = { id: user.id, email: user.email ?? "", accessToken: token };
     return true;

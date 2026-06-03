@@ -5,7 +5,7 @@ export const HEURISTIC_RULES: {
 }[] = [
   {
     patterns: [/kitesurf/i, /kite surf/i, /kiteboard/i, /wing\s*foil/i, /wakestyle/i, /\bkite\b/i],
-    categories: ["Kitesurf"],
+    categories: ["Glisse"],
     verticalSummary: "des produits liés au kitesurf",
   },
   {

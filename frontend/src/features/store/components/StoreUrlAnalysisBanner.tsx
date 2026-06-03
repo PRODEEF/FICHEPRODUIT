@@ -7,17 +7,37 @@ import { useSiteAnalysis } from '@shared/hooks/useSiteAnalysis';
 import { useUrlSearch } from '@shared/hooks/useUrlSearch';
 import { Button } from '@shared/ui';
 
+export type StoreUrlAnalysisBannerVariant = 'onboarding' | 'prompt';
+
+const VARIANT_COPY: Record<
+  StoreUrlAnalysisBannerVariant,
+  { title: string; description: string }
+> = {
+  onboarding: {
+    title: 'Commencez par votre site',
+    description:
+      'Indiquez l’URL de votre boutique pour détecter le CMS, les marques et les catégories.',
+  },
+  prompt: {
+    title: 'URL mise à jour',
+    description:
+      'Lancez une analyse pour détecter le CMS, les marques et les catégories de votre boutique.',
+  },
+};
+
 interface StoreUrlAnalysisBannerProps {
   url: string;
+  variant?: StoreUrlAnalysisBannerVariant;
   onDismiss: () => void;
   onAnalysisSuccess: () => void;
 }
 
 /**
- * Invite à lancer une analyse après modification de l’URL du magasin.
+ * Zone mise en avant pour saisir l’URL et lancer une analyse du magasin.
  */
 export function StoreUrlAnalysisBanner({
   url,
+  variant = 'onboarding',
   onDismiss,
   onAnalysisSuccess,
 }: StoreUrlAnalysisBannerProps) {
@@ -26,10 +46,12 @@ export function StoreUrlAnalysisBanner({
   });
 
   const search = useUrlSearch({ onSubmit: runAnalysis });
+  const { setInput } = search;
+  const copy = VARIANT_COPY[variant];
 
   useEffect(() => {
-    search.setInput(url);
-  }, [url, search.setInput]);
+    setInput(url);
+  }, [url, setInput]);
 
   return (
     <>
@@ -43,11 +65,9 @@ export function StoreUrlAnalysisBanner({
         aria-labelledby="store-url-analysis-title"
       >
         <h2 id="store-url-analysis-title" className="mb-1 text-sm font-semibold text-text-primary">
-          URL mise à jour
+          {copy.title}
         </h2>
-        <p className="mb-4 text-sm leading-6 text-text-secondary">
-          Lancez une analyse pour détecter le CMS, les marques et les catégories de votre boutique.
-        </p>
+        <p className="mb-4 text-sm leading-6 text-text-secondary">{copy.description}</p>
 
         <UrlSearchForm
           siteInput={search.input}

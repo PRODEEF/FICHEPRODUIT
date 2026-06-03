@@ -258,7 +258,20 @@ export async function scrapeFields(
       }))
     : [];
 
-  return { fields, warnings };
+  const sampleValues = normalizeSampleValues(o['sampleValues']);
+
+  return { fields, sampleValues, warnings };
+}
+
+function normalizeSampleValues(raw: unknown): Record<string, string> {
+  if (!raw || typeof raw !== 'object') return {};
+  const out: Record<string, string> = {};
+  for (const [key, value] of Object.entries(raw as Record<string, unknown>)) {
+    if (typeof key === 'string' && typeof value === 'string' && key.trim()) {
+      out[key] = value;
+    }
+  }
+  return out;
 }
 
 /**

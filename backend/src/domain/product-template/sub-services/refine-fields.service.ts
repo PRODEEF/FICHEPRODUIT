@@ -36,6 +36,8 @@ export class RefineFieldsService {
     if (!key) {
       return {
         fields: normalized,
+        refinedWithAi: false,
+        message: "Clé OpenAI non configurée : champs inchangés.",
       };
     }
 
@@ -43,11 +45,25 @@ export class RefineFieldsService {
     if (!fromModel) {
       return {
         fields: normalized,
+        refinedWithAi: false,
+        message: "Affinage IA indisponible : champs inchangés.",
+      };
+    }
+
+    if (fromModel.length !== normalized.length) {
+      return {
+        fields: normalized,
+        refinedWithAi: false,
+        message: "Réponse IA invalide (nombre de champs) : champs inchangés.",
       };
     }
 
     const merged = this.mergeRefinement(normalized, fromModel);
-    return { fields: merged };
+    return {
+      fields: merged,
+      refinedWithAi: true,
+      message: "Champs affinés par l’IA.",
+    };
   }
 
   private mergeRefinement(
@@ -80,10 +96,10 @@ export class RefineFieldsService {
 
     const sourceHint =
       source === "csv_import"
-        ? "CSV import (e.g. PrestaShop export). Column headers may include asterisks or French labels."
+        ? "Import CSV (ex. export PrestaShop). En-têtes possibles avec astérisques ou libellés français."
         : source === "product_page"
-          ? "Fields inferred from scraping an HTML product page (labels may be verbose)."
-          : "Manually edited field list in the app.";
+          ? "Champs détectés par analyse HTML d’une fiche produit."
+          : "Liste de champs saisie manuellement dans l’application.";
 
     const userPayload = {
       source,
@@ -105,16 +121,17 @@ export class RefineFieldsService {
         messages: [
           {
             role: "system",
-            content: `You improve ecommerce product template field definitions. Reply with JSON only: {"fields":[...]}.
+            content: `Tu améliores des définitions de champs pour une fiche produit e-commerce. Réponds uniquement en JSON : {"fields":[...]}.
 
-Each item must be: {"name":"string","type":"one of ${TYPE_ENUM_FOR_PROMPT}","required":boolean}.
+Chaque élément : {"name":"string","type":"un parmi ${TYPE_ENUM_FOR_PROMPT}","required":boolean}.
 
-Rules:
-- Keep the SAME number of fields and SAME order as the input.
-- Types: use "rich_text" for HTML; "long_text" for long plain text; "price" for money amounts; "percentage" for discount %; "weight" for mass; "reference" for SKU/EAN/barcode; "image" for image URL/path; "url" for generic links; "boolean" for 0/1; "date" / "datetime" as appropriate; "color" / "size" for variants; "country" / "currency" when clearly ISO country or currency code; "enum" / "multi_enum" for closed lists or multi-value tags; "number" for other counts/IDs; "text" for short labels; "json" only for truly structured blobs. Prefer "reference" over "text" for SKUs/EANs.
-- You may normalize names slightly: trim, remove trailing "*" from required markers, fix spacing, keep them recognizable for merchants (French UI is OK).
-- Set required true only when clearly mandatory (asterisk in original name, or critical identifier like main product name/SKU when obvious).
-- Do not invent new columns or drop any.`,
+Règles :
+- Conserver le MÊME nombre de champs et le MÊME ordre que l’entrée.
+- Libellés en français, reconnaissables pour un marchand.
+- Ne pas fusionner ni rapprocher des champs distincts (ex. « Description courte » et « Détails produit (description) » restent séparés).
+- Types : "rich_text" pour HTML ; "long_text" pour texte long sans HTML ; "price" pour montants ; "reference" pour SKU/EAN ; "image" pour URL image ; "color" / "size" pour variantes ; "enum" pour listes fermées ; "text" pour libellés courts. Utiliser sampleValues pour choisir le type quand c’est utile.
+- required true seulement si clairement obligatoire (astérisque dans le nom d’origine, ou identifiant critique évident).
+- Ne pas inventer de colonnes ni en supprimer.`,
           },
           {
             role: "user",

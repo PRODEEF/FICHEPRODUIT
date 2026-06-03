@@ -31,7 +31,12 @@ export class AnalysisPipelineService {
 
   private async run(analysis: Analysis, accessToken: string): Promise<void> {
     try {
-      await this.analysisRepo.updateStatus(analysis.id, { status: "running" }, accessToken);
+      await this.analysisRepo.updateStatus(
+        analysis.id,
+        { status: "running" },
+        accessToken,
+        analysis.sessionId,
+      );
 
       // 1. Fetch HTML
       const scrapeResult = await this.scraper.fetchPage(analysis.url);
@@ -44,6 +49,7 @@ export class AnalysisPipelineService {
             errorMessage: scrapeResult.error,
           },
           accessToken,
+          analysis.sessionId,
         );
         return;
       }
@@ -82,6 +88,7 @@ export class AnalysisPipelineService {
           shopId,
         },
         accessToken,
+        analysis.sessionId,
       );
     } catch (err) {
       this.logger.error(`Pipeline failed for ${analysis.id}`, err);
@@ -94,6 +101,7 @@ export class AnalysisPipelineService {
             errorMessage: err instanceof Error ? err.message : "Erreur interne",
           },
           accessToken,
+          analysis.sessionId,
         )
         .catch(() => undefined); // ne pas crasher si le update échoue aussi
     }

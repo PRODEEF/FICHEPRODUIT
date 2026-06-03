@@ -26,7 +26,7 @@ export class CatalogRepository implements ICatalogRepository {
 
     if (error) {
       this.logger.error(`findById(${id}) failed`, error);
-      throw new InternalServerErrorException("Failed to fetch catalog product");
+      throw new InternalServerErrorException("Échec de la récupération du produit catalogue");
     }
 
     return data ? this.toEntity(data as CatalogProductRow) : null;
@@ -43,7 +43,7 @@ export class CatalogRepository implements ICatalogRepository {
 
     if (error) {
       this.logger.error(`findByIds(${uniqueIds.length} ids) failed`, error);
-      throw new InternalServerErrorException("Failed to fetch catalog products");
+      throw new InternalServerErrorException("Échec de la récupération des produits catalogue");
     }
 
     const rows = (data ?? []) as CatalogProductRow[];
@@ -58,16 +58,18 @@ export class CatalogRepository implements ICatalogRepository {
 
     if (brands.length > 0) {
       this.logger.log(
-        `[catalog.search] merged-by-brand path brands=${JSON.stringify(brands)} limit=${limit} otherCriteria=${JSON.stringify({
-          sector: criteria.sector,
-          categories: criteria.categories,
-          subcategories: criteria.subcategories,
-          minYear: criteria.minYear,
-          maxYear: criteria.maxYear,
-          minPrice: criteria.minPrice,
-          maxPrice: criteria.maxPrice,
-          attributes: criteria.attributes,
-        })}`,
+        `[catalog.search] merged-by-brand path brands=${JSON.stringify(brands)} limit=${limit} otherCriteria=${JSON.stringify(
+          {
+            sector: criteria.sector,
+            categories: criteria.categories,
+            subcategories: criteria.subcategories,
+            minYear: criteria.minYear,
+            maxYear: criteria.maxYear,
+            minPrice: criteria.minPrice,
+            maxPrice: criteria.maxPrice,
+            attributes: criteria.attributes,
+          },
+        )}`,
       );
       return this.searchMergedByBrandIlike(brands, criteria, limit);
     }
@@ -77,7 +79,7 @@ export class CatalogRepository implements ICatalogRepository {
     const { data, error } = await query.limit(limit);
     if (error) {
       this.logger.error("search(criteria) failed", error);
-      throw new InternalServerErrorException("Failed to search catalog products");
+      throw new InternalServerErrorException("Échec de la recherche produits catalogue");
     }
 
     return ((data ?? []) as CatalogProductRow[]).map((row) => this.toEntity(row));
@@ -150,7 +152,7 @@ export class CatalogRepository implements ICatalogRepository {
         this.logger.error(
           `[catalog.search.brands] brand=${JSON.stringify(brand)} ilikePattern=${JSON.stringify(ilikePattern)} ${this.formatSupabaseError(error)}`,
         );
-        throw new InternalServerErrorException("Failed to search catalog products");
+        throw new InternalServerErrorException("Échec de la recherche produits catalogue");
       }
 
       const rows = (data ?? []) as CatalogProductRow[];
@@ -167,7 +169,9 @@ export class CatalogRepository implements ICatalogRepository {
       }
     }
 
-    this.logger.log(`[catalog.search.brands] done mergedUnique=${byId.size} returningSlice=${Math.min(byId.size, limit)}`);
+    this.logger.log(
+      `[catalog.search.brands] done mergedUnique=${byId.size} returningSlice=${Math.min(byId.size, limit)}`,
+    );
 
     return [...byId.values()].slice(0, limit).map((row) => this.toEntity(row));
   }
@@ -197,7 +201,9 @@ export class CatalogRepository implements ICatalogRepository {
     return [...new Set(out)];
   }
 
-  private normalizeAttributes(attributes: Record<string, string> | undefined): Record<string, string> {
+  private normalizeAttributes(
+    attributes: Record<string, string> | undefined,
+  ): Record<string, string> {
     if (!attributes || typeof attributes !== "object" || Array.isArray(attributes)) {
       return {};
     }
@@ -220,7 +226,12 @@ export class CatalogRepository implements ICatalogRepository {
     return value.replace(/[%_]/g, "\\$&");
   }
 
-  private formatSupabaseError(error: { message?: string; details?: string; hint?: string; code?: string }): string {
+  private formatSupabaseError(error: {
+    message?: string;
+    details?: string;
+    hint?: string;
+    code?: string;
+  }): string {
     return JSON.stringify({
       message: error.message,
       details: error.details,

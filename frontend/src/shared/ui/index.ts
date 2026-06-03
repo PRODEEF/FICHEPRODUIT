@@ -1,5 +1,6 @@
 export { Button } from './Button';
 export { InputField } from './InputField';
+export { SelectField } from './SelectField';
 export { Badge } from './Badge';
 export { Tag } from './Tag';
 export type { TagVariant } from './Tag';

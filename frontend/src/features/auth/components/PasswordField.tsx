@@ -1,4 +1,4 @@
-import { forwardRef, useState, type ChangeEvent, type FocusEvent } from 'react';
+import { useState, type ChangeEvent, type FocusEvent, type Ref } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 
 import { PasswordStrengthMeter } from './PasswordStrengthMeter';
@@ -25,26 +25,25 @@ export interface PasswordFieldProps {
   error?: string | null | undefined;
   /** Affiche l’indicateur de force (inscription, premier champ mot de passe). */
   showStrengthMeter?: boolean | undefined;
+  ref?: Ref<HTMLInputElement>;
 }
 
-export const PasswordField = forwardRef<HTMLInputElement, PasswordFieldProps>(function PasswordField(
-  {
-    id,
-    label,
-    name,
-    autoComplete,
-    required,
-    minLength,
-    placeholder,
-    value,
-    onChange,
-    onBlur,
-    disabled,
-    error,
-    showStrengthMeter = false,
-  },
+export function PasswordField({
   ref,
-) {
+  id,
+  label,
+  name,
+  autoComplete,
+  required,
+  minLength,
+  placeholder,
+  value,
+  onChange,
+  onBlur,
+  disabled,
+  error,
+  showStrengthMeter = false,
+}: PasswordFieldProps) {
   const [visible, setVisible] = useState(false);
   const errorId = `${id}-error`;
   const strengthId = `${id}-strength`;
@@ -97,6 +96,4 @@ export const PasswordField = forwardRef<HTMLInputElement, PasswordFieldProps>(fu
       ) : null}
     </div>
   );
-});
-
-PasswordField.displayName = 'PasswordField';
+}

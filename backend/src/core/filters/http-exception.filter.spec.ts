@@ -88,7 +88,7 @@ describe("AllHttpExceptionsFilter", () => {
 
     const body = mockReply.send.mock.calls[0][0] as Record<string, unknown>;
     expect(body.statusCode).toBe(500);
-    expect(body.message).toBe("Internal server error");
+    expect(body.message).toBe("Erreur interne du serveur");
     expect(body.message).not.toContain("leaked");
   });
 

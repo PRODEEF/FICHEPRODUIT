@@ -11,7 +11,10 @@ export const shopResponseSchema = z.object({
   sector: z.string().nullable().describe("Secteur métier"),
   brands: z.array(z.string()).describe("Marques associées"),
   categories: z.array(z.string()).describe("Catégories détectées ou saisies"),
-  ownerId: z.uuid().nullable().describe("Propriétaire (null pour une boutique invitée avant inscription)"),
+  ownerId: z
+    .uuid()
+    .nullable()
+    .describe("Propriétaire (null pour une boutique invitée avant inscription)"),
   createdAt: z.string().describe("Création (ISO 8601)"),
   updatedAt: z.string().describe("Dernière mise à jour (ISO 8601)"),
 });

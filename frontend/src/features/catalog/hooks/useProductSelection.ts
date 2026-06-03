@@ -26,12 +26,11 @@ export function useProductSelection(
     queueMicrotask(() => void setSelectedIds(new Set()));
   }, [
     filters.search,
-    filters.brand,
+    filters.sector,
     filters.category,
     filters.subCategory,
+    filters.brand,
     filters.year,
-    filters.priceMin,
-    filters.priceMax,
   ]);
 
   useEffect(() => {

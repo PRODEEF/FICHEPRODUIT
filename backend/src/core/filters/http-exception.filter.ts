@@ -91,7 +91,7 @@ export class AllHttpExceptionsFilter implements ExceptionFilter {
     // Erreurs non-NestJS (Supabase SDK, réseau, AWS Bedrock, etc.)
     const isProduction = process.env["NODE_ENV"] === "production";
     const message = isProduction
-      ? "Internal server error"
+      ? "Erreur interne du serveur"
       : exception instanceof Error
         ? exception.message
         : String(exception);

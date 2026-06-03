@@ -8,16 +8,46 @@ type ReplyWithCookies = FastifyReply & {
 
 export const GUEST_SESSION_COOKIE_NAME = "ficheproduct_guest_session";
 
-/**
- * Lit l’identifiant de session invité : cookie httpOnly en priorité, puis en-tête `x-session-id` (tests / outils).
- */
-export function readGuestSessionId(req: FastifyRequest): string | undefined {
+/** Cookie httpOnly uniquement (pas d’en-tête `x-session-id`). */
+export function readGuestSessionCookie(req: FastifyRequest): string | undefined {
   const fromCookie = (req as RequestWithCookies).cookies?.[GUEST_SESSION_COOKIE_NAME];
   if (fromCookie?.trim()) return fromCookie.trim();
+  return undefined;
+}
+
+function readGuestSessionHeader(req: FastifyRequest): string | undefined {
   const h = req.headers["x-session-id"];
   if (typeof h === "string" && h.trim()) return h.trim();
   if (Array.isArray(h) && h[0]?.trim()) return h[0].trim();
   return undefined;
+}
+
+/**
+ * Lit l’identifiant de session invité : cookie httpOnly en priorité, puis en-tête `x-session-id`.
+ */
+export function readGuestSessionId(req: FastifyRequest): string | undefined {
+  return readGuestSessionCookie(req) ?? readGuestSessionHeader(req);
+}
+
+/**
+ * Résout l’ID de session pour le claim post-auth (JWT requis) :
+ * cookie en priorité ; sinon body ou en-tête `x-session-id` (cross-origin / nouvel onglet).
+ */
+export function resolveClaimGuestSessionId(
+  req: FastifyRequest,
+  bodySessionId?: string,
+): string | null {
+  const fromCookie = readGuestSessionCookie(req);
+  const fromBody = bodySessionId?.trim();
+
+  if (fromCookie) {
+    if (fromBody && fromBody !== fromCookie) return null;
+    return fromCookie;
+  }
+
+  if (fromBody) return fromBody;
+
+  return readGuestSessionHeader(req) ?? null;
 }
 
 export function setGuestSessionCookie(

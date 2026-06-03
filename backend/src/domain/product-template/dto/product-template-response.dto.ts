@@ -29,6 +29,9 @@ const scrapeWarningSchema = z.object({
 /** Résultat de la détection de champs depuis une page produit */
 export const scrapeFieldsResultSchema = z.object({
   fields: z.array(productTemplateFieldResponseSchema).describe("Champs détectés"),
+  sampleValues: z
+    .record(z.string(), z.string())
+    .describe("Valeurs exemple extraites de la page, par nom de champ"),
   warnings: z.array(scrapeWarningSchema).describe("Avertissements non bloquants"),
 });
 
@@ -37,6 +40,8 @@ export class ScrapeFieldsResultDto extends createZodDto(scrapeFieldsResultSchema
 /** Résultat du raffinement des champs par l’IA */
 export const refineFieldsResultSchema = z.object({
   fields: z.array(productTemplateFieldResponseSchema).describe("Champs après raffinement"),
+  refinedWithAi: z.boolean().describe("True si le modèle a effectivement affiné les champs"),
+  message: z.string().optional().describe("Message informatif (succès, échec ou clé API absente)"),
 });
 
 export class RefineFieldsResultDto extends createZodDto(refineFieldsResultSchema) {}

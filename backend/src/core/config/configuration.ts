@@ -9,15 +9,36 @@ export default () => {
 
   const optional = (key: string, fallback: string): string => process.env[key]?.trim() || fallback;
 
+  const nodeEnv = optional("NODE_ENV", "development");
+  const corsOriginRaw = process.env["CORS_ORIGIN"]?.trim();
+  let corsOrigin: string;
+  if (nodeEnv === "production") {
+    if (!corsOriginRaw || corsOriginRaw === "*") {
+      throw new Error(
+        "CORS_ORIGIN doit être défini explicitement en production (origines séparées par des virgules, pas *).",
+      );
+    }
+    corsOrigin = corsOriginRaw;
+  } else {
+    corsOrigin = corsOriginRaw || "*";
+  }
+
   return {
     port: parseInt(optional("PORT", "3000"), 10),
-    nodeEnv: optional("NODE_ENV", "development"),
+    nodeEnv,
 
-    /** Origines CORS séparées par des virgules, ou `*` (déconseillé avec credentials). */
-    corsOrigin: optional("CORS_ORIGIN", "*"),
+    /** Origines CORS séparées par des virgules, ou `*` en dev uniquement. */
+    corsOrigin,
 
     /** Durée de vie du cookie de session invité (secondes). */
-    guestSessionCookieMaxAgeSec: parseInt(optional("GUEST_SESSION_COOKIE_MAX_AGE_SEC", String(60 * 60 * 24 * 30)), 10),
+    guestSessionCookieMaxAgeSec: parseInt(
+      optional("GUEST_SESSION_COOKIE_MAX_AGE_SEC", String(60 * 60 * 24 * 30)),
+      10,
+    ),
+    /** Active la génération de traces scrape-fields (désactivée en production). */
+    scrapeFieldsTraceEnabled: nodeEnv !== "production",
+    /** Dossier local des traces scrape-fields (relatif au backend). */
+    scrapeFieldsTraceDir: optional("SCRAPE_FIELDS_TRACE_DIR", "logs/scrape-fields"),
 
     // Supabase
     supabaseUrl: required("SUPABASE_URL"),

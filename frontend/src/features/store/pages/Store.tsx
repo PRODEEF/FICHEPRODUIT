@@ -3,12 +3,12 @@ import { useNavigate } from 'react-router';
 
 import { patchMyShop } from '@api/shop';
 import type { PatchMyShopBody } from '@types-api';
-import { Banner } from '@shared/ui';
 
 import type { Shop } from '../types';
 import { ShopInfoSection } from '../components/ShopInfoSection';
 import { StoreUrlAnalysisBanner } from '../components/StoreUrlAnalysisBanner';
 import { TagListEditor } from '../components/TagListEditor';
+import { needsShopSetup } from '../lib/shop-setup-status';
 import { useShop } from '../hooks/useShop';
 
 function LoadingState() {
@@ -27,9 +27,10 @@ interface StoreLoadedProps {
   shop: Shop;
   updateShop: (shop: Shop) => void;
   onUrlSaved: (url: string) => void;
+  hideUrlRow: boolean;
 }
 
-function StoreLoaded({ shop, updateShop, onUrlSaved }: StoreLoadedProps) {
+function StoreLoaded({ shop, updateShop, onUrlSaved, hideUrlRow }: StoreLoadedProps) {
   const [patching, setPatching] = useState(false);
 
   const patchShop = useCallback(
@@ -50,7 +51,12 @@ function StoreLoaded({ shop, updateShop, onUrlSaved }: StoreLoadedProps) {
 
   return (
     <>
-      <ShopInfoSection shop={shop} onSavePartial={patchShop} saving={patching} />
+      <ShopInfoSection
+        shop={shop}
+        onSavePartial={patchShop}
+        saving={patching}
+        hideUrlRow={hideUrlRow}
+      />
 
       <TagListEditor
         label="Marques"
@@ -84,6 +90,7 @@ export function MyStore() {
   const navigate = useNavigate();
   const { shop, loading, error, updateShop } = useShop();
   const [urlAnalysisPrompt, setUrlAnalysisPrompt] = useState<string | null>(null);
+  const [setupHeroDismissed, setSetupHeroDismissed] = useState(false);
 
   const handleUrlSaved = useCallback((url: string) => {
     if (url.trim()) {
@@ -119,28 +126,40 @@ export function MyStore() {
     return null;
   }
 
+  const showAnalysisHero =
+    urlAnalysisPrompt !== null || (needsShopSetup(shop) && !setupHeroDismissed);
+  const analysisBannerVariant = urlAnalysisPrompt !== null ? 'prompt' : 'onboarding';
+  const analysisBannerUrl = urlAnalysisPrompt ?? shop.url;
+
+  const handleAnalysisHeroDismiss = () => {
+    if (urlAnalysisPrompt !== null) {
+      setUrlAnalysisPrompt(null);
+      return;
+    }
+    setSetupHeroDismissed(true);
+  };
+
   return (
     <div className="relative z-[1] w-full px-12 pb-12 pt-9">
       <header className="mb-6 text-left">
         <h1 className="m-0 text-[1.75rem] font-extrabold text-text-primary">Mon magasin</h1>
       </header>
 
-      {!shop.url.trim() ? (
-        <Banner variant="neutral" className="mb-6" role="status">
-          Indiquez l&apos;URL de votre boutique ci-dessous pour lier vos analyses et enrichir votre
-          fiche magasin.
-        </Banner>
-      ) : null}
-
-      {urlAnalysisPrompt ? (
+      {showAnalysisHero ? (
         <StoreUrlAnalysisBanner
-          url={urlAnalysisPrompt}
-          onDismiss={() => void setUrlAnalysisPrompt(null)}
+          url={analysisBannerUrl}
+          variant={analysisBannerVariant}
+          onDismiss={handleAnalysisHeroDismiss}
           onAnalysisSuccess={handleAnalysisSuccess}
         />
       ) : null}
 
-      <StoreLoaded shop={shop} updateShop={updateShop} onUrlSaved={handleUrlSaved} />
+      <StoreLoaded
+        shop={shop}
+        updateShop={updateShop}
+        onUrlSaved={handleUrlSaved}
+        hideUrlRow={showAnalysisHero}
+      />
     </div>
   );
 }

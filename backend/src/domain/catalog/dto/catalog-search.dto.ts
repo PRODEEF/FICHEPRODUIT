@@ -7,7 +7,9 @@ export const catalogSearchSchema = z.object({
     .array(z.string().trim().min(1))
     .max(100)
     .optional()
-    .describe("Marques à inclure (correspondance insensible à la casse, une requête par marque puis fusion)"),
+    .describe(
+      "Marques à inclure (correspondance insensible à la casse, une requête par marque puis fusion)",
+    ),
   categories: z
     .array(z.string().trim().min(1))
     .max(100)

@@ -38,7 +38,7 @@ export class AnalysisRepository implements IAnalysisRepository {
 
     if (error) {
       this.logger.error(`findById(${id}) failed`, error);
-      throw new InternalServerErrorException("Failed to fetch analysis");
+      throw new InternalServerErrorException("Échec de la récupération de l'analyse");
     }
     return data ? this.toEntity(data as AnalysisRow) : null;
   }
@@ -54,7 +54,7 @@ export class AnalysisRepository implements IAnalysisRepository {
 
     if (error) {
       this.logger.error(`findByIdForGuest(${id}) failed`, error);
-      throw new InternalServerErrorException("Failed to fetch analysis");
+      throw new InternalServerErrorException("Échec de la récupération de l'analyse");
     }
     return data ? this.toEntity(data as AnalysisRow) : null;
   }
@@ -69,7 +69,7 @@ export class AnalysisRepository implements IAnalysisRepository {
 
     if (error) {
       this.logger.error(`findAllByUser(${userId}) failed`, error);
-      throw new InternalServerErrorException("Failed to fetch analyses");
+      throw new InternalServerErrorException("Échec de la récupération des analyses");
     }
     return (data ?? []).map((r) => this.toEntity(r as AnalysisRow));
   }
@@ -107,10 +107,11 @@ export class AnalysisRepository implements IAnalysisRepository {
     id: string,
     patch: Partial<Pick<Analysis, "status" | "errorCode" | "errorMessage" | "shopId">>,
     accessToken: string,
+    guestSessionId?: string | null,
   ): Promise<void> {
     const client = accessToken ? this.supabase.forUser(accessToken) : this.supabase.admin;
 
-    const { error } = await client
+    let query = client
       .from("analyses")
       .update({
         status: patch.status,
@@ -120,9 +121,15 @@ export class AnalysisRepository implements IAnalysisRepository {
       })
       .eq("id", id);
 
+    if (!accessToken && guestSessionId) {
+      query = query.eq("session_id", guestSessionId);
+    }
+
+    const { error } = await query;
+
     if (error) {
       this.logger.error(`updateStatus(${id}) failed`, error);
-      throw new InternalServerErrorException("Failed to update analysis");
+      throw new InternalServerErrorException("Échec de la mise à jour de l'analyse");
     }
   }
 
@@ -133,7 +140,10 @@ export class AnalysisRepository implements IAnalysisRepository {
       .update({ user_id: userId, session_id: null })
       .eq("session_id", sessionId);
 
-    if (error) throw new InternalServerErrorException(error.message);
+    if (error) {
+      this.logger.error(`transferToUser(${sessionId}) failed`, error);
+      throw new InternalServerErrorException("Échec du transfert des analyses invité");
+    }
   }
 
   // ─── Mappers ──────────────────────────────────────────────────
@@ -172,6 +182,6 @@ export class AnalysisRepository implements IAnalysisRepository {
       throw new BadRequestException("Les données d'analyse sont invalides.");
     }
 
-    throw new InternalServerErrorException("Failed to create analysis");
+    throw new InternalServerErrorException("Échec de la création de l'analyse");
   }
 }

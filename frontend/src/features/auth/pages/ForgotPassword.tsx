@@ -1,39 +1,58 @@
-import React, { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+
 import { getSupabaseClient } from '@shared/supabase';
 import { Banner, Button, Card, InputField, PageSection, TextLink } from '@shared/ui';
 
+import { parseAuthEmailFromQuery } from '../lib/authEmailQuery';
+import { forgotPasswordSchema, type ForgotPasswordInput } from '../lib/authSchemas';
 import { getPasswordResetRedirectUrl, requestPasswordResetEmail } from '../lib/passwordAuth';
 
 export function ForgotPassword() {
-  const [email, setEmail] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [searchParams] = useSearchParams();
   const [done, setDone] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
-  async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setError(null);
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors, isSubmitting },
+  } = useForm<ForgotPasswordInput>({
+    resolver: zodResolver(forgotPasswordSchema),
+    defaultValues: { email: '' },
+  });
+
+  const emailFromQuery = searchParams.get('email');
+  useEffect(() => {
+    const parsed = parseAuthEmailFromQuery(emailFromQuery);
+    if (parsed) {
+      queueMicrotask(() => {
+        void setValue('email', parsed);
+      });
+    }
+  }, [emailFromQuery, setValue]);
+
+  const onSubmit = async (data: ForgotPasswordInput) => {
+    setFormError(null);
     const supabase = getSupabaseClient();
     if (!supabase) {
-      setError('Configuration Supabase manquante. Vérifiez le fichier .env du frontend.');
+      setFormError('Configuration Supabase manquante. Vérifiez le fichier .env du frontend.');
       return;
     }
-    setSubmitting(true);
-    try {
-      const result = await requestPasswordResetEmail(
-        supabase,
-        email,
-        getPasswordResetRedirectUrl(),
-      );
-      if (!result.ok) {
-        setError(result.message);
-        return;
-      }
-      setDone(true);
-    } finally {
-      setSubmitting(false);
+    const result = await requestPasswordResetEmail(
+      supabase,
+      data.email,
+      getPasswordResetRedirectUrl(),
+    );
+    if (!result.ok) {
+      setFormError(result.message);
+      return;
     }
-  }
+    setDone(true);
+  };
 
   return (
     <PageSection className="max-w-2xl pt-8">
@@ -50,25 +69,30 @@ export function ForgotPassword() {
             choisir un nouveau mot de passe.
           </Banner>
         ) : (
-          <form className="flex flex-col gap-4" onSubmit={(e) => void handleSubmit(e)}>
+          <form
+            className="flex flex-col gap-4"
+            noValidate
+            onSubmit={(e) => void handleSubmit(onSubmit)(e)}
+          >
             <InputField
               id="forgot-email"
               label="E-mail"
-              name="email"
               type="email"
               autoComplete="email"
+              placeholder="vous@exemple.fr"
               required
-              value={email}
-              onChange={(ev) => void setEmail(ev.target.value)}
-              disabled={submitting}
+              error={errors.email?.message}
+              errorId="forgot-email-error"
+              disabled={isSubmitting}
+              {...register('email')}
             />
-            {error ? (
+            {formError ? (
               <p className="m-0 text-sm text-red-500" role="alert">
-                {error}
+                {formError}
               </p>
             ) : null}
-            <Button type="submit" variant="gradient" disabled={submitting}>
-              {submitting ? 'Envoi…' : 'Envoyer le lien'}
+            <Button type="submit" variant="gradient" disabled={isSubmitting}>
+              {isSubmitting ? 'Envoi…' : 'Envoyer le lien'}
             </Button>
           </form>
         )}

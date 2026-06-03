@@ -43,6 +43,28 @@ describe("ShopService", () => {
     expect(repo.create).not.toHaveBeenCalled();
   });
 
+  it("getMyShop préfère une boutique avec URL à une fiche Mon magasin vide", async () => {
+    const emptyDefault: Shop = {
+      ...sampleShop,
+      id: "shop-empty",
+      name: "Mon magasin",
+      url: "",
+      cms: "inconnu",
+      updatedAt: "2025-06-01T00:00:00.000Z",
+    };
+    const fromGuest: Shop = {
+      ...sampleShop,
+      id: "shop-guest",
+      name: "exemple.fr",
+      url: "https://exemple.fr",
+      updatedAt: "2025-01-01T00:00:00.000Z",
+    };
+    repo.findAllByOwner.mockResolvedValue([emptyDefault, fromGuest]);
+
+    await expect(service.getMyShop("user-1", "tok")).resolves.toBe(fromGuest);
+    expect(repo.create).not.toHaveBeenCalled();
+  });
+
   it("getMyShop crée un magasin minimal si aucun", async () => {
     const created: Shop = {
       ...sampleShop,
@@ -81,7 +103,9 @@ describe("ShopService", () => {
     repo.findAllByOwner.mockResolvedValue([]);
     repo.create.mockRejectedValue(new Error("db"));
 
-    await expect(service.getMyShop("user-1", "tok")).rejects.toBeInstanceOf(InternalServerErrorException);
+    await expect(service.getMyShop("user-1", "tok")).rejects.toBeInstanceOf(
+      InternalServerErrorException,
+    );
   });
 
   it("updateMyShop assure un magasin puis met à jour", async () => {

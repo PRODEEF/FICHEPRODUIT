@@ -12,10 +12,10 @@ export class JwtGuard implements CanActivate {
     const req = context.switchToHttp().getRequest<FastifyRequest>();
     const token = extractBearerToken(req);
 
-    if (!token) throw new UnauthorizedException("Missing token");
+    if (!token) throw new UnauthorizedException("Token manquant");
 
     const user = await this.supabase.getUser(token);
-    if (!user) throw new UnauthorizedException("Invalid or expired token");
+    if (!user) throw new UnauthorizedException("Token invalide ou expiré");
 
     (req as FastifyRequest & { user: AuthenticatedUser }).user = {
       id: user.id,

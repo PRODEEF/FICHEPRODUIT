@@ -18,111 +18,105 @@ import {
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
+import { SHOP_SECTOR_LABELS, type ShopSectorLabel } from '@shared/lib/shopSectors';
+
 export interface Universe {
-  label: string;
+  label: ShopSectorLabel;
   icon: LucideIcon;
   color: string;
   example: string;
 }
 
-export const universes: Universe[] = [
-  {
-    label: 'Nautisme',
+const UNIVERSE_META: Record<
+  ShopSectorLabel,
+  Pick<Universe, 'icon' | 'color' | 'example'>
+> = {
+  Nautisme: {
     icon: Waves,
     color: 'text-cyan-400',
     example: 'Combinaisons néoprène, planches, accessoires',
   },
-  {
-    label: 'Glisse',
+  Glisse: {
     icon: Wind,
     color: 'text-sky-400',
     example: 'Ailes, barres, harnais, sécurité',
   },
-  {
-    label: 'Vélo',
+  Vélo: {
     icon: Bike,
     color: 'text-lime-400',
     example: 'VTT, route, gravel, composants',
   },
-  {
-    label: 'Outdoor',
+  Outdoor: {
     icon: Tent,
     color: 'text-emerald-400',
     example: 'Tentes, sacs, lampes, randonnée',
   },
-  {
-    label: 'Montagne',
+  Montagne: {
     icon: Mountain,
     color: 'text-slate-300',
     example: 'Ski, alpinisme, équipement technique',
   },
-  {
-    label: 'Mode',
+  Mode: {
     icon: Shirt,
     color: 'text-pink-400',
     example: 'Collections, matières, tailles, looks',
   },
-  {
-    label: 'Maison',
+  Maison: {
     icon: Home,
     color: 'text-amber-400',
     example: 'Déco, cuisine, rangement, entretien',
   },
-  {
-    label: 'Animalerie',
+  Animalerie: {
     icon: Dog,
     color: 'text-orange-400',
     example: 'Chiens, chats, accessoires, nutrition',
   },
-  {
-    label: 'Sport',
+  Sport: {
     icon: Dumbbell,
     color: 'text-red-400',
     example: 'Musculation, cardio, performance',
   },
-  {
-    label: 'Jardin',
+  Jardin: {
     icon: Flower2,
     color: 'text-green-400',
     example: 'Plantes, outils, arrosage, extérieur',
   },
-  {
-    label: 'Bricolage',
+  Bricolage: {
     icon: Hammer,
     color: 'text-yellow-400',
     example: 'Outillage, rénovation, atelier',
   },
-  {
-    label: 'Puériculture',
+  Puériculture: {
     icon: Baby,
     color: 'text-rose-300',
     example: 'Bébé, sécurité, éveil, quotidien',
   },
-  {
-    label: 'Bijoux',
+  Bijoux: {
     icon: Gem,
     color: 'text-violet-400',
     example: 'Bagues, colliers, matières précieuses',
   },
-  {
-    label: 'Montres',
+  Montres: {
     icon: Watch,
     color: 'text-zinc-300',
     example: 'Horlogerie, style, précision',
   },
-  {
-    label: 'Gastronomie',
+  Gastronomie: {
     icon: UtensilsCrossed,
     color: 'text-orange-300',
     example: 'Épicerie fine, art de table, saveurs',
   },
-  {
-    label: 'Gaming',
+  Gaming: {
     icon: Gamepad2,
     color: 'text-indigo-400',
     example: 'Consoles, accessoires, univers joueurs',
   },
-];
+};
+
+export const universes: Universe[] = SHOP_SECTOR_LABELS.map((label) => ({
+  label,
+  ...UNIVERSE_META[label],
+}));
 
 export interface Testimonial {
   quote: string;

@@ -32,6 +32,39 @@ describe("UserService", () => {
     });
   });
 
+  it("corrige website_url et pending_auto_analyze invalides au getMe", async () => {
+    userRepoMock.ensureRow.mockResolvedValue({
+      id: "user-1",
+      username: "demo",
+      websiteUrl: "javascript:alert(1)",
+      pendingAutoAnalyze: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+    userRepoMock.update.mockResolvedValue({
+      id: "user-1",
+      username: "demo",
+      websiteUrl: null,
+      pendingAutoAnalyze: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+
+    const me = await service.getMe({
+      id: "user-1",
+      email: "demo@test.com",
+      accessToken: "token",
+    });
+
+    expect(userRepoMock.update).toHaveBeenCalledWith(
+      "user-1",
+      { websiteUrl: null, pendingAutoAnalyze: false },
+      "token",
+    );
+    expect(me.pendingAutoAnalyze).toBe(false);
+    expect(me.websiteUrl).toBeNull();
+  });
+
   it("transfère les shops puis les analyses guest lors du claim", async () => {
     await service.claimGuestSession(
       {

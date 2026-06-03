@@ -1,6 +1,7 @@
 import type { Shop } from '@types-api';
 import { TextLink } from '@shared/ui/TextLink';
 
+import { needsShopSetup } from '../../store/lib/shop-setup-status';
 import { BrandChips } from './BrandChips';
 import { formatCmsLabel } from '../lib/productUtils';
 
@@ -22,7 +23,7 @@ export interface ShopSummarySectionProps {
  * Résumé du site analysé et marques (boutique enregistrée ou dérivées des exemples catalogue).
  */
 export function ShopSummarySection({ shop, activeBrand, onBrandClick }: ShopSummarySectionProps) {
-  const emptyShop = shop.brands.length === 0 && shop.sector === null && shop.url.trim() === '';
+  const emptyShop = needsShopSetup(shop);
   const topBrands = getTopBrands(shop.brands, TOP_BRANDS_CHIP_LIMIT);
   const urlLabel = shop.url.trim() ? shop.url : 'Url non fournie';
 
@@ -49,7 +50,7 @@ export function ShopSummarySection({ shop, activeBrand, onBrandClick }: ShopSumm
           <span className="shrink-0 text-purple-600">🔗</span>
           <span className="truncate">{urlLabel}</span>
           <span className="shrink-0 text-gray-400">—</span>
-          <span className="shrink-0">{formatCmsLabel(shop?.cms ?? null)}</span>
+          <span className="shrink-0">{formatCmsLabel(shop.cms)}</span>
           <span className="shrink-0 text-gray-400">—</span>
           <span className="shrink-0">
             {shop.brands.length} marque{shop.brands.length > 1 ? 's' : ''} repérée
@@ -58,7 +59,7 @@ export function ShopSummarySection({ shop, activeBrand, onBrandClick }: ShopSumm
         </p>
         {shop.sector?.trim() ? (
           <p className="text-xs text-gray-500">
-            Périmètre détecté&nbsp;: vous vendez {shop.sector.trim()}.
+            Votre univers&nbsp;: {shop.sector.trim()}.
           </p>
         ) : null}
       </div>

@@ -2,6 +2,19 @@ import type { FastifyInstance, FastifyRequest } from "fastify";
 import helmet from "@fastify/helmet";
 import rateLimit from "@fastify/rate-limit";
 
+function hasBearerAuth(req: FastifyRequest): boolean {
+  const auth = req.headers.authorization;
+  return typeof auth === "string" && auth.startsWith("Bearer ");
+}
+
+function suggestUrlsRateLimitKey(req: FastifyRequest): string {
+  if (hasBearerAuth(req)) {
+    const token = String(req.headers.authorization).slice(7, 43);
+    return `suggest-auth:${token}`;
+  }
+  return `suggest-anon:${clientIp(req)}`;
+}
+
 function clientIp(req: FastifyRequest): string {
   const xf = req.headers["x-forwarded-for"];
   if (typeof xf === "string" && xf.trim()) {
@@ -28,12 +41,26 @@ export async function registerHttpSecurityPlugins(fastify: FastifyInstance): Pro
     max: (req) => {
       const path = (req.url ?? "").split("?")[0] ?? "";
       if (req.method === "POST" && path === "/api/analyses") return 20;
-      if (req.method === "POST" && path.startsWith("/api/suggest-urls")) return 25;
+      if (path.startsWith("/api/suggest-urls")) {
+        return hasBearerAuth(req) ? 25 : 5;
+      }
       if (req.method === "POST" && path.startsWith("/api/export")) return 15;
+      if (
+        req.method === "POST" &&
+        (path.endsWith("/scrape-fields") || path.endsWith("/refine-fields"))
+      ) {
+        return 20;
+      }
       return 300;
     },
     timeWindow: "1 minute",
-    keyGenerator: (req) => `${clientIp(req)}:${req.method}:${(req.url ?? "").split("?")[0] ?? ""}`,
+    keyGenerator: (req) => {
+      const path = (req.url ?? "").split("?")[0] ?? "";
+      if (path.startsWith("/api/suggest-urls")) {
+        return `${suggestUrlsRateLimitKey(req)}:${req.method}:${path}`;
+      }
+      return `${clientIp(req)}:${req.method}:${path}`;
+    },
     allowList: (req) => {
       if (process.env.NODE_ENV === "test") return true;
       const path = (req.url ?? "").split("?")[0] ?? "";

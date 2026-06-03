@@ -9,6 +9,7 @@ export interface IAnalysisRepository {
     id: string,
     patch: Partial<Pick<Analysis, "status" | "errorCode" | "errorMessage" | "shopId">>,
     accessToken: string,
+    guestSessionId?: string | null,
   ): Promise<void>;
   transferToUser(sessionId: string, userId: string): Promise<void>; // admin
 }

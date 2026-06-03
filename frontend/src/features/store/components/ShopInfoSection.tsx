@@ -3,7 +3,9 @@ import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import type { PatchMyShopBody } from '@types-api';
 
 import { formatCmsLabel } from '../../catalog/lib/productUtils';
+import { shopSectorSchema } from '../lib/shopSchemas';
 import type { Shop, ShopCms } from '../types';
+import { SHOP_SECTOR_LABELS, isShopSectorLabel } from '../types';
 import { Button } from '@shared/ui/Button';
 
 const CMS_OPTIONS: ShopCms[] = ['prestashop', 'shopify', 'woocommerce', 'autre', 'inconnu'];
@@ -12,6 +14,8 @@ interface ShopInfoSectionProps {
   shop: Shop;
   onSavePartial: (patch: PatchMyShopBody) => Promise<void>;
   saving?: boolean;
+  /** Masque la ligne URL lorsque la zone d’analyse hero est affichée. */
+  hideUrlRow?: boolean;
 }
 
 type RowKey = 'name' | 'url' | 'cms' | 'sector';
@@ -23,16 +27,32 @@ interface Buffers {
   sector: string;
 }
 
+function sectorBufferFromShop(shop: Shop): string {
+  const raw = shop.sector?.trim();
+  if (!raw) return '';
+  return raw;
+}
+
 function buffersFromShop(shop: Shop): Buffers {
   return {
     name: shop.name,
     url: shop.url,
     cms: shop.cms,
-    sector: shop.sector ?? '',
+    sector: sectorBufferFromShop(shop),
   };
 }
 
-export function ShopInfoSection({ shop, onSavePartial, saving = false }: ShopInfoSectionProps) {
+function isLegacySector(value: string): boolean {
+  const trimmed = value.trim();
+  return trimmed.length > 0 && !isShopSectorLabel(trimmed);
+}
+
+export function ShopInfoSection({
+  shop,
+  onSavePartial,
+  saving = false,
+  hideUrlRow = false,
+}: ShopInfoSectionProps) {
   const idBase = useId();
   const [editing, setEditing] = useState<RowKey | null>(null);
   const [draft, setDraft] = useState<Buffers | null>(null);
@@ -45,6 +65,9 @@ export function ShopInfoSection({ shop, onSavePartial, saving = false }: ShopInf
 
   const buffers: Buffers =
     editing === null ? buffersFromShop(shop) : (draft ?? buffersFromShop(shop));
+
+  const legacySector = sectorBufferFromShop(shop);
+  const showLegacyOption = isLegacySector(legacySector);
 
   const openEdit = (key: RowKey) => {
     setSaveError(null);
@@ -72,7 +95,12 @@ export function ShopInfoSection({ shop, onSavePartial, saving = false }: ShopInf
       patch.cms = buffers.cms;
     }
     if (editing === 'sector') {
-      const next = buffers.sector.trim() === '' ? null : buffers.sector.trim();
+      const parsed = shopSectorSchema.safeParse(buffers.sector);
+      if (!parsed.success) {
+        setSaveError('Veuillez choisir un secteur dans la liste.');
+        return;
+      }
+      const next = parsed.data;
       if (next !== shop.sector) {
         patch.sector = next;
       }
@@ -150,6 +178,10 @@ export function ShopInfoSection({ shop, onSavePartial, saving = false }: ShopInf
     setDraft((prev) => ({ ...(prev ?? buffersFromShop(shop)), ...partial }));
   };
 
+  const sectorDisplay = shop.sector?.trim()
+    ? shop.sector
+    : '—';
+
   return (
     <div>
       {saveError ? <p className="mb-2 text-sm text-red-600">{saveError}</p> : null}
@@ -165,18 +197,20 @@ export function ShopInfoSection({ shop, onSavePartial, saving = false }: ShopInf
             className="w-full max-w-md rounded-md border border-gray-200 px-2 py-1 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-400"
           />,
         )}
-        {row(
-          'url',
-          'URL',
-          shop.url.trim() ? shop.url : <span className="text-gray-500">Non renseignée</span>,
-          <input
-            id={`${idBase}-url`}
-            type="url"
-            value={buffers.url}
-            onChange={(e) => void setBuffersPatch({ url: e.target.value })}
-            className="w-full max-w-md rounded-md border border-gray-200 px-2 py-1 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-400"
-          />,
-        )}
+        {hideUrlRow
+          ? null
+          : row(
+              'url',
+              'URL',
+              shop.url.trim() ? shop.url : <span className="text-gray-500">Non renseignée</span>,
+              <input
+                id={`${idBase}-url`}
+                type="url"
+                value={buffers.url}
+                onChange={(e) => void setBuffersPatch({ url: e.target.value })}
+                className="w-full max-w-md rounded-md border border-gray-200 px-2 py-1 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-400"
+              />,
+            )}
         {row(
           'cms',
           'CMS',
@@ -197,14 +231,25 @@ export function ShopInfoSection({ shop, onSavePartial, saving = false }: ShopInf
         {row(
           'sector',
           'Secteur',
-          shop.sector?.trim() ? shop.sector : '—',
-          <input
+          sectorDisplay,
+          <select
             id={`${idBase}-sector`}
             value={buffers.sector}
             onChange={(e) => void setBuffersPatch({ sector: e.target.value })}
-            placeholder="Secteur"
-            className="w-full max-w-md rounded-md border border-gray-200 px-2 py-1 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-400"
-          />,
+            className="max-w-md rounded-md border border-gray-200 px-2 py-1 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-400"
+          >
+            <option value="">— Non renseigné —</option>
+            {showLegacyOption ? (
+              <option value={legacySector}>
+                {legacySector} (hors liste)
+              </option>
+            ) : null}
+            {SHOP_SECTOR_LABELS.map((label) => (
+              <option key={label} value={label}>
+                {label}
+              </option>
+            ))}
+          </select>,
         )}
       </div>
     </div>

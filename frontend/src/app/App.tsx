@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { BrowserRouter, Outlet, Route, Routes, useNavigate } from 'react-router';
 import { Toaster } from 'sonner';
 
@@ -8,7 +8,7 @@ import { AuthProvider } from '../features/auth/AuthContext';
 import { RequireAuthRoute } from '../features/auth/components/RequireAuthRoute';
 import { BackgroundGlow } from '../features/layout/components/BackgroundGlow';
 import { Navbar } from '../features/layout/components/Navbar';
-import { bootCrisp } from './crisp';
+// import { bootCrisp } from './crisp';
 
 const Home = lazy(async () => {
   const m = await import('../features/landing/pages/Home');
@@ -39,7 +39,7 @@ const Catalog = lazy(async () => {
   return { default: m.Catalog };
 });
 const ProductSheet = lazy(async () => {
-  const m = await import('../features/product-sheet/pages/ProductSheet');
+  const m = await import('../features/product-template/pages/ProductSheet');
   return { default: m.ProductSheet };
 });
 const Profile = lazy(async () => {
@@ -92,13 +92,15 @@ function AppHeader({ drawerOpen, onDrawerToggle }: AppHeaderProps) {
 
 function AppShellLayout({ userEmail }: { userEmail: string | null }) {
   const [drawerOpen, setDrawerOpen] = useState(true);
+  const [prevUserEmail, setPrevUserEmail] = useState(userEmail);
   const drawerExpanded = drawerOpen && Boolean(userEmail);
 
-  useEffect(() => {
+  if (userEmail !== prevUserEmail) {
+    setPrevUserEmail(userEmail);
     if (userEmail) {
       setDrawerOpen(true);
     }
-  }, [userEmail]);
+  }
 
   return (
     <div
@@ -124,9 +126,9 @@ function AppShell() {
 }
 
 export function App() {
-  useEffect(() => {
-    bootCrisp();
-  }, []);
+  // useEffect(() => {
+  //   bootCrisp();
+  // }, []);
 
   return (
     <AuthProvider>

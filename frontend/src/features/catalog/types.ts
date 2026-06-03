@@ -1,11 +1,10 @@
 export interface ProductFilter {
   search: string;
-  brand: string;
+  sector: string;
   category: string;
   subCategory: string;
+  brand: string;
   year: string;
-  priceMin: string;
-  priceMax: string;
 }
 
 export interface CatalogProductPayloadMetadata {

@@ -1,4 +1,14 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Req, UnauthorizedException, UseGuards } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  Req,
+  UnauthorizedException,
+  UseGuards,
+} from "@nestjs/common";
 import {
   ApiBearerAuth,
   ApiBadRequestResponse,
@@ -54,7 +64,7 @@ export class CatalogController {
     }
     const sessionId = readGuestSessionId(req);
     if (!sessionId) {
-      throw new UnauthorizedException("Guest session required");
+      throw new UnauthorizedException("Session invité requise");
     }
     return this.catalogService.listCatalogProductsByShopBrandsForGuest(shopId, sessionId);
   }

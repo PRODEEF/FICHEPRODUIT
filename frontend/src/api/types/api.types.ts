@@ -175,6 +175,7 @@ export interface ScrapeFieldsBody {
 
 export interface ScrapeFieldsResponse {
   fields: ProductTemplateField[];
+  sampleValues: Record<string, string>;
   warnings: { code: string; message: string }[];
 }
 
@@ -223,4 +224,11 @@ export interface SuggestUrlsResponse {
 
 export interface ClaimGuestSessionBody {
   sessionId?: string;
+}
+
+export interface ClaimGuestSessionOptions {
+  /** Session invité explicite (prioritaire sur sessionStorage). */
+  sessionId?: string | null;
+  /** JWT fraîchement émis (évite une course avec getSession() juste après signUp). */
+  accessToken?: string;
 }

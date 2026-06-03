@@ -18,6 +18,8 @@ export interface CatalogProductsSectionProps {
   productPayload: CatalogProductPayloadMetadata | null;
   isLoadingProducts: boolean;
   shopBrands?: string[] | undefined;
+  /** Secteur boutique : valeur par défaut du filtre secteur et cible du reset. */
+  defaultShopSector?: string | null | undefined;
   externalBrandFilter?: string | undefined;
   onBrandFilterChange?: ((brand: string) => void) | undefined;
   /** Texte d’intro : périmètre lié au magasin ou parcours de tout le catalogue public. */
@@ -31,6 +33,7 @@ export function CatalogProductsSection({
   productPayload,
   isLoadingProducts,
   shopBrands,
+  defaultShopSector,
   externalBrandFilter,
   onBrandFilterChange,
   introVariant = 'shop',
@@ -42,14 +45,14 @@ export function CatalogProductsSection({
   const {
     filters,
     setFilter,
+    resetFilters,
     hasActiveFilters,
     filteredProducts,
     brandOptions,
     categoryOptions,
     subCategoryOptions,
     yearOptions,
-    priceFilterErrors,
-  } = useProductFilters(allProducts, productPayload, shopBrands);
+  } = useProductFilters(allProducts, productPayload, shopBrands, defaultShopSector);
 
   // Keep hook filters in sync when brand is driven only from parent (e.g. ShopSummarySection chips)
   useEffect(() => {
@@ -65,6 +68,14 @@ export function CatalogProductsSection({
     },
     [setFilter, onBrandFilterChange],
   );
+
+  const handleResetFilters = useCallback(() => {
+    resetFilters();
+    onBrandFilterChange?.('');
+  }, [resetFilters, onBrandFilterChange]);
+
+  const canResetFilters =
+    hasActiveFilters || Boolean(externalBrandFilter?.trim());
 
   // Si le parent impose un filtre brand (via BrandChips), on le propage
   const effectiveFilters: ProductFilter =
@@ -110,11 +121,12 @@ export function CatalogProductsSection({
               setFilter(key, value);
             }
           }}
+          onReset={handleResetFilters}
+          canReset={canResetFilters}
           brandOptions={brandOptions}
           categoryOptions={categoryOptions}
           subCategoryOptions={subCategoryOptions}
           yearOptions={yearOptions}
-          priceFilterErrors={priceFilterErrors}
         />
 
         {displayProducts.length > 0 ? (

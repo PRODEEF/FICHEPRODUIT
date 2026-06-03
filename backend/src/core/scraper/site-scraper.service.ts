@@ -1,6 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { load } from "cheerio";
-import { assertUrlSafeForServerFetch } from "./scrape-url-policy";
+import { fetchHtmlSafeForServer } from "./scrape-url-policy";
 import type { CmsType, ScrapePageResult } from "./scraper.types";
 
 const FETCH_TIMEOUT_MS = 20_000;
@@ -13,37 +13,22 @@ export class SiteScraperService {
   private readonly logger = new Logger(SiteScraperService.name);
 
   async fetchPage(url: string): Promise<ScrapePageResult> {
-    const safe = await assertUrlSafeForServerFetch(url);
-    if (!safe.ok) {
-      this.logger.warn(`fetchPage blocked URL policy: ${safe.reason} (${url})`);
-      return { ok: false, error: safe.reason };
+    const fetched = await fetchHtmlSafeForServer(url, {
+      timeoutMs: FETCH_TIMEOUT_MS,
+      userAgent: USER_AGENT,
+    });
+
+    if (!fetched.ok) {
+      this.logger.warn(`fetchPage blocked or failed: ${fetched.error} (${url})`);
+      return { ok: false, error: fetched.error };
     }
 
-    try {
-      const res = await fetch(url, {
-        redirect: "follow",
-        headers: {
-          "User-Agent": USER_AGENT,
-          Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        },
-        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-      });
+    const { html } = fetched;
+    const cms = this.detectCms(html);
+    const title = this.extractTitle(html);
+    const textSample = this.extractTextSample(html);
 
-      if (!res.ok) {
-        return { ok: false, error: `HTTP ${res.status}` };
-      }
-
-      const html = await res.text();
-      const cms = this.detectCms(html);
-      const title = this.extractTitle(html);
-      const textSample = this.extractTextSample(html);
-
-      return { ok: true, html, cms, title, textSample };
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Fetch failed";
-      this.logger.warn(`fetchPage(${url}) failed: ${message}`);
-      return { ok: false, error: message };
-    }
+    return { ok: true, html, cms, title, textSample };
   }
 
   // ─── Méthodes extraites du SiteAnalysisService existant ──────

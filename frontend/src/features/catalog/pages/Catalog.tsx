@@ -113,6 +113,7 @@ export function Catalog() {
               productPayload={productPayload}
               isLoadingProducts={isLoadingProducts}
               shopBrands={hasShopWithBrands ? shop?.brands : undefined}
+              defaultShopSector={shop?.sector}
               externalBrandFilter={activeBrand}
               onBrandFilterChange={setActiveBrand}
               introVariant={hasShopWithBrands ? 'shop' : 'all'}

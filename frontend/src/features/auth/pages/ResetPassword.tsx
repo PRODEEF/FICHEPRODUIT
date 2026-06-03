@@ -1,21 +1,35 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from 'react-router';
+import { toast } from 'sonner';
 
-import { getSupabaseClient } from '../../../shared/supabase';
+import { getSupabaseClient } from '@shared/supabase';
 import { Banner, Button, Card, PageSection, TextLink } from '@shared/ui';
 
 import { PasswordField } from '../components/PasswordField';
+import { resetPasswordSchema, type ResetPasswordInput } from '../lib/authSchemas';
+import { subscribePasswordRecoveryGate } from '../lib/passwordRecoveryGate';
 import { updatePasswordAndSignOut } from '../lib/passwordAuth';
-import { validatePasswordMatch, validatePasswordMinLength } from '../lib/signupFieldValidation';
 import type { PasswordRecoveryGateState } from '../types';
 
 export function ResetPassword() {
   const navigate = useNavigate();
   const [gate, setGate] = useState<PasswordRecoveryGateState>('loading');
-  const [password, setPassword] = useState('');
-  const [passwordConfirm, setPasswordConfirm] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    formState: { errors, isSubmitting },
+  } = useForm<ResetPasswordInput>({
+    resolver: zodResolver(resetPasswordSchema),
+    defaultValues: { password: '', passwordConfirm: '' },
+  });
+
+  const passwordValue = useWatch({ control, name: 'password', defaultValue: '' });
+  const passwordConfirmValue = useWatch({ control, name: 'passwordConfirm', defaultValue: '' });
 
   useEffect(() => {
     const supabase = getSupabaseClient();
@@ -26,72 +40,36 @@ export function ResetPassword() {
       return;
     }
 
-    let resolved = false;
-
-    const finish = (ok: boolean) => {
-      if (resolved) return;
-      resolved = true;
-      setGate(ok ? 'ready' : 'invalid');
-    };
-
-    void supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) finish(true);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      if (
-        session &&
-        (event === 'INITIAL_SESSION' || event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN')
-      ) {
-        finish(true);
-      }
-    });
-
-    const t = window.setTimeout(() => {
-      if (resolved) return;
-      void supabase.auth.getSession().then(({ data: { session } }) => {
-        finish(Boolean(session));
-      });
-    }, 6000);
-
-    return () => {
-      window.clearTimeout(t);
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setError(null);
-    const pwdMatch = validatePasswordMatch(password, passwordConfirm);
-    if (pwdMatch) {
-      setError(pwdMatch);
-      return;
-    }
-    const pwdLen = validatePasswordMinLength(password);
-    if (pwdLen) {
-      setError(pwdLen);
-      return;
-    }
-    const supabase = getSupabaseClient();
-    if (!supabase) {
-      setError('Configuration Supabase manquante.');
-      return;
-    }
-    setSubmitting(true);
-    try {
-      const result = await updatePasswordAndSignOut(supabase, password);
-      if (!result.ok) {
-        setError(result.message);
+    return subscribePasswordRecoveryGate(supabase, (ok) => {
+      if (ok) {
+        setGate('ready');
         return;
       }
-      void navigate('/login', { replace: true });
-    } finally {
-      setSubmitting(false);
+      void supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session) {
+          void navigate('/profile', { replace: true });
+          return;
+        }
+        setGate('invalid');
+      });
+    });
+  }, [navigate]);
+
+  const onSubmit = async (data: ResetPasswordInput) => {
+    setFormError(null);
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+      setFormError('Configuration Supabase manquante.');
+      return;
     }
-  }
+    const result = await updatePasswordAndSignOut(supabase, data.password);
+    if (!result.ok) {
+      setFormError(result.message);
+      return;
+    }
+    toast.success('Mot de passe enregistré. Connectez-vous avec votre nouveau mot de passe.');
+    void navigate('/login', { replace: true });
+  };
 
   return (
     <PageSection className="max-w-2xl pt-8">
@@ -116,36 +94,41 @@ export function ResetPassword() {
           </>
         ) : null}
         {gate === 'ready' ? (
-          <form className="flex flex-col gap-4" onSubmit={(e) => void handleSubmit(e)}>
+          <form
+            className="flex flex-col gap-4"
+            noValidate
+            onSubmit={(e) => void handleSubmit(onSubmit)(e)}
+          >
             <PasswordField
               id="reset-password"
               label="Nouveau mot de passe"
-              name="password"
               autoComplete="new-password"
+              placeholder="Veuillez entrer un mot de passe"
               required
-              minLength={8}
-              value={password}
-              onChange={(ev) => void setPassword(ev.target.value)}
-              disabled={submitting}
+              showStrengthMeter
+              value={passwordValue}
+              error={errors.password?.message}
+              disabled={isSubmitting}
+              {...register('password')}
             />
             <PasswordField
               id="reset-password-confirm"
               label="Confirmer le mot de passe"
-              name="passwordConfirm"
               autoComplete="new-password"
+              placeholder="Saisissez le même mot de passe"
               required
-              minLength={8}
-              value={passwordConfirm}
-              onChange={(ev) => void setPasswordConfirm(ev.target.value)}
-              disabled={submitting}
+              value={passwordConfirmValue}
+              error={errors.passwordConfirm?.message}
+              disabled={isSubmitting}
+              {...register('passwordConfirm')}
             />
-            {error ? (
+            {formError ? (
               <p className="m-0 text-sm text-red-500" role="alert">
-                {error}
+                {formError}
               </p>
             ) : null}
-            <Button type="submit" variant="gradient" disabled={submitting}>
-              {submitting ? 'Enregistrement…' : 'Enregistrer le mot de passe'}
+            <Button type="submit" variant="gradient" disabled={isSubmitting}>
+              {isSubmitting ? 'Enregistrement…' : 'Enregistrer le mot de passe'}
             </Button>
           </form>
         ) : null}

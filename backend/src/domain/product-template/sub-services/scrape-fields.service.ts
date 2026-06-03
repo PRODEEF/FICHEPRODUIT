@@ -1,141 +1,146 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
-import axios, { AxiosError } from "axios";
 import * as cheerio from "cheerio";
-import type { Element } from "domhandler";
-import * as net from "net";
+import type { AnyNode, Element } from "domhandler";
+import {
+  assertUrlSafeForServerFetch,
+  fetchHtmlSafeForServer,
+} from "../../../core/scraper/scrape-url-policy";
 import type {
   ProductTemplateField,
   ProductTemplateFieldType,
   ScrapeFieldsResult,
 } from "../types/product-template.types";
+import { dedupeFieldsByNormalizedLabel } from "../lib/dedupe-fields-by-label";
+import {
+  JSON_LD_FIELD_LABELS,
+  jsonLdPriceFieldLabel,
+} from "../lib/json-ld-field-labels-fr";
+import {
+  formatFieldDisplayLabel,
+  inferVariantFieldType,
+  isLikelyVariantOptionValue,
+} from "../lib/normalize-field-label";
+import { ScrapeFieldsTraceService } from "./scrape-fields-trace.service";
+import type {
+  ScrapeFieldExtractorId,
+  ScrapeFieldMapping,
+} from "../types/scrape-fields-trace.types";
 
 /** Champs enrichis hors JSON-LD : pas d’index `order` tant qu’ils ne sont pas fusionnés. */
 type FieldDraft = Omit<ProductTemplateField, "order">;
 
 type ScrapeFieldWarning = ScrapeFieldsResult["warnings"][number];
 
+type SampleValues = Record<string, string>;
+type TracedFieldDraft = FieldDraft & {
+  extractor: ScrapeFieldExtractorId;
+  sitePath?: string;
+  siteLabel?: string;
+  domHint?: string;
+};
+
+const SAMPLE_VALUE_MAX_LEN = 500;
+
 const FETCH_TIMEOUT_MS = 18_000;
 const USER_AGENT = "Mozilla/5.0 (compatible; FicheProduit/1.0; +https://example.com/bot)";
 
 @Injectable()
 export class ScrapeFieldsService {
-  scrape(rawUrl: string): Promise<ScrapeFieldsResult> {
-    const normalized = this.assertSafeUrl(rawUrl);
+  constructor(private readonly traceService: ScrapeFieldsTraceService) {}
+
+  async scrape(rawUrl: string): Promise<ScrapeFieldsResult> {
+    const normalized = rawUrl.trim();
+    if (!normalized) {
+      throw new BadRequestException("URL invalide");
+    }
+    const safe = await assertUrlSafeForServerFetch(normalized);
+    if (!safe.ok) {
+      throw new BadRequestException(safe.reason);
+    }
     return this.fetchAndExtract(normalized);
-  }
-
-  private assertSafeUrl(rawUrl: string): string {
-    let parsed: URL;
-    try {
-      parsed = new URL(rawUrl.trim());
-    } catch {
-      throw new BadRequestException("Invalid URL");
-    }
-    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-      throw new BadRequestException("Only http and https URLs are allowed");
-    }
-    if (parsed.username || parsed.password) {
-      throw new BadRequestException("URLs with credentials are not allowed");
-    }
-    const host = parsed.hostname.toLowerCase();
-    if (
-      host === "localhost" ||
-      host.endsWith(".localhost") ||
-      host.endsWith(".local") ||
-      host === "metadata.google.internal"
-    ) {
-      throw new BadRequestException("Host is not allowed");
-    }
-    if (host === "169.254.169.254") {
-      throw new BadRequestException("Host is not allowed");
-    }
-    if (net.isIP(host) && this.isPrivateOrReservedIp(host)) {
-      throw new BadRequestException("IP target is not allowed");
-    }
-    return parsed.toString();
-  }
-
-  private isPrivateOrReservedIp(ip: string): boolean {
-    if (net.isIPv4(ip)) {
-      const [a, b] = ip.split(".").map((n) => Number(n));
-      if (a === 10) return true;
-      if (a === 127) return true;
-      if (a === 0) return true;
-      if (a === 169 && b === 254) return true;
-      if (a === 192 && b === 168) return true;
-      if (a === 172 && b >= 16 && b <= 31) return true;
-      if (a >= 224) return true;
-      return false;
-    }
-    if (net.isIPv6(ip)) {
-      const lower = ip.toLowerCase();
-      if (lower === "::1") return true;
-      if (lower.startsWith("::ffff:")) {
-        const v4 = lower.slice(7);
-        if (net.isIPv4(v4)) return this.isPrivateOrReservedIp(v4);
-      }
-      if (lower.startsWith("fc") || lower.startsWith("fd")) return true;
-      if (lower.startsWith("fe80:")) return true;
-      return false;
-    }
-    return false;
   }
 
   private async fetchAndExtract(url: string): Promise<ScrapeFieldsResult> {
     const warnings: ScrapeFieldWarning[] = [];
-    let html = "";
-    try {
-      const res = await axios.get<string>(url, {
-        responseType: "text",
-        timeout: FETCH_TIMEOUT_MS,
-        maxRedirects: 5,
-        validateStatus: (s) => s >= 200 && s < 400,
-        headers: {
-          "User-Agent": USER_AGENT,
-          Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        },
-      });
-      html = typeof res.data === "string" ? res.data : String(res.data);
-    } catch (err) {
-      const msg =
-        err instanceof AxiosError
-          ? err.message
-          : err instanceof Error
-            ? err.message
-            : "Request failed";
-      warnings.push({ code: "FETCH_FAILED", message: msg });
-      return { fields: [], warnings };
+    const fetched = await fetchHtmlSafeForServer(url, {
+      timeoutMs: FETCH_TIMEOUT_MS,
+      userAgent: USER_AGENT,
+    });
+
+    if (!fetched.ok) {
+      warnings.push({ code: "FETCH_FAILED", message: fetched.error });
+      return { fields: [], sampleValues: {}, warnings };
     }
+
+    const html = fetched.html;
 
     const $ = cheerio.load(html);
     const ldBundle = this.extractFieldsFromJsonLd($, warnings);
-    const fromVariants = this.extractPrestaShopVariantFields($);
-    const fromDetails = this.extractProductDetailFields($);
-    const fromFeat = this.extractFeatureFields($, warnings);
-    const merged = this.mergeFields([
-      ...ldBundle.fields,
-      ...fromVariants,
-      ...fromDetails,
-      ...fromFeat,
-    ]);
-    const fields: ProductTemplateField[] = merged.map((f, i) => ({
+    const variantBundle = this.extractPrestaShopVariantFields($);
+    const detailBundle = this.extractProductDetailFields($);
+    const featBundle = this.extractFeatureFields($, warnings);
+
+    const tracedRows: TracedFieldDraft[] = [
+      ...ldBundle.fields.map((field) => ({
+        ...field,
+        extractor: "json_ld" as const,
+        sitePath: this.jsonLdSitePathForFieldName(field.name),
+      })),
+      ...variantBundle.fields.map((field) => ({
+        ...field,
+        extractor: "prestashop_variants" as const,
+        siteLabel: field.name,
+        domHint: ".product-variants",
+      })),
+      ...detailBundle.fields.map((field) => ({
+        ...field,
+        extractor: "prestashop_details" as const,
+        siteLabel: field.name,
+        domHint: "#description,.product-tabs,#product-details",
+      })),
+      ...featBundle.fields.map((field) => ({
+        ...field,
+        extractor: "prestashop_features" as const,
+        siteLabel: field.name,
+        domHint: ".product-features tr, table.data-sheet tr, dl dt",
+      })),
+    ];
+
+    const merged = this.mergeFieldsWithTrace(tracedRows);
+    const allSamples = this.mergeSampleMaps(
+      ldBundle.samples,
+      variantBundle.samples,
+      detailBundle.samples,
+      featBundle.samples,
+    );
+    const deduped = dedupeFieldsByNormalizedLabel(merged.fields, allSamples);
+    const fields: ProductTemplateField[] = deduped.fields.map((f, i) => ({
       ...f,
       order: i,
     }));
-    return { fields, warnings };
+    const sampleValues = this.pickSamplesForFields(fields, allSamples);
+    const result: ScrapeFieldsResult = { fields, sampleValues, warnings };
+    await this.traceService.emitTrace(
+      url,
+      fetched.finalUrl,
+      result,
+      this.buildMappings(merged.traceRows, sampleValues),
+      this.countByExtractor(merged.traceRows),
+    );
+    return result;
   }
 
   private extractFieldsFromJsonLd(
     $: cheerio.CheerioAPI,
     warnings: ScrapeFieldWarning[],
-  ): { fields: FieldDraft[] } {
+  ): { fields: FieldDraft[]; samples: SampleValues } {
     const scripts = $('script[type="application/ld+json"]');
     if (scripts.length === 0) {
       warnings.push({
         code: "NO_JSONLD",
-        message: "No application/ld+json scripts found on the page",
+        message: "Aucun script application/ld+json trouvé sur la page",
       });
-      return { fields: [] };
+      return { fields: [], samples: {} };
     }
 
     const productNodes: Record<string, unknown>[] = [];
@@ -148,7 +153,7 @@ export class ScrapeFieldsService {
       } catch {
         warnings.push({
           code: "JSONLD_PARSE_ERROR",
-          message: "Failed to parse a JSON-LD block",
+          message: "Échec du parsing d’un bloc JSON-LD",
         });
         return;
       }
@@ -162,45 +167,75 @@ export class ScrapeFieldsService {
     if (productNodes.length === 0) {
       warnings.push({
         code: "NO_PRODUCT_IN_SCHEMA",
-        message: "No Product or ProductGroup node found in JSON-LD",
+        message: "Aucun nœud Product ou ProductGroup trouvé dans le JSON-LD",
       });
-      return { fields: [] };
+      return { fields: [], samples: {} };
     }
 
     const node = productNodes[0]!;
     const fields: FieldDraft[] = [];
+    const samples: SampleValues = {};
+    const putSample = (fieldName: string, value: string | undefined): void => {
+      if (!value) return;
+      samples[fieldName] = this.trimSampleValue(value);
+    };
+
     const name = this.asNonEmptyString(node["name"]);
-    if (name) fields.push({ name: "Product name", type: "text", required: false });
+    if (name) {
+      fields.push({
+        name: JSON_LD_FIELD_LABELS.productName,
+        type: "text",
+        required: false,
+      });
+      putSample(JSON_LD_FIELD_LABELS.productName, name);
+    }
 
     const sku = this.asNonEmptyString(node["sku"]);
-    if (sku) fields.push({ name: "SKU", type: "reference", required: false });
+    if (sku) {
+      fields.push({
+        name: JSON_LD_FIELD_LABELS.sku,
+        type: "reference",
+        required: false,
+      });
+      putSample(JSON_LD_FIELD_LABELS.sku, sku);
+    }
 
     const { price, currency } = this.pickOfferPrice(node["offers"]);
     if (price !== undefined && !Number.isNaN(price)) {
+      const priceFieldName = jsonLdPriceFieldLabel(currency);
       fields.push({
-        name: currency ? `Price (${currency})` : "Price",
+        name: priceFieldName,
         type: "price",
         required: false,
       });
+      putSample(priceFieldName, String(price));
     }
 
     const desc = this.asNonEmptyString(node["description"]);
     if (desc) {
       fields.push({
-        name: "Description",
+        name: JSON_LD_FIELD_LABELS.shortDescription,
         type: desc.includes("<") ? "rich_text" : "long_text",
         required: false,
       });
+      putSample(JSON_LD_FIELD_LABELS.shortDescription, desc);
     }
 
     const imageUrl = this.firstImageUrl(node["image"]);
     if (imageUrl) {
-      fields.push({ name: "Image URL", type: "image", required: false });
+      fields.push({
+        name: JSON_LD_FIELD_LABELS.imageUrl,
+        type: "image",
+        required: false,
+      });
+      putSample(JSON_LD_FIELD_LABELS.imageUrl, imageUrl);
     }
 
-    fields.push(...this.extractJsonLdVariantsAndProperties(productNodes));
+    const variantBundle = this.extractJsonLdVariantsAndProperties(productNodes);
+    fields.push(...variantBundle.fields);
+    Object.assign(samples, variantBundle.samples);
 
-    return { fields };
+    return { fields, samples };
   }
 
   /**
@@ -208,14 +243,19 @@ export class ScrapeFieldsService {
    */
   private extractJsonLdVariantsAndProperties(
     productNodes: Record<string, unknown>[],
-  ): FieldDraft[] {
+  ): { fields: FieldDraft[]; samples: SampleValues } {
     const out: FieldDraft[] = [];
+    const samples: SampleValues = {};
     const seen = new Set<string>();
-    const add = (label: string, type: ProductTemplateFieldType) => {
-      const k = label.trim().toLowerCase();
+    const add = (label: string, type: ProductTemplateFieldType, sample?: string) => {
+      const trimmed = label.trim();
+      const k = trimmed.toLowerCase();
       if (!k || seen.has(k)) return;
       seen.add(k);
-      out.push({ name: label.trim(), type, required: false });
+      out.push({ name: trimmed, type, required: false });
+      if (sample) {
+        samples[trimmed] = this.trimSampleValue(sample);
+      }
     };
 
     const walkAdditionalProperty = (ap: unknown): void => {
@@ -225,13 +265,15 @@ export class ScrapeFieldsService {
         if (!item || typeof item !== "object") continue;
         const o = item as Record<string, unknown>;
         const propName = this.asNonEmptyString(o["name"]);
+        const propValue = this.propertyValueToString(o["value"]);
         if (propName) {
-          add(propName, "text");
+          add(propName, "text", propValue);
           continue;
         }
         if (this.isPropertyValueNode(o)) {
           const n = this.asNonEmptyString(o["propertyID"]);
-          if (n) add(n, "text");
+          const v = this.propertyValueToString(o["value"]);
+          if (n) add(n, "text", v);
         }
       }
     };
@@ -241,11 +283,12 @@ export class ScrapeFieldsService {
       const vo = v as Record<string, unknown>;
       walkAdditionalProperty(vo["additionalProperty"]);
       const color = this.asNonEmptyString(vo["color"]);
-      if (color) add("Couleur", "color");
+      if (color) add("Couleur", "color", color);
       const size = this.asNonEmptyString(vo["size"]);
-      if (size) add("Taille", "size");
-      if (this.asNonEmptyString(vo["sku"])) {
-        add("SKU (variante)", "reference");
+      if (size) add("Taille", "size", size);
+      const variantSku = this.asNonEmptyString(vo["sku"]);
+      if (variantSku) {
+        add(JSON_LD_FIELD_LABELS.variantSku, "reference", variantSku);
       }
     };
 
@@ -259,7 +302,7 @@ export class ScrapeFieldsService {
       }
     }
 
-    return out;
+    return { fields: out, samples };
   }
 
   private isPropertyValueNode(o: Record<string, unknown>): boolean {
@@ -270,17 +313,59 @@ export class ScrapeFieldsService {
   /**
    * PrestaShop Classic: .product-variants, group[n] selects, color/radio lists.
    */
-  private extractPrestaShopVariantFields($: cheerio.CheerioAPI): FieldDraft[] {
-    const labels: string[] = [];
+  private extractPrestaShopVariantFields(
+    $: cheerio.CheerioAPI,
+  ): { fields: FieldDraft[]; samples: SampleValues } {
+    type VariantEntry = { name: string; type: ProductTemplateFieldType; sample?: string };
+    const entries: VariantEntry[] = [];
     const seen = new Set<string>();
-    const push = (raw: string) => {
-      const t = raw.replace(/\s+/g, " ").trim();
-      if (!t || t.length > 120) return;
-      if (/^[\d.,]+$/.test(t)) return;
-      const k = t.toLowerCase();
+
+    const push = (raw: string, sample?: string) => {
+      const trimmed = raw.replace(/\s+/g, " ").trim();
+      if (!trimmed || trimmed.length > 120) return;
+      if (isLikelyVariantOptionValue(trimmed)) return;
+      const name = formatFieldDisplayLabel(trimmed);
+      if (!name || isLikelyVariantOptionValue(name)) return;
+      const k = name.toLowerCase();
       if (seen.has(k)) return;
       seen.add(k);
-      labels.push(t);
+      entries.push({
+        name,
+        type: inferVariantFieldType(name),
+        sample: sample?.trim() ? sample : undefined,
+      });
+    };
+
+    const sampleFromSelect = ($sel: cheerio.Cheerio<Element>): string | undefined => {
+      const selected = $sel.find("option[selected]").first();
+      if (selected.length) {
+        const t = selected.text().replace(/\s+/g, " ").trim();
+        if (t) return t;
+      }
+      const first = $sel
+        .find("option")
+        .filter((_i, opt) => {
+          const v = $(opt).attr("value") ?? "";
+          return v !== "" && v !== "0";
+        })
+        .first();
+      const t = first.text().replace(/\s+/g, " ").trim();
+      return t || undefined;
+    };
+
+    const sampleFromVariantItem = ($el: cheerio.Cheerio<Element>): string | undefined => {
+      const checked = $el.find('input[type="radio"]:checked, input[type="radio"][checked]').first();
+      if (checked.length) {
+        const aria = checked.attr("aria-label")?.trim();
+        if (aria) return aria;
+        const title = checked.attr("title")?.trim();
+        if (title) return title;
+        const sibling = checked.closest("li, label, .input-container").text().replace(/\s+/g, " ").trim();
+        if (sibling && sibling.length < 80) return sibling;
+      }
+      const select = $el.find('select[name^="group["], select[name^="group_"]').first();
+      if (select.length) return sampleFromSelect(select);
+      return undefined;
     };
 
     $(
@@ -294,7 +379,7 @@ export class ScrapeFieldsService {
       if (!label.trim()) {
         label = $el.find("span.control-label").first().text();
       }
-      push(label);
+      push(label, sampleFromVariantItem($el));
     });
 
     const groupFieldSeen = new Set<string>();
@@ -319,7 +404,9 @@ export class ScrapeFieldsService {
       if (!label.trim() && $ctx.attr("aria-label")) {
         label = String($ctx.attr("aria-label"));
       }
-      push(label);
+      if (!label.trim() || isLikelyVariantOptionValue(label)) return;
+      const sample = $ctx.is("select") ? sampleFromSelect($ctx) : undefined;
+      push(label, sample);
     };
 
     $('select[name^="group["], select[name^="group_"]').each((_i, sel) => {
@@ -343,7 +430,13 @@ export class ScrapeFieldsService {
       if (!label.trim()) {
         label = $inp.closest("fieldset, .form-group").find("legend, .control-label").first().text();
       }
-      push(label);
+      let sample: string | undefined;
+      if ($inp.is(":checked") || $inp.attr("checked") !== undefined) {
+        sample = $inp.attr("aria-label")?.trim() ?? $inp.attr("title")?.trim();
+      }
+      if (label.trim() && !isLikelyVariantOptionValue(label)) {
+        push(label, sample);
+      }
     });
 
     $("fieldset.attribute_fieldset, .attribute_fieldset").each((_i, fs) => {
@@ -356,41 +449,58 @@ export class ScrapeFieldsService {
       push(legend);
     });
 
-    $("ul.product-variants-list li .attribute-name, .variant-label").each((_i, el) => {
-      push($(el).text());
-    });
-
-    return labels.map((name) => ({
-      name,
-      type: "text" as const,
+    const fields: FieldDraft[] = entries.map((e) => ({
+      name: e.name,
+      type: e.type,
       required: false,
     }));
+    const samples: SampleValues = {};
+    for (const e of entries) {
+      if (e.sample) {
+        samples[e.name] = this.trimSampleValue(e.sample);
+      }
+    }
+    return { fields, samples };
   }
 
   /**
    * Long description, tabs, accordions — "détails" beyond the short JSON-LD blurb.
    */
-  private extractProductDetailFields($: cheerio.CheerioAPI): FieldDraft[] {
+  private extractProductDetailFields(
+    $: cheerio.CheerioAPI,
+  ): { fields: FieldDraft[]; samples: SampleValues } {
     const fields: FieldDraft[] = [];
+    const samples: SampleValues = {};
     const seen = new Set<string>();
-    const add = (name: string, type: ProductTemplateFieldType) => {
-      const k = name.toLowerCase();
+
+    const add = (name: string, type: ProductTemplateFieldType, $content?: cheerio.Cheerio<AnyNode>) => {
+      const displayName = formatFieldDisplayLabel(name);
+      const k = displayName.toLowerCase();
       if (seen.has(k)) return;
       seen.add(k);
-      fields.push({ name, type, required: false });
+      fields.push({ name: displayName, type, required: false });
+      if ($content?.length) {
+        const html = $content.html()?.trim();
+        const text = $content.text().replace(/\s+/g, " ").trim();
+        const raw = html && html.includes("<") ? html : text;
+        if (raw.length > 0) {
+          samples[displayName] = this.trimSampleValue(raw);
+        }
+      }
     };
 
     const longDesc = $(
       "#description .product-description, #product-description, .product-description:not(.short-description), .rte.product-description",
     ).first();
     if (longDesc.length && longDesc.text().replace(/\s+/g, " ").trim().length > 40) {
-      add("Détails produit (description)", "rich_text");
+      add("Détails produit (description)", "rich_text", longDesc);
     }
 
     $("#description, section#description").each((_i, sec) => {
       const $sec = $(sec);
       if ($sec.find(".product-description, .rte").length && $sec.text().trim().length > 40) {
-        add("Détails produit (description)", "rich_text");
+        const inner = $sec.find(".product-description, .rte").first();
+        add("Détails produit (description)", "rich_text", inner.length ? inner : $sec);
       }
     });
 
@@ -401,7 +511,10 @@ export class ScrapeFieldsService {
         return;
       }
       if (/description|détail|caractéristiques|composition|livr|entretien|guide/i.test(t)) {
-        add(`Onglet : ${t}`, "rich_text");
+        const href = $(a).attr("href") ?? "";
+        const paneId = href.startsWith("#") ? href.slice(1) : "";
+        const $pane = paneId ? $(`#${paneId}`).first() : $("");
+        add(`Onglet : ${t}`, "rich_text", $pane.length ? $pane : undefined);
       }
     });
 
@@ -411,13 +524,16 @@ export class ScrapeFieldsService {
       const t = $(btn).text().replace(/\s+/g, " ").trim();
       if (!t || t.length > 80) return;
       if (/description|détail|caract|composition|livr|entretien|guide|taille|couleur/i.test(t)) {
-        add(`Section : ${t}`, "rich_text");
+        const target = $(btn).attr("data-bs-target") ?? $(btn).attr("data-target") ?? "";
+        const paneId = target.replace(/^#/, "");
+        const $pane = paneId ? $(paneId).first() : $(btn).next(".collapse, .accordion-collapse").first();
+        add(`Section : ${t}`, "rich_text", $pane.length ? $pane : undefined);
       }
     });
 
     const shortBlock = $(".product-description-short, #product-description-short");
     if (shortBlock.length && shortBlock.text().replace(/\s+/g, " ").trim().length > 20) {
-      add("Résumé / accroche", "rich_text");
+      add("Résumé / accroche", "rich_text", shortBlock);
     }
 
     $(".product-information .tab-pane, #product .tab-pane, .tabs .tab-pane").each((_i, pane) => {
@@ -429,18 +545,19 @@ export class ScrapeFieldsService {
         /description|detail|more|supplement|product|caracteristique/i.test(id) ||
         $pane.find(".rte, .product-description").length > 0
       ) {
-        add("Détails produit (description)", "rich_text");
+        add("Détails produit (description)", "rich_text", $pane);
       }
     });
 
-    return fields;
+    return { fields, samples };
   }
 
   private extractFeatureFields(
     $: cheerio.CheerioAPI,
     warnings: ScrapeFieldWarning[],
-  ): FieldDraft[] {
+  ): { fields: FieldDraft[]; samples: SampleValues } {
     const labels = new Set<string>();
+    const samples: SampleValues = {};
     const rowSelectors = [
       ".product-features tr",
       "table.table-product tr",
@@ -454,10 +571,16 @@ export class ScrapeFieldsService {
       $(sel).each((_i, tr) => {
         const cells = $(tr).find("th, td");
         if (cells.length < 2) return;
-        const label = $(cells[0]).text().replace(/\s+/g, " ").trim();
-        if (!label || label.length > 120) return;
-        if (/^[\d.,]+$/.test(label)) return;
+        const rawLabel = $(cells[0]).text().replace(/\s+/g, " ").trim();
+        if (!rawLabel || rawLabel.length > 120) return;
+        if (isLikelyVariantOptionValue(rawLabel)) return;
+        const label = formatFieldDisplayLabel(rawLabel);
+        if (!label) return;
         labels.add(label);
+        const value = $(cells[1]).text().replace(/\s+/g, " ").trim();
+        if (value) {
+          samples[label] = this.trimSampleValue(value);
+        }
       });
     }
 
@@ -470,37 +593,164 @@ export class ScrapeFieldsService {
         return;
       }
       root.find("dt").each((_j, dt) => {
-        const label = $(dt).text().replace(/\s+/g, " ").trim();
-        if (!label || label.length > 120) return;
+        const rawLabel = $(dt).text().replace(/\s+/g, " ").trim();
+        if (!rawLabel || rawLabel.length > 120) return;
+        if (isLikelyVariantOptionValue(rawLabel)) return;
+        const label = formatFieldDisplayLabel(rawLabel);
+        if (!label) return;
         labels.add(label);
+        const dd = $(dt).next("dd");
+        if (dd.length) {
+          const value = dd.text().replace(/\s+/g, " ").trim();
+          if (value) {
+            samples[label] = this.trimSampleValue(value);
+          }
+        }
       });
     });
 
     if (labels.size === 0) {
       warnings.push({
         code: "NO_FEATURES_TABLE",
-        message: "No PrestaShop-style feature rows detected (table/dl heuristics)",
+        message: "Aucune caractéristique PrestaShop détectée (tableau ou liste dl)",
       });
-      return [];
+      return { fields: [], samples: {} };
     }
 
-    return [...labels].map((name) => ({
+    const fields = [...labels].map((name) => ({
       name,
       type: "text" as const,
       required: false,
     }));
+    return { fields, samples };
   }
 
-  private mergeFields(rows: FieldDraft[]): FieldDraft[] {
+  private mergeSampleMaps(...maps: SampleValues[]): SampleValues {
+    const out: SampleValues = {};
+    for (const map of maps) {
+      for (const [key, value] of Object.entries(map)) {
+        if (!out[key]) {
+          out[key] = value;
+        }
+      }
+    }
+    return out;
+  }
+
+  private pickSamplesForFields(
+    fields: ProductTemplateField[],
+    samples: SampleValues,
+  ): SampleValues {
+    const out: SampleValues = {};
+    for (const field of fields) {
+      const value = samples[field.name];
+      if (value) {
+        out[field.name] = value;
+      }
+    }
+    return out;
+  }
+
+  private trimSampleValue(value: string): string {
+    const s = value.replace(/\s+/g, " ").trim();
+    if (s.length <= SAMPLE_VALUE_MAX_LEN) return s;
+    return `${s.slice(0, SAMPLE_VALUE_MAX_LEN)}…`;
+  }
+
+  private propertyValueToString(value: unknown): string | undefined {
+    if (typeof value === "string") {
+      return this.asNonEmptyString(value);
+    }
+    if (typeof value === "number" || typeof value === "boolean") {
+      return String(value);
+    }
+    if (value && typeof value === "object") {
+      const o = value as Record<string, unknown>;
+      const nested = this.asNonEmptyString(o["value"]) ?? this.asNonEmptyString(o["name"]);
+      return nested;
+    }
+    return undefined;
+  }
+
+  private mergeFieldsWithTrace(rows: TracedFieldDraft[]): {
+    fields: FieldDraft[];
+    traceRows: Array<TracedFieldDraft & { mergeStatus: "kept" | "dropped_duplicate"; keptBy?: ScrapeFieldExtractorId }>;
+  } {
     const seen = new Set<string>();
     const out: FieldDraft[] = [];
+    const traceRows: Array<
+      TracedFieldDraft & { mergeStatus: "kept" | "dropped_duplicate"; keptBy?: ScrapeFieldExtractorId }
+    > = [];
+    const winners = new Map<string, ScrapeFieldExtractorId>();
+
     for (const f of rows) {
       const key = f.name.trim().toLowerCase();
       if (!key || seen.has(key)) continue;
       seen.add(key);
       out.push({ ...f, name: f.name.trim() });
+      winners.set(key, f.extractor);
+      traceRows.push({ ...f, name: f.name.trim(), mergeStatus: "kept" });
     }
-    return out;
+
+    for (const f of rows) {
+      const key = f.name.trim().toLowerCase();
+      if (!key) continue;
+      const winner = winners.get(key);
+      if (!winner || winner === f.extractor) continue;
+      traceRows.push({
+        ...f,
+        name: f.name.trim(),
+        mergeStatus: "dropped_duplicate",
+        keptBy: winner,
+      });
+    }
+    return { fields: out, traceRows };
+  }
+
+  private buildMappings(
+    traceRows: Array<
+      TracedFieldDraft & { mergeStatus: "kept" | "dropped_duplicate"; keptBy?: ScrapeFieldExtractorId }
+    >,
+    sampleValues: SampleValues,
+  ): ScrapeFieldMapping[] {
+    return traceRows.map((row) => ({
+      fieldName: row.name,
+      fieldType: row.type,
+      extractor: row.extractor,
+      sitePath: row.sitePath,
+      siteLabel: row.siteLabel,
+      domHint: row.domHint,
+      sampleValue: sampleValues[row.name],
+      mergeStatus: row.mergeStatus,
+      keptBy: row.keptBy,
+    }));
+  }
+
+  private countByExtractor(
+    traceRows: Array<TracedFieldDraft & { mergeStatus: "kept" | "dropped_duplicate"; keptBy?: ScrapeFieldExtractorId }>,
+  ): Record<ScrapeFieldExtractorId, number> {
+    const counts: Record<ScrapeFieldExtractorId, number> = {
+      json_ld: 0,
+      prestashop_features: 0,
+      prestashop_variants: 0,
+      prestashop_details: 0,
+    };
+    for (const row of traceRows) {
+      if (row.mergeStatus === "kept") {
+        counts[row.extractor] += 1;
+      }
+    }
+    return counts;
+  }
+
+  private jsonLdSitePathForFieldName(fieldName: string): string {
+    const key = fieldName.toLowerCase();
+    if (key === JSON_LD_FIELD_LABELS.productName.toLowerCase()) return "Product.name";
+    if (key === JSON_LD_FIELD_LABELS.sku.toLowerCase()) return "Product.sku";
+    if (key.startsWith("prix")) return "Product.offers.price";
+    if (key === JSON_LD_FIELD_LABELS.shortDescription.toLowerCase()) return "Product.description";
+    if (key === JSON_LD_FIELD_LABELS.imageUrl.toLowerCase()) return "Product.image";
+    return "Product.additionalProperty";
   }
 
   private flattenJsonLd(data: unknown): Record<string, unknown>[] {

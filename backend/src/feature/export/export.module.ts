@@ -1,4 +1,5 @@
 import { Module } from "@nestjs/common";
+import { AuthModule } from "../../core/auth/auth.module";
 import { ExportController } from "./export.controller";
 import { ExportService } from "./export.service";
 import { FieldMapperService } from "./mapper/field-mapper.service";
@@ -11,7 +12,7 @@ import { ProductTemplateModule } from "@/domain/product-template/product-templat
  * Feature export catalogue → CSV (template boutique + mapping direct / OpenAI).
  */
 @Module({
-  imports: [CatalogModule, ProductTemplateModule],
+  imports: [AuthModule, CatalogModule, ProductTemplateModule],
   controllers: [ExportController],
   providers: [ExportService, FieldMapperService, AiContentService, CsvBuilderService],
 })

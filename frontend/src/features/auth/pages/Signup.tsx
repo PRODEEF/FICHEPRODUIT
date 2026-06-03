@@ -3,8 +3,10 @@ import { useNavigate, useSearchParams } from 'react-router';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
-import { claimGuestSession } from '@api/user';
-import { clearGuestSessionId, getGuestSessionId } from '@lib/analysis/guestSessionStorage';
+import {
+  persistGuestSessionFromSources,
+  resolveGuestSessionId,
+} from '@lib/analysis/guestSessionStorage';
 import { parseAsFullSiteUrl } from '@lib/siteUrl';
 import { getSupabaseClient } from '@shared/supabase';
 import { AnalysisProgress } from '@shared/components/AnalysisProgress';
@@ -13,10 +15,15 @@ import { useSiteAnalysis } from '@shared/hooks/useSiteAnalysis';
 import { Banner, Button, Card, InputField, PageSection, TextLink } from '@shared/ui';
 
 import { PasswordField } from '../components/PasswordField';
-import { authErrorMessage } from '../lib/authErrorMessage';
+import { buildAuthEmailQuery } from '../lib/authEmailQuery';
+import {
+  authErrorMessage,
+  isSignupDuplicateEmailUser,
+  isSignupEmailAlreadyRegisteredError,
+  SIGNUP_EMAIL_ALREADY_MESSAGE,
+} from '../lib/authErrorMessage';
 import { writePendingSignup } from '../lib/pendingSignupStorage';
-import { clearPendingAutoAnalyzeForUser } from '../lib/userProfile';
-import { createSupabaseUserRepository } from '../supabaseUserRepository';
+import { buildSignupUserMetadata, handleSignupWithActiveSession } from '../lib/signupPostAuth';
 import { signupSchema, type SignupInput } from '../lib/authSchemas';
 
 export function Signup() {
@@ -26,6 +33,7 @@ export function Signup() {
   const [signupUrlAnalysisActive, setSignupUrlAnalysisActive] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [verifyEmailSent, setVerifyEmailSent] = useState(false);
+  const [emailAlreadyRegistered, setEmailAlreadyRegistered] = useState(false);
   const signupPostAuthRef = useRef(false);
 
   const { runAnalysis, analysisOpen, siteAnalysis, dismissError } = useSiteAnalysis({
@@ -57,12 +65,15 @@ export function Signup() {
     },
   });
 
-  // useWatch au lieu de watch() pour limiter les re-renders aux champs concernés
   const passwordValue = useWatch({ control, name: 'password', defaultValue: '' });
   const passwordConfirmValue = useWatch({ control, name: 'passwordConfirm', defaultValue: '' });
   const websiteUrlValue = useWatch({ control, name: 'websiteUrl', defaultValue: '' });
+  const emailValue = useWatch({ control, name: 'email', defaultValue: '' });
 
-  // Pré-remplit l'URL depuis le query param
+  useEffect(() => {
+    persistGuestSessionFromSources(searchParams.get('s'));
+  }, [searchParams]);
+
   const urlFromQuery = searchParams.get('url');
   useEffect(() => {
     if (!urlFromQuery) return;
@@ -74,7 +85,6 @@ export function Signup() {
     }
   }, [urlFromQuery, setValue]);
 
-  // Redirige si déjà connecté
   useEffect(() => {
     if (authLoading || configError) return;
     if (!userEmail) return;
@@ -87,6 +97,7 @@ export function Signup() {
     async (data: SignupInput) => {
       signupPostAuthRef.current = true;
       setFormError(null);
+      setEmailAlreadyRegistered(false);
       setVerifyEmailSent(false);
 
       const supabase = getSupabaseClient();
@@ -99,8 +110,8 @@ export function Signup() {
       const emailTrim = data.email.trim();
       const normalizedUsername = data.username.trim();
       const websiteUrl = data.websiteUrl;
-      const hasGuestSession = Boolean(getGuestSessionId());
-      const shouldRunSignupAnalysis = websiteUrl !== '' && !hasGuestSession;
+      const guestSessionId = resolveGuestSessionId(searchParams.get('s'));
+      const shouldRunSignupAnalysis = websiteUrl !== '' && guestSessionId === null;
 
       if (shouldRunSignupAnalysis) {
         setSignupUrlAnalysisActive(true);
@@ -111,21 +122,27 @@ export function Signup() {
         password: data.password,
         options: {
           emailRedirectTo: `${window.location.origin}/catalog`,
-          data: {
-            display_name: normalizedUsername,
-            full_name: normalizedUsername,
-          },
+          data: buildSignupUserMetadata(normalizedUsername, websiteUrl, guestSessionId !== null),
         },
       });
 
       if (signError) {
+        if (import.meta.env.DEV) {
+          console.error('[signup] Supabase Auth', {
+            code: signError.code,
+            message: signError.message,
+            status: signError.status,
+            name: signError.name,
+          });
+        }
         signupPostAuthRef.current = false;
         if (shouldRunSignupAnalysis) {
           setSignupUrlAnalysisActive(false);
         }
         const message = authErrorMessage(signError);
         const code = signError.code?.toLowerCase() ?? '';
-        if (code === 'user_already_registered') {
+        if (isSignupEmailAlreadyRegisteredError(signError)) {
+          setEmailAlreadyRegistered(true);
           setError('email', { message });
         } else if (code === 'weak_password' || code === 'same_password') {
           setError('password', { message });
@@ -135,41 +152,32 @@ export function Signup() {
         return;
       }
 
+      if (isSignupDuplicateEmailUser(authData.user)) {
+        signupPostAuthRef.current = false;
+        if (shouldRunSignupAnalysis) {
+          setSignupUrlAnalysisActive(false);
+        }
+        setEmailAlreadyRegistered(true);
+        setError('email', { message: SIGNUP_EMAIL_ALREADY_MESSAGE });
+        return;
+      }
+
       if (authData.session?.user) {
-        const userId = authData.session.user.id;
-        const repo = createSupabaseUserRepository(supabase);
-        await repo.updateProfile(userId, {
-          username: normalizedUsername,
-          website_url: websiteUrl === '' ? null : websiteUrl,
-          pending_auto_analyze: hasGuestSession ? false : websiteUrl !== '',
+        const outcome = await handleSignupWithActiveSession({
+          supabase,
+          userId: authData.session.user.id,
+          accessToken: authData.session.access_token,
+          normalizedUsername,
+          websiteUrl,
+          guestSessionId,
+          refreshProfile,
+          runAnalysis,
+          navigate,
         });
-        await refreshProfile();
-
-        if (hasGuestSession) {
-          try {
-            await claimGuestSession(getGuestSessionId() ?? undefined);
-            clearGuestSessionId();
-          } catch {
-            // Le claim centralisé dans AuthContext peut compléter si le cookie est encore présent.
-          }
-          void navigate('/catalog', { replace: true });
-          return;
+        if (outcome === 'analysis_error') {
+          signupPostAuthRef.current = false;
         }
-
-        if (websiteUrl) {
-          try {
-            const outcome = await runAnalysis(websiteUrl);
-            if (outcome === 'error_alert') {
-              setSignupUrlAnalysisActive(false);
-              signupPostAuthRef.current = false;
-            }
-          } finally {
-            await clearPendingAutoAnalyzeForUser(userId);
-            setSignupUrlAnalysisActive(false);
-          }
-          return;
-        }
-        void navigate('/store', { replace: true });
+        setSignupUrlAnalysisActive(false);
         return;
       }
 
@@ -178,7 +186,7 @@ export function Signup() {
           email: emailTrim,
           username: normalizedUsername,
           websiteUrl,
-          pendingAutoAnalyze: hasGuestSession ? false : websiteUrl !== '',
+          pendingAutoAnalyze: guestSessionId !== null ? false : websiteUrl !== '',
         });
         signupPostAuthRef.current = false;
         setVerifyEmailSent(true);
@@ -188,7 +196,7 @@ export function Signup() {
       signupPostAuthRef.current = false;
       setFormError('Inscription impossible pour le moment. Réessayez plus tard.');
     },
-    [navigate, refreshProfile, runAnalysis, setError],
+    [navigate, refreshProfile, runAnalysis, searchParams, setError],
   );
 
   if (configError) {
@@ -296,9 +304,17 @@ export function Signup() {
                 {formError}
               </p>
             ) : null}
-            <Button type="submit" variant="gradient" disabled={isDisabled}>
-              {isSubmitting ? 'Inscription…' : 'Créer mon compte'}
-            </Button>
+            <div className="flex flex-col gap-1">
+              {emailAlreadyRegistered ? (
+                <p className="m-0 text-center text-sm text-text-secondary">
+                  Ce mail existe déjà,{' '}
+                  <TextLink to={`/login${buildAuthEmailQuery(emailValue)}`}>se connecter ?</TextLink>
+                </p>
+              ) : null}
+              <Button type="submit" variant="gradient" disabled={isDisabled}>
+                {isSubmitting ? 'Inscription…' : 'Créer mon compte'}
+              </Button>
+            </div>
           </form>
         )}
       </Card>

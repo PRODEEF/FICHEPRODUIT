@@ -156,38 +156,38 @@ export type Database = {
       };
       product_templates: {
         Row: {
-          client_id: string;
           created_at: string;
           fields: Json;
           id: string;
           name: string;
           shop_id: string;
           updated_at: string;
+          user_id: string;
         };
         Insert: {
-          client_id: string;
           created_at?: string;
           fields?: Json;
           id?: string;
           name: string;
           shop_id: string;
           updated_at?: string;
+          user_id: string;
         };
         Update: {
-          client_id?: string;
           created_at?: string;
           fields?: Json;
           id?: string;
           name?: string;
           shop_id?: string;
           updated_at?: string;
+          user_id?: string;
         };
         Relationships: [
           {
-            foreignKeyName: "product_templates_client_id_fkey";
-            columns: ["client_id"];
+            foreignKeyName: "product_templates_user_id_fkey";
+            columns: ["user_id"];
             isOneToOne: false;
-            referencedRelation: "profiles";
+            referencedRelation: "users";
             referencedColumns: ["id"];
           },
           {

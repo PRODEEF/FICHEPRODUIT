@@ -1,4 +1,9 @@
-import { Inject, Injectable, InternalServerErrorException, NotFoundException } from "@nestjs/common";
+import {
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from "@nestjs/common";
 import type { CmsType } from "../../core/scraper/scraper.types";
 import type { AuthenticatedUser } from "../../core/auth/types/jwt-payload.types";
 import { SHOP_REPOSITORY, type IShopRepository } from "./shop.repository.interface";
@@ -24,6 +29,8 @@ function mapScraperCmsToShopCms(cms: CmsType): ShopCms {
       return "inconnu";
   }
 }
+
+const DEFAULT_SHOP_NAME = "Mon magasin";
 
 @Injectable()
 export class ShopService {
@@ -91,9 +98,25 @@ export class ShopService {
     return this.shopRepo.update(shop.id, dto, accessToken);
   }
 
+  /** Évite de renvoyer une fiche « Mon magasin » vide créée avant le claim guest. */
+  private pickPrimaryShop(shops: Shop[]): Shop | undefined {
+    if (shops.length === 0) return undefined;
+    const score = (shop: Shop): number => {
+      if (shop.url.trim().length > 0) return 2;
+      if (shop.name !== DEFAULT_SHOP_NAME) return 1;
+      return 0;
+    };
+    const sorted = [...shops].sort((a, b) => {
+      const diff = score(b) - score(a);
+      if (diff !== 0) return diff;
+      return b.updatedAt.localeCompare(a.updatedAt);
+    });
+    return sorted[0];
+  }
+
   private async getOrCreateMyShop(ownerId: string, accessToken: string): Promise<Shop> {
     const shops = await this.shopRepo.findAllByOwner(ownerId, accessToken);
-    const existing = shops[0];
+    const existing = this.pickPrimaryShop(shops);
     if (existing) {
       return existing;
     }
@@ -101,7 +124,7 @@ export class ShopService {
     try {
       return await this.shopRepo.create(
         {
-          name: "Mon magasin",
+          name: DEFAULT_SHOP_NAME,
           url: "",
           cms: "inconnu",
           sector: null,
@@ -114,25 +137,25 @@ export class ShopService {
       );
     } catch {
       const again = await this.shopRepo.findAllByOwner(ownerId, accessToken);
-      const recovered = again[0];
+      const recovered = this.pickPrimaryShop(again);
       if (recovered) {
         return recovered;
       }
-      throw new InternalServerErrorException("Failed to create default shop");
+      throw new InternalServerErrorException("Échec de la création de la boutique par défaut");
     }
   }
 
   async getForUser(id: string, user: AuthenticatedUser): Promise<Shop> {
     const shop = await this.shopRepo.findById(id, user.accessToken);
     if (!shop || shop.ownerId !== user.id) {
-      throw new NotFoundException("Shop not found");
+      throw new NotFoundException("Boutique introuvable");
     }
     return shop;
   }
 
   async getForGuest(shopId: string, sessionId: string): Promise<Shop> {
     const shop = await this.shopRepo.findByIdForGuest(shopId, sessionId);
-    if (!shop) throw new NotFoundException("Shop not found");
+    if (!shop) throw new NotFoundException("Boutique introuvable");
     return shop;
   }
 
