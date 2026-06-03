@@ -8,7 +8,7 @@ import { AuthProvider } from '../features/auth/AuthContext';
 import { RequireAuthRoute } from '../features/auth/components/RequireAuthRoute';
 import { BackgroundGlow } from '../features/layout/components/BackgroundGlow';
 import { Navbar } from '../features/layout/components/Navbar';
-import { bootCrisp } from './crisp';
+// import { bootCrisp } from './crisp';
 
 const Home = lazy(async () => {
   const m = await import('../features/landing/pages/Home');
@@ -124,9 +124,9 @@ function AppShell() {
 }
 
 export function App() {
-  useEffect(() => {
-    bootCrisp();
-  }, []);
+  // useEffect(() => {
+  //   bootCrisp();
+  // }, []);
 
   return (
     <AuthProvider>

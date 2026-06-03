@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { getMyShop } from '@api/shop';
+import { useAuth } from '@shared/hooks/useAuth';
+
 import type { Shop } from '../types';
 
 export interface UseShopResult {
@@ -12,6 +14,7 @@ export interface UseShopResult {
 }
 
 export function useShop(): UseShopResult {
+  const { user } = useAuth();
   const [shop, setShop] = useState<Shop | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -50,7 +53,7 @@ export function useShop(): UseShopResult {
     queueMicrotask(() => {
       void refetch();
     });
-  }, [refetch]);
+  }, [refetch, user?.id]);
 
   return { shop, loading, error, refetch, updateShop };
 }

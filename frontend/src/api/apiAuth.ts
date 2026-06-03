@@ -24,8 +24,14 @@ function omitContentType(headers: ApiHeaders): ApiHeaders {
 /**
  * Headers de base : Content-Type JSON + Bearer si session Supabase active.
  */
-export async function authHeaders(): Promise<ApiHeaders> {
+export async function authHeaders(accessTokenOverride?: string): Promise<ApiHeaders> {
   const headers: ApiHeaders = { 'Content-Type': 'application/json' };
+
+  const token = accessTokenOverride?.trim();
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+    return headers;
+  }
 
   const supabase = getSupabaseClient();
   if (supabase) {
@@ -67,8 +73,9 @@ export async function guestOrAuthHeadersNoBody(): Promise<ApiHeaders> {
  */
 export async function guestOrAuthHeadersWithGuestSession(
   guestSessionId?: string | null,
+  accessTokenOverride?: string,
 ): Promise<ApiHeaders> {
-  const h = await guestOrAuthHeaders();
+  const h = await authHeaders(accessTokenOverride);
   const sid = guestSessionId?.trim();
   if (!sid) return h;
   return { ...h, 'x-session-id': sid };

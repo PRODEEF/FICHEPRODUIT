@@ -32,3 +32,41 @@ export function clearGuestSessionId(): void {
     // ignore
   }
 }
+
+function firstValidSessionId(...candidates: Array<string | null | undefined>): string | null {
+  for (const candidate of candidates) {
+    const trimmed = candidate?.trim();
+    if (isValidGuestSessionId(trimmed)) return trimmed;
+  }
+  return null;
+}
+
+/**
+ * Résout la session invité : sessionStorage → query `?s=` → sessionId renvoyé par l’API analyse.
+ */
+export function resolveGuestSessionId(
+  sessionIdFromQuery?: string | null,
+  sessionIdFromAnalysis?: string | null,
+): string | null {
+  const fromStorage = getGuestSessionId();
+  if (fromStorage) return fromStorage;
+  return firstValidSessionId(sessionIdFromQuery, sessionIdFromAnalysis);
+}
+
+/**
+ * Résout la session pour le claim : argument explicite → sessionStorage.
+ */
+export function resolveGuestSessionIdForClaim(
+  explicitSessionId?: string | null,
+): string | null {
+  return firstValidSessionId(explicitSessionId) ?? getGuestSessionId();
+}
+
+/** Persiste la session invité depuis l’URL ou l’analyse si disponible. */
+export function persistGuestSessionFromSources(
+  sessionIdFromQuery?: string | null,
+  sessionIdFromAnalysis?: string | null,
+): void {
+  const resolved = resolveGuestSessionId(sessionIdFromQuery, sessionIdFromAnalysis);
+  if (resolved) setGuestSessionId(resolved);
+}

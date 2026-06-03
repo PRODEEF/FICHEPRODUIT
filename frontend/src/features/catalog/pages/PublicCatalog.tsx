@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router';
 
-import { isValidAnalysisId, isValidGuestSessionId } from '@lib/analysis/analysisStorage';
-import { setGuestSessionId } from '@lib/analysis/guestSessionStorage';
+import { isValidAnalysisId } from '@lib/analysis/analysisStorage';
+import {
+  persistGuestSessionFromSources,
+  resolveGuestSessionId,
+} from '@lib/analysis/guestSessionStorage';
 
 import { CatalogProductsSection } from '../components/CatalogProductsSection';
 import { EmptyProducts } from '../components/EmptyProducts';
@@ -75,18 +78,17 @@ export function PublicCatalog() {
 
   const isLoadingProducts = workflowStatus === 'loading_products';
 
+  const sessionFromQuery = searchParams.get('s');
+  const guestSessionId = useMemo(
+    () => resolveGuestSessionId(sessionFromQuery, analysis?.sessionId ?? null),
+    [sessionFromQuery, analysis?.sessionId],
+  );
+
   const signupWebsiteUrl = analysis?.url ?? shop?.url ?? '';
 
   useEffect(() => {
-    const fromQuery = searchParams.get('s');
-    if (isValidGuestSessionId(fromQuery)) {
-      setGuestSessionId(fromQuery);
-      return;
-    }
-    if (analysis?.sessionId) {
-      setGuestSessionId(analysis.sessionId);
-    }
-  }, [searchParams, analysis?.sessionId]);
+    persistGuestSessionFromSources(sessionFromQuery, analysis?.sessionId ?? null);
+  }, [sessionFromQuery, analysis?.sessionId]);
 
   useEffect(() => {
     if (!analysisId || !hasValidAnalysisId || !analysisNotFound) return;
@@ -103,7 +105,7 @@ export function PublicCatalog() {
         <h1 className="m-0 text-[1.75rem] font-extrabold text-text-primary">Mon catalogue</h1>
       </header>
 
-      <GuestCatalogCTA websiteUrl={signupWebsiteUrl} />
+      <GuestCatalogCTA websiteUrl={signupWebsiteUrl} guestSessionId={guestSessionId} />
 
       <div className="mb-6 flex flex-col gap-4">
         {shopLoading ? (

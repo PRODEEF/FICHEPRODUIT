@@ -1,15 +1,14 @@
+import { buildSignupHref } from '../../auth/lib/signupHref';
+
 import { Button } from '@shared/ui';
 
 interface GuestCatalogCTAProps {
   websiteUrl: string;
+  guestSessionId?: string | null;
 }
 
-export function GuestCatalogCTA({ websiteUrl }: GuestCatalogCTAProps) {
-  const trimmedUrl = websiteUrl.trim();
-  const signupHref =
-    trimmedUrl === ''
-      ? '/signup'
-      : `/signup?${new URLSearchParams({ url: trimmedUrl }).toString()}`;
+export function GuestCatalogCTA({ websiteUrl, guestSessionId }: GuestCatalogCTAProps) {
+  const signupHref = buildSignupHref(websiteUrl, guestSessionId);
 
   return (
     <section

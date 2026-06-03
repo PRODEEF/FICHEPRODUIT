@@ -72,12 +72,13 @@ export class UserController {
     summary: "Rattacher les analyses invitées à ce compte",
     description:
       "Met à jour les analyses dont `session_id` correspond : elles passent sous `user_id` du porteur du JWT. " +
-      "Requiert le cookie invité httpOnly ; un `sessionId` body optionnel doit être identique au cookie.",
+      "Session invité via cookie httpOnly, body `sessionId` ou en-tête `x-session-id` (doit correspondre au cookie si les deux sont présents).",
   })
   @ApiCreatedResponse({ type: UserMeResponseDto })
   @ApiUnauthorizedResponse({ description: "JWT manquant ou invalide" })
   @ApiBadRequestResponse({
-    description: "Cookie invité manquant ou sessionId body ne correspond pas au cookie",
+    description:
+      "Session invité introuvable ou sessionId body ne correspond pas au cookie",
   })
   async claimGuestSession(
     @CurrentUser() user: AuthenticatedUser,
@@ -91,7 +92,9 @@ export class UserController {
       if (bodySid && readGuestSessionCookie(req)) {
         throw new BadRequestException("Le sessionId ne correspond pas au cookie invité");
       }
-      throw new BadRequestException("Cookie de session invité requis");
+      throw new BadRequestException(
+        "Session invité requise (cookie, en-tête x-session-id ou body sessionId)",
+      );
     }
     const result = await this.userService.claimGuestSession(user, sid);
     const secure = this.config.get<string>("nodeEnv") === "production";

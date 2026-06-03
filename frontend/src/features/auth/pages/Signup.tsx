@@ -3,7 +3,10 @@ import { useNavigate, useSearchParams } from 'react-router';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
-import { getGuestSessionId } from '@lib/analysis/guestSessionStorage';
+import {
+  persistGuestSessionFromSources,
+  resolveGuestSessionId,
+} from '@lib/analysis/guestSessionStorage';
 import { parseAsFullSiteUrl } from '@lib/siteUrl';
 import { getSupabaseClient } from '@shared/supabase';
 import { AnalysisProgress } from '@shared/components/AnalysisProgress';
@@ -67,6 +70,10 @@ export function Signup() {
   const websiteUrlValue = useWatch({ control, name: 'websiteUrl', defaultValue: '' });
   const emailValue = useWatch({ control, name: 'email', defaultValue: '' });
 
+  useEffect(() => {
+    persistGuestSessionFromSources(searchParams.get('s'));
+  }, [searchParams]);
+
   const urlFromQuery = searchParams.get('url');
   useEffect(() => {
     if (!urlFromQuery) return;
@@ -103,8 +110,8 @@ export function Signup() {
       const emailTrim = data.email.trim();
       const normalizedUsername = data.username.trim();
       const websiteUrl = data.websiteUrl;
-      const hasGuestSession = Boolean(getGuestSessionId());
-      const shouldRunSignupAnalysis = websiteUrl !== '' && !hasGuestSession;
+      const guestSessionId = resolveGuestSessionId(searchParams.get('s'));
+      const shouldRunSignupAnalysis = websiteUrl !== '' && guestSessionId === null;
 
       if (shouldRunSignupAnalysis) {
         setSignupUrlAnalysisActive(true);
@@ -115,7 +122,7 @@ export function Signup() {
         password: data.password,
         options: {
           emailRedirectTo: `${window.location.origin}/catalog`,
-          data: buildSignupUserMetadata(normalizedUsername, websiteUrl, hasGuestSession),
+          data: buildSignupUserMetadata(normalizedUsername, websiteUrl, guestSessionId !== null),
         },
       });
 
@@ -159,9 +166,10 @@ export function Signup() {
         const outcome = await handleSignupWithActiveSession({
           supabase,
           userId: authData.session.user.id,
+          accessToken: authData.session.access_token,
           normalizedUsername,
           websiteUrl,
-          hasGuestSession,
+          guestSessionId,
           refreshProfile,
           runAnalysis,
           navigate,
@@ -178,7 +186,7 @@ export function Signup() {
           email: emailTrim,
           username: normalizedUsername,
           websiteUrl,
-          pendingAutoAnalyze: hasGuestSession ? false : websiteUrl !== '',
+          pendingAutoAnalyze: guestSessionId !== null ? false : websiteUrl !== '',
         });
         signupPostAuthRef.current = false;
         setVerifyEmailSent(true);
@@ -188,7 +196,7 @@ export function Signup() {
       signupPostAuthRef.current = false;
       setFormError('Inscription impossible pour le moment. Réessayez plus tard.');
     },
-    [navigate, refreshProfile, runAnalysis, setError],
+    [navigate, refreshProfile, runAnalysis, searchParams, setError],
   );
 
   if (configError) {

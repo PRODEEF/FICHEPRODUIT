@@ -40,7 +40,15 @@ describe("resolveClaimGuestSessionId", () => {
     ).toBeNull();
   });
 
-  it("retourne null sans cookie même avec body", () => {
-    expect(resolveClaimGuestSessionId(reqWithCookie(), SESSION_ID)).toBeNull();
+  it("retourne le body si le cookie est absent", () => {
+    expect(resolveClaimGuestSessionId(reqWithCookie(), SESSION_ID)).toBe(SESSION_ID);
+  });
+
+  it("retourne l'en-tête x-session-id si cookie et body absents", () => {
+    expect(resolveClaimGuestSessionId(reqWithCookie(undefined, SESSION_ID))).toBe(SESSION_ID);
+  });
+
+  it("retourne null sans cookie, body ni en-tête", () => {
+    expect(resolveClaimGuestSessionId(reqWithCookie())).toBeNull();
   });
 });

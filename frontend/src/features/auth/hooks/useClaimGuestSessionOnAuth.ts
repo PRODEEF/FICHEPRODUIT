@@ -1,9 +1,8 @@
 import { useEffect, useRef } from 'react';
 
-import { claimGuestSession } from '@api/user';
-import { clearGuestSessionId } from '@lib/analysis/guestSessionStorage';
-
 import type { Session } from '@supabase/supabase-js';
+
+import { claimGuestSessionIfPresent } from '../lib/claimGuestSessionIfPresent';
 
 /**
  * Rattache les ressources invité (analyses, shop) au compte dès qu'un JWT est disponible.
@@ -17,15 +16,10 @@ export function useClaimGuestSessionOnAuth(session: Session | null, authLoading:
     if (claimedForUserIdRef.current === session.user.id) return;
 
     const userId = session.user.id;
-    claimedForUserIdRef.current = userId;
 
     void (async () => {
-      try {
-        await claimGuestSession();
-        clearGuestSessionId();
-      } catch {
-        // Pas de session invité ou erreur réseau : le parcours continue sans claim.
-      }
+      const claimed = await claimGuestSessionIfPresent(session.access_token);
+      if (claimed) claimedForUserIdRef.current = userId;
     })();
   }, [session, authLoading]);
 
