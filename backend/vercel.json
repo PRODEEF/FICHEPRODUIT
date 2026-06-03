@@ -1,11 +1,8 @@
 {
   "version": 2,
-  "framework": null,
-  "buildCommand": "",
   "functions": {
-    "api/index.ts": {
+    "src/main.ts": {
       "maxDuration": 60
     }
-  },
-  "rewrites": [{ "source": "/(.*)", "destination": "/api/index" }]
+  }
 }

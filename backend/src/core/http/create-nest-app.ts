@@ -14,7 +14,7 @@ export type CreateNestAppOptions = {
 };
 
 /**
- * Bootstrap NestJS + Fastify partagé entre `main.ts` (local) et `api/index.ts` (Vercel).
+ * Bootstrap NestJS + Fastify (local et Vercel zero-config via `main.ts`).
  */
 export async function createNestApp(
   options: CreateNestAppOptions = {},
