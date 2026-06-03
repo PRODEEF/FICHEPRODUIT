@@ -22,10 +22,10 @@ export function ProductPreview({ shopName, product, open, onClose }: ProductPrev
 
   if (!product) return null;
 
-  const images = product.images ?? [];
+  const images = product.images;
   const safeIndex = images.length > 0 ? Math.min(mainImageIndex, images.length - 1) : 0;
   const mainSrc = images[safeIndex];
-  const attrRows = sortedAttributeEntries(product.attributes ?? {});
+  const attrRows = sortedAttributeEntries(product.attributes);
 
   return (
     <Modal
@@ -87,7 +87,7 @@ export function ProductPreview({ shopName, product, open, onClose }: ProductPrev
             {images.length > 1 ? (
               <ul className="flex flex-wrap gap-2" aria-label="Miniatures">
                 {images.map((src, i) => (
-                  <li key={`${src}-${i}`}>
+                  <li key={src}>
                     <Button
                       type="button"
                       variant="ghost"
@@ -98,7 +98,9 @@ export function ProductPreview({ shopName, product, open, onClose }: ProductPrev
                           ? 'border-purple-600 ring-2 ring-purple-500/30'
                           : 'border-soft',
                       )}
-                      onClick={() => setMainImageIndex(i)}
+                      onClick={() => {
+                        setMainImageIndex(i);
+                      }}
                       aria-label={`Afficher l’image ${i + 1}`}
                       aria-current={i === safeIndex ? 'true' : undefined}
                     >
@@ -126,7 +128,7 @@ export function ProductPreview({ shopName, product, open, onClose }: ProductPrev
             <div>
               <h3 className="mb-1.5 text-sm font-bold text-text-secondary">Description</h3>
               <p className="whitespace-pre-wrap text-sm leading-relaxed text-text-primary">
-                {product.description?.trim() ? product.description : '—'}
+                {product.description.trim() ? product.description : '—'}
               </p>
             </div>
 

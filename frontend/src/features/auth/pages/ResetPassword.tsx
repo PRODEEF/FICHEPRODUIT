@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
@@ -20,13 +20,16 @@ export function ResetPassword() {
 
   const {
     register,
-    watch,
     handleSubmit,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<ResetPasswordInput>({
     resolver: zodResolver(resetPasswordSchema),
     defaultValues: { password: '', passwordConfirm: '' },
   });
+
+  const passwordValue = useWatch({ control, name: 'password', defaultValue: '' });
+  const passwordConfirmValue = useWatch({ control, name: 'passwordConfirm', defaultValue: '' });
 
   useEffect(() => {
     const supabase = getSupabaseClient();
@@ -50,7 +53,7 @@ export function ResetPassword() {
         setGate('invalid');
       });
     });
-  }, []);
+  }, [navigate]);
 
   const onSubmit = async (data: ResetPasswordInput) => {
     setFormError(null);
@@ -103,7 +106,7 @@ export function ResetPassword() {
               placeholder="Veuillez entrer un mot de passe"
               required
               showStrengthMeter
-              value={watch('password')}
+              value={passwordValue}
               error={errors.password?.message}
               disabled={isSubmitting}
               {...register('password')}
@@ -114,7 +117,7 @@ export function ResetPassword() {
               autoComplete="new-password"
               placeholder="Saisissez le même mot de passe"
               required
-              value={watch('passwordConfirm')}
+              value={passwordConfirmValue}
               error={errors.passwordConfirm?.message}
               disabled={isSubmitting}
               {...register('passwordConfirm')}

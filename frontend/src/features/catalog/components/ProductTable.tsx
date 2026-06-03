@@ -127,7 +127,9 @@ export function ProductTable({
                     type="button"
                     variant="secondary"
                     size="sm"
-                    onClick={() => setPreviewProduct(p)}
+                    onClick={() => {
+                      setPreviewProduct(p);
+                    }}
                   >
                     Voir
                   </Button>
@@ -141,7 +143,9 @@ export function ProductTable({
         shopName={shopName}
         product={previewProduct}
         open={previewProduct !== null}
-        onClose={() => setPreviewProduct(null)}
+        onClose={() => {
+          setPreviewProduct(null);
+        }}
       />
     </>
   );

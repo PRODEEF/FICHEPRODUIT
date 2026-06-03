@@ -1,4 +1,4 @@
-import type { ProductTemplateField, ProductTemplateFieldType } from "../types/product-template.types";
+import type { ProductTemplateField } from "../types/product-template.types";
 import {
   fieldTypeMergePriority,
   normalizeFieldLabelForDedup,

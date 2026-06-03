@@ -33,7 +33,7 @@ export function clearGuestSessionId(): void {
   }
 }
 
-function firstValidSessionId(...candidates: Array<string | null | undefined>): string | null {
+function firstValidSessionId(...candidates: (string | null | undefined)[]): string | null {
   for (const candidate of candidates) {
     const trimmed = candidate?.trim();
     if (isValidGuestSessionId(trimmed)) return trimmed;

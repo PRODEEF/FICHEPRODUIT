@@ -7,7 +7,7 @@ import { clearPendingAutoAnalyzeForUser } from './userProfile';
 import { claimGuestSessionIfPresent } from './claimGuestSessionIfPresent';
 import { createSupabaseUserRepository } from '../supabaseUserRepository';
 
-export type SignupPostAuthInput = {
+export interface SignupPostAuthInput {
   supabase: SupabaseClient;
   userId: string;
   accessToken: string;
@@ -17,7 +17,7 @@ export type SignupPostAuthInput = {
   refreshProfile: () => Promise<void>;
   runAnalysis: (url: string) => Promise<RunAnalysisOutcome>;
   navigate: NavigateFunction;
-};
+}
 
 /** Parcours après inscription avec session immédiate (email déjà confirmé). */
 export async function handleSignupWithActiveSession({

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 
@@ -33,9 +33,9 @@ export function Profile() {
 
   const {
     register: registerPassword,
-    watch: watchPassword,
     handleSubmit: handlePasswordSubmit,
     reset: resetPasswordForm,
+    control: passwordControl,
     formState: { errors: passwordErrors, isSubmitting: isPasswordSubmitting },
   } = useForm<ChangePasswordInput>({
     resolver: zodResolver(changePasswordSchema),
@@ -44,6 +44,22 @@ export function Profile() {
       newPassword: '',
       passwordConfirm: '',
     },
+  });
+
+  const currentPasswordValue = useWatch({
+    control: passwordControl,
+    name: 'currentPassword',
+    defaultValue: '',
+  });
+  const newPasswordValue = useWatch({
+    control: passwordControl,
+    name: 'newPassword',
+    defaultValue: '',
+  });
+  const passwordConfirmValue = useWatch({
+    control: passwordControl,
+    name: 'passwordConfirm',
+    defaultValue: '',
   });
 
   useEffect(() => {
@@ -199,7 +215,7 @@ export function Profile() {
             autoComplete="current-password"
             placeholder="••••••••"
             required
-            value={watchPassword('currentPassword')}
+            value={currentPasswordValue}
             error={passwordErrors.currentPassword?.message}
             disabled={isPasswordSubmitting}
             {...registerPassword('currentPassword')}
@@ -211,7 +227,7 @@ export function Profile() {
             placeholder="Veuillez entrer un mot de passe"
             required
             showStrengthMeter
-            value={watchPassword('newPassword')}
+            value={newPasswordValue}
             error={passwordErrors.newPassword?.message}
             disabled={isPasswordSubmitting}
             {...registerPassword('newPassword')}
@@ -222,7 +238,7 @@ export function Profile() {
             autoComplete="new-password"
             placeholder="Saisissez le même mot de passe"
             required
-            value={watchPassword('passwordConfirm')}
+            value={passwordConfirmValue}
             error={passwordErrors.passwordConfirm?.message}
             disabled={isPasswordSubmitting}
             {...registerPassword('passwordConfirm')}

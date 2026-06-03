@@ -46,11 +46,12 @@ export function StoreUrlAnalysisBanner({
   });
 
   const search = useUrlSearch({ onSubmit: runAnalysis });
+  const { setInput } = search;
   const copy = VARIANT_COPY[variant];
 
   useEffect(() => {
-    search.setInput(url);
-  }, [url, search.setInput]);
+    setInput(url);
+  }, [url, setInput]);
 
   return (
     <>

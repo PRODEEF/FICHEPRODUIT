@@ -31,7 +31,7 @@ function mockUser(overrides: Pick<User, 'identities'> & Partial<Pick<User, 'id'>
     aud: 'authenticated',
     created_at: '',
     ...overrides,
-  } as unknown as User;
+  };
 }
 
 describe('isSignupEmailAlreadyRegisteredError', () => {

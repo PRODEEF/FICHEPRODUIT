@@ -30,6 +30,37 @@ function matchesSector(product: CatalogProduct, sector: string): boolean {
   return product.sector.trim().toLowerCase() === sector.trim().toLowerCase();
 }
 
+function pruneDependentFilters(
+  prev: Pick<ProductFilter, 'category' | 'subCategory' | 'brand' | 'year'>,
+  options: {
+    categoryOptions: string[];
+    subCategoryOptions: string[];
+    brandOptions: string[];
+    yearOptions: string[];
+  },
+): Pick<ProductFilter, 'category' | 'subCategory' | 'brand' | 'year'> {
+  let { category, subCategory, brand, year } = prev;
+  const { categoryOptions, subCategoryOptions, brandOptions, yearOptions } = options;
+
+  if (category && !categoryOptions.includes(category)) {
+    category = '';
+    subCategory = '';
+    brand = '';
+    year = '';
+  } else if (subCategory && !subCategoryOptions.includes(subCategory)) {
+    subCategory = '';
+    brand = '';
+    year = '';
+  } else if (brand && !brandOptions.includes(brand)) {
+    brand = '';
+    year = '';
+  } else if (year && !yearOptions.includes(year)) {
+    year = '';
+  }
+
+  return { category, subCategory, brand, year };
+}
+
 export function useProductFilters(
   products: CatalogProduct[],
   _productPayload: CatalogProductPayloadMetadata | null,
@@ -130,41 +161,33 @@ export function useProductFilters(
     [products, parentFilters],
   );
 
-  useEffect(() => {
-    setFilters((prev) => {
-      let category = prev.category;
-      let subCategory = prev.subCategory;
-      let brand = prev.brand;
-      let year = prev.year;
+  const prunedDependentFilters = useMemo(
+    () =>
+      pruneDependentFilters(
+        {
+          category: filters.category,
+          subCategory: filters.subCategory,
+          brand: filters.brand,
+          year: filters.year,
+        },
+        {
+          categoryOptions,
+          subCategoryOptions,
+          brandOptions,
+          yearOptions,
+        },
+      ),
+    [filters, categoryOptions, subCategoryOptions, brandOptions, yearOptions],
+  );
 
-      if (category && !categoryOptions.includes(category)) {
-        category = '';
-        subCategory = '';
-        brand = '';
-        year = '';
-      } else if (subCategory && !subCategoryOptions.includes(subCategory)) {
-        subCategory = '';
-        brand = '';
-        year = '';
-      } else if (brand && !brandOptions.includes(brand)) {
-        brand = '';
-        year = '';
-      } else if (year && !yearOptions.includes(year)) {
-        year = '';
-      }
-
-      if (
-        category === prev.category &&
-        subCategory === prev.subCategory &&
-        brand === prev.brand &&
-        year === prev.year
-      ) {
-        return prev;
-      }
-
-      return { ...prev, category, subCategory, brand, year };
-    });
-  }, [categoryOptions, subCategoryOptions, brandOptions, yearOptions]);
+  if (
+    prunedDependentFilters.category !== filters.category ||
+    prunedDependentFilters.subCategory !== filters.subCategory ||
+    prunedDependentFilters.brand !== filters.brand ||
+    prunedDependentFilters.year !== filters.year
+  ) {
+    setFilters((prev) => ({ ...prev, ...prunedDependentFilters }));
+  }
 
   const filteredProducts = useMemo(() => {
     const q = filters.search.trim().toLowerCase();

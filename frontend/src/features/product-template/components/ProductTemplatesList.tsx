@@ -12,7 +12,7 @@ export interface ProductTemplatesListProps {
 }
 
 export function ProductTemplatesList({ templates, onEdit, onDelete }: ProductTemplatesListProps) {
-  const [expandedTemplateIds, setExpandedTemplateIds] = useState<Set<string>>(new Set());
+  const [expandedTemplateIds, setExpandedTemplateIds] = useState<Set<string>>(() => new Set());
   const [templateToDelete, setTemplateToDelete] = useState<ProductTemplate | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -93,7 +93,9 @@ export function ProductTemplatesList({ templates, onEdit, onDelete }: ProductTem
               <button
                 type="button"
                 className="product-sheet-analyze-btn gap-1.5"
-                onClick={() => toggleTemplatePreview(t.id)}
+                onClick={() => {
+                  toggleTemplatePreview(t.id);
+                }}
                 aria-expanded={expandedTemplateIds.has(t.id)}
                 aria-controls={`template-preview-${t.id}`}
               >

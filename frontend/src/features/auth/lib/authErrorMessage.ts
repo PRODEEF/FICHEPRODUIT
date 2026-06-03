@@ -36,7 +36,7 @@ export function isSignupEmailAlreadyRegisteredError(error: AuthError | null): bo
   ) {
     return true;
   }
-  const message = error.message?.trim() ?? '';
+  const message = error.message.trim();
   return EMAIL_ALREADY_REGISTERED_MESSAGE_RE.test(message);
 }
 
@@ -53,7 +53,7 @@ export function isSignupDuplicateEmailUser(user: User | null | undefined): boole
 export function authErrorMessage(error: AuthError | null): string {
   if (!error) return 'Une erreur inconnue est survenue. Réessayez.';
 
-  const message = error.message?.trim() ?? '';
+  const message = error.message.trim();
   if (/database error saving new user/i.test(message)) {
     return DATABASE_SIGNUP_HINT;
   }

@@ -50,7 +50,7 @@ export function ShopSummarySection({ shop, activeBrand, onBrandClick }: ShopSumm
           <span className="shrink-0 text-purple-600">🔗</span>
           <span className="truncate">{urlLabel}</span>
           <span className="shrink-0 text-gray-400">—</span>
-          <span className="shrink-0">{formatCmsLabel(shop?.cms ?? null)}</span>
+          <span className="shrink-0">{formatCmsLabel(shop.cms)}</span>
           <span className="shrink-0 text-gray-400">—</span>
           <span className="shrink-0">
             {shop.brands.length} marque{shop.brands.length > 1 ? 's' : ''} repérée

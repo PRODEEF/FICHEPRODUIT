@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { BrowserRouter, Outlet, Route, Routes, useNavigate } from 'react-router';
 import { Toaster } from 'sonner';
 
@@ -92,13 +92,15 @@ function AppHeader({ drawerOpen, onDrawerToggle }: AppHeaderProps) {
 
 function AppShellLayout({ userEmail }: { userEmail: string | null }) {
   const [drawerOpen, setDrawerOpen] = useState(true);
+  const [prevUserEmail, setPrevUserEmail] = useState(userEmail);
   const drawerExpanded = drawerOpen && Boolean(userEmail);
 
-  useEffect(() => {
+  if (userEmail !== prevUserEmail) {
+    setPrevUserEmail(userEmail);
     if (userEmail) {
       setDrawerOpen(true);
     }
-  }, [userEmail]);
+  }
 
   return (
     <div

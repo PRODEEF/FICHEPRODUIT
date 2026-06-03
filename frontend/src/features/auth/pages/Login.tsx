@@ -20,7 +20,6 @@ export function Login() {
 
   const {
     register,
-    watch,
     handleSubmit,
     setError,
     setValue,
@@ -32,6 +31,7 @@ export function Login() {
   });
 
   const loginEmail = useWatch({ control, name: 'email', defaultValue: '' });
+  const loginPassword = useWatch({ control, name: 'password', defaultValue: '' });
 
   const emailFromQuery = searchParams.get('email');
   useEffect(() => {
@@ -117,7 +117,7 @@ export function Login() {
             label="Mot de passe"
             autoComplete="current-password"
             placeholder="••••••••"
-            value={watch('password')}
+            value={loginPassword}
             error={errors.password?.message}
             disabled={isDisabled}
             {...register('password')}

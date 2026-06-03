@@ -12,7 +12,7 @@ export function useClaimGuestSessionOnAuth(session: Session | null, authLoading:
   const claimedForUserIdRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (authLoading || !session?.user?.id || !session.access_token) return;
+    if (authLoading || !session?.user.id || !session.access_token) return;
     if (claimedForUserIdRef.current === session.user.id) return;
 
     const userId = session.user.id;
@@ -24,8 +24,8 @@ export function useClaimGuestSessionOnAuth(session: Session | null, authLoading:
   }, [session, authLoading]);
 
   useEffect(() => {
-    if (!session?.user?.id) {
+    if (!session?.user.id) {
       claimedForUserIdRef.current = null;
     }
-  }, [session?.user?.id]);
+  }, [session?.user.id]);
 }
