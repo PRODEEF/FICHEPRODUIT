@@ -1,6 +1,6 @@
 import { FieldMapperService } from "./field-mapper.service";
-import type { CatalogProduct } from "@/domain/catalog/types/catalog.types";
-import type { ProductTemplateField } from "@/domain/product-template/types/product-template.types";
+import type { CatalogProduct } from "../../../domain/catalog/types/catalog.types";
+import type { ProductTemplateField } from "../../../domain/product-template/types/product-template.types";
 
 const sampleProduct = (): CatalogProduct => ({
   id: "550e8400-e29b-41d4-a716-446655440001",

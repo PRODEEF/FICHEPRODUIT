@@ -1,7 +1,8 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import type { CatalogProduct } from "@/domain/catalog/types/catalog.types";
-import type { ProductTemplateField } from "@/domain/product-template/types/product-template.types";
+
+import type { CatalogProduct } from "../../../domain/catalog/types/catalog.types";
+import type { ProductTemplateField } from "../../../domain/product-template/types/product-template.types";
 import type { MappedField } from "../types/export.types";
 
 /**

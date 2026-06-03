@@ -1,13 +1,14 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
-import { CatalogService } from "@/domain/catalog/catalog.service";
-import { ProductTemplateService } from "@/domain/product-template/product-template.service";
+
+import { CatalogService } from "../../domain/catalog/catalog.service";
+import { ProductTemplateService } from "../../domain/product-template/product-template.service";
 import { FieldMapperService } from "./mapper/field-mapper.service";
 import { AiContentService } from "./mapper/ai-content.service";
 import { CsvBuilderService } from "./csv/csv-builder.service";
 import type { ExportRequest, ExportResult, MappedProduct } from "./types/export.types";
 import type { AuthenticatedUser } from "../../core/auth/types/jwt-payload.types";
-import type { CatalogProduct } from "@/domain/catalog/types/catalog.types";
-import type { ProductTemplateField } from "@/domain/product-template/types/product-template.types";
+import type { CatalogProduct } from "../../domain/catalog/types/catalog.types";
+import type { ProductTemplateField } from "../../domain/product-template/types/product-template.types";
 
 /**
  * Orchestre chargement template + produits, mappage direct / IA et rendu CSV.

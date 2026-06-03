@@ -10,7 +10,7 @@ FICHEPRODUIT/
 │   └── src/
 ├── backend/           # NestJS 11 + Fastify + Zod + Supabase
 │   ├── src/
-│   ├── api/index.js   # Point d’entrée Vercel → dist/serverless.js
+│   ├── src/main.ts    # Entrée NestJS (local + Vercel zero-config)
 │   └── vercel.json
 ├── .github/workflows/ # CI (lint, tests, build)
 └── README.md
