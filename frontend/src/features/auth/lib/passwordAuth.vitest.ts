@@ -3,6 +3,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 import {
   changePasswordWithVerification,
+  completePasswordRecovery,
   getPasswordResetRedirectUrl,
   requestPasswordResetEmail,
   updatePassword,
@@ -99,6 +100,22 @@ describe('changePasswordWithVerification', () => {
       password: 'old-pass',
     });
     expect(updateUser).toHaveBeenCalledWith({ password: 'NewP@ssw0rd!' });
+  });
+});
+
+describe('completePasswordRecovery', () => {
+  it('met à jour le mot de passe sans déconnecter', async () => {
+    const updateUser = vi.fn().mockResolvedValue({ error: null });
+    const signOut = vi.fn().mockResolvedValue(undefined);
+    const supabase = {
+      auth: { updateUser, signOut },
+    } as unknown as SupabaseClient;
+
+    const result = await completePasswordRecovery(supabase, 'NewP@ssw0rd!');
+
+    expect(result).toEqual({ ok: true });
+    expect(updateUser).toHaveBeenCalledWith({ password: 'NewP@ssw0rd!' });
+    expect(signOut).not.toHaveBeenCalled();
   });
 });
 

@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 
 import type { Session, User } from '@supabase/supabase-js';
-import { getSupabaseClient } from '@shared/supabase';
+import { getSupabaseClient, isSupabaseConfigured } from '@shared/supabase';
 
+import { SupabaseConfigErrorScreen } from './components/SupabaseConfigErrorScreen';
 import { AuthContext } from './auth-context';
 import { useClaimGuestSessionOnAuth } from './hooks/useClaimGuestSessionOnAuth';
 import { applyPendingSignupFromStorage } from './lib/pendingSignupStorage';
@@ -10,9 +11,13 @@ import { createSupabaseUserRepository } from './supabaseUserRepository';
 import type { UserProfile } from './types';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const supabaseConfigured = getSupabaseClient() !== null;
-  const configError = !supabaseConfigured;
+  if (!isSupabaseConfigured()) {
+    return <SupabaseConfigErrorScreen />;
+  }
+  return <AuthProviderInner>{children}</AuthProviderInner>;
+}
 
+function AuthProviderInner({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [profileBundle, setProfileBundle] = useState<{
@@ -119,7 +124,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       displayLabel,
       profileLoading: Boolean(user) && profileLoading,
       loading,
-      configError,
       signOut,
       refreshProfile,
     }),
@@ -131,7 +135,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       displayLabel,
       profileLoading,
       loading,
-      configError,
       signOut,
       refreshProfile,
     ],

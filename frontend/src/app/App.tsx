@@ -1,5 +1,5 @@
 import { lazy, Suspense, useState } from 'react';
-import { BrowserRouter, Outlet, Route, Routes, useNavigate } from 'react-router';
+import { BrowserRouter, Outlet, Route, Routes, useLocation, useNavigate } from 'react-router';
 import { Toaster } from 'sonner';
 
 import { useAuth } from '@shared/hooks/useAuth';
@@ -120,9 +120,16 @@ function AppShellLayout({ userEmail }: { userEmail: string | null }) {
   );
 }
 
+/** Routes auth publiques : pas de sidebar même si une session recovery existe en arrière-plan. */
+function isPasswordResetRoute(pathname: string): boolean {
+  return pathname.endsWith('/auth/reset-password');
+}
+
 function AppShell() {
   const { userEmail } = useAuth();
-  return <AppShellLayout userEmail={userEmail} />;
+  const { pathname } = useLocation();
+  const layoutUserEmail = isPasswordResetRoute(pathname) ? null : userEmail;
+  return <AppShellLayout userEmail={layoutUserEmail} />;
 }
 
 export function App() {

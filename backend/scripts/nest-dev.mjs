@@ -3,13 +3,22 @@
  * Certains environnements (ex. terminal intégré) tronquent le PATH et
  * excluent System32, ce qui casse `nest start --watch` (appel à taskkill).
  */
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const backendRoot = path.join(__dirname, '..');
 const nestCli = path.join(backendRoot, 'node_modules', '@nestjs', 'cli', 'bin', 'nest.js');
+const ensureDist = path.join(__dirname, 'ensure-dist-built.mjs');
+
+const ensureResult = spawnSync(process.execPath, [ensureDist], {
+  cwd: backendRoot,
+  stdio: 'inherit',
+});
+if (ensureResult.status !== 0) {
+  process.exit(ensureResult.status ?? 1);
+}
 
 const env = { ...process.env };
 if (process.platform === 'win32') {
