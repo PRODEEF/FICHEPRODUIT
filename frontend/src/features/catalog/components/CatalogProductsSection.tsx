@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
-import { toast } from 'sonner';
 
 import type { CatalogProduct } from '@types-api';
+
+import { InsufficientCreditsModal } from '../../billing/components/InsufficientCreditsModal';
+import { useCatalogProductExport } from '../hooks/useCatalogProductExport';
 import type { CatalogProductPayloadMetadata, ProductFilter } from '../types';
 
 import { useProductFilters } from '../hooks/useProductFilters';
@@ -38,6 +40,8 @@ export function CatalogProductsSection({
   onBrandFilterChange,
   introVariant = 'shop',
 }: CatalogProductsSectionProps) {
+  const { exportProducts, insufficientCreditsOpen, dismissInsufficientCredits } =
+    useCatalogProductExport();
   const [removedIds, setRemovedIds] = useState<Set<string>>(() => new Set());
 
   const allProducts = products.filter((p) => !removedIds.has(p.id));
@@ -136,9 +140,12 @@ export function CatalogProductsSection({
             selectedCount={selectedInViewCount}
             onDelete={deleteSelected}
             onExport={() => {
-              toast.info('Export non disponible pour le moment', {
-                description:
-                  'L’export des fiches sélectionnées sera proposé ici dès que l’API d’export sera branchée.',
+              const productIds = [...selectedIds];
+              if (productIds.length === 0) return;
+              void exportProducts({
+                productIds,
+                templateId: '',
+                format: 'prestashop',
               });
             }}
           />
@@ -164,6 +171,10 @@ export function CatalogProductsSection({
           />
         )}
       </div>
+      <InsufficientCreditsModal
+        open={insufficientCreditsOpen}
+        onClose={dismissInsufficientCredits}
+      />
     </section>
   );
 }

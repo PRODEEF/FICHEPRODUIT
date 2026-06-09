@@ -3,9 +3,44 @@ import { NestFactory } from "@nestjs/core";
 import { FastifyAdapter, NestFastifyApplication } from "@nestjs/platform-fastify";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import cookie from "@fastify/cookie";
+import type { FastifyRequest } from "fastify";
+import { Readable } from "node:stream";
 import { cleanupOpenApiDoc } from "nestjs-zod";
 import { AppModule } from "../../app.module";
 import { registerHttpSecurityPlugins } from "./fastify-security-plugins";
+
+/** Route webhook Stripe — nécessite le corps brut pour la vérification de signature. */
+const STRIPE_WEBHOOK_PATH = "/api/billing/stripe/webhook";
+
+type FastifyRequestWithRawBody = FastifyRequest & { rawBody?: Buffer };
+
+/**
+ * Conserve une copie du corps brut uniquement pour le webhook Stripe.
+ * Stripe exige le payload non parsé pour `constructEvent`.
+ */
+function registerStripeWebhookRawBody(app: NestFastifyApplication): void {
+  const fastify = app.getHttpAdapter().getInstance();
+
+  fastify.addHook("preParsing", (request, _reply, payload, done) => {
+    if (request.url !== STRIPE_WEBHOOK_PATH) {
+      done(null, payload);
+      return;
+    }
+
+    const chunks: Buffer[] = [];
+    payload.on("data", (chunk: Buffer) => {
+      chunks.push(chunk);
+    });
+    payload.on("end", () => {
+      const rawBody = Buffer.concat(chunks);
+      (request as FastifyRequestWithRawBody).rawBody = rawBody;
+      done(null, Readable.from(rawBody));
+    });
+    payload.on("error", (err: Error) => {
+      done(err, undefined);
+    });
+  });
+}
 
 export type CreateNestAppOptions = {
   /** Active Swagger hors production (défaut : true). */
@@ -26,6 +61,8 @@ export async function createNestApp(
     new FastifyAdapter(),
     logger !== undefined ? { logger } : undefined,
   );
+
+  registerStripeWebhookRawBody(app);
 
   const fastify = app.getHttpAdapter().getInstance();
   await registerHttpSecurityPlugins(fastify);

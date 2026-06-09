@@ -59,6 +59,101 @@ export type Database = {
           },
         ];
       };
+      credit_lots: {
+        Row: {
+          amount_initial: number;
+          amount_remaining: number;
+          created_at: string;
+          expires_at: string | null;
+          id: string;
+          plan_id: string | null;
+          sector: string | null;
+          source: Database["public"]["Enums"]["credit_lot_source"];
+          stripe_checkout_session_id: string | null;
+          stripe_invoice_id: string | null;
+          user_id: string;
+        };
+        Insert: {
+          amount_initial: number;
+          amount_remaining: number;
+          created_at?: string;
+          expires_at?: string | null;
+          id?: string;
+          plan_id?: string | null;
+          sector?: string | null;
+          source: Database["public"]["Enums"]["credit_lot_source"];
+          stripe_checkout_session_id?: string | null;
+          stripe_invoice_id?: string | null;
+          user_id: string;
+        };
+        Update: {
+          amount_initial?: number;
+          amount_remaining?: number;
+          created_at?: string;
+          expires_at?: string | null;
+          id?: string;
+          plan_id?: string | null;
+          sector?: string | null;
+          source?: Database["public"]["Enums"]["credit_lot_source"];
+          stripe_checkout_session_id?: string | null;
+          stripe_invoice_id?: string | null;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "credit_lots_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      credit_transactions: {
+        Row: {
+          created_at: string;
+          delta: number;
+          id: string;
+          lot_id: string;
+          metadata: Json;
+          reason: Database["public"]["Enums"]["credit_transaction_reason"];
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          delta: number;
+          id?: string;
+          lot_id: string;
+          metadata?: Json;
+          reason: Database["public"]["Enums"]["credit_transaction_reason"];
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          delta?: number;
+          id?: string;
+          lot_id?: string;
+          metadata?: Json;
+          reason?: Database["public"]["Enums"]["credit_transaction_reason"];
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "credit_transactions_lot_id_fkey";
+            columns: ["lot_id"];
+            isOneToOne: false;
+            referencedRelation: "credit_lots";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "credit_transactions_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       catalog_products: {
         Row: {
           attributes: Json;
@@ -112,47 +207,6 @@ export type Database = {
           year?: number | null;
         };
         Relationships: [];
-      };
-      product_template_fields: {
-        Row: {
-          created_at: string;
-          id: string;
-          name: string;
-          order: number;
-          required: boolean;
-          template_id: string;
-          type: Database["public"]["Enums"]["template_field_type"];
-          updated_at: string;
-        };
-        Insert: {
-          created_at?: string;
-          id?: string;
-          name: string;
-          order?: number;
-          required?: boolean;
-          template_id: string;
-          type: Database["public"]["Enums"]["template_field_type"];
-          updated_at?: string;
-        };
-        Update: {
-          created_at?: string;
-          id?: string;
-          name?: string;
-          order?: number;
-          required?: boolean;
-          template_id?: string;
-          type?: Database["public"]["Enums"]["template_field_type"];
-          updated_at?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "product_template_fields_template_id_fkey";
-            columns: ["template_id"];
-            isOneToOne: false;
-            referencedRelation: "product_templates";
-            referencedColumns: ["id"];
-          },
-        ];
       };
       product_templates: {
         Row: {
@@ -249,6 +303,79 @@ export type Database = {
           },
         ];
       };
+      user_billing: {
+        Row: {
+          active_subscription_id: string | null;
+          created_at: string;
+          stripe_customer_id: string | null;
+          subscription_period_end: string | null;
+          subscription_status: string | null;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          active_subscription_id?: string | null;
+          created_at?: string;
+          stripe_customer_id?: string | null;
+          subscription_period_end?: string | null;
+          subscription_status?: string | null;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          active_subscription_id?: string | null;
+          created_at?: string;
+          stripe_customer_id?: string | null;
+          subscription_period_end?: string | null;
+          subscription_status?: string | null;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "user_billing_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: true;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      user_entitlements: {
+        Row: {
+          expires_at: string;
+          granted_at: string;
+          id: string;
+          revoked_at: string | null;
+          type: Database["public"]["Enums"]["user_entitlement_type"];
+          user_id: string;
+        };
+        Insert: {
+          expires_at: string;
+          granted_at?: string;
+          id?: string;
+          revoked_at?: string | null;
+          type: Database["public"]["Enums"]["user_entitlement_type"];
+          user_id: string;
+        };
+        Update: {
+          expires_at?: string;
+          granted_at?: string;
+          id?: string;
+          revoked_at?: string | null;
+          type?: Database["public"]["Enums"]["user_entitlement_type"];
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "user_entitlements_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       users: {
         Row: {
           created_at: string;
@@ -284,6 +411,9 @@ export type Database = {
       [_ in never]: never;
     };
     Enums: {
+      credit_lot_source: "signup_grant" | "pack_purchase" | "subscription_grant" | "manual";
+      credit_transaction_reason: "export" | "expiry" | "refund";
+      user_entitlement_type: "free_low_price_exports";
       analysis_error_code:
         | "SITE_UNREACHABLE"
         | "UNANALYZABLE"
@@ -441,6 +571,9 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      credit_lot_source: ["signup_grant", "pack_purchase", "subscription_grant", "manual"],
+      credit_transaction_reason: ["export", "expiry", "refund"],
+      user_entitlement_type: ["free_low_price_exports"],
       analysis_error_code: ["SITE_UNREACHABLE", "UNANALYZABLE", "UNKNOWN_SECTOR", "INTERNAL_ERROR"],
       analysis_status: ["pending", "running", "done", "failed"],
       shop_cms: ["prestashop", "shopify", "woocommerce", "autre", "inconnu"],

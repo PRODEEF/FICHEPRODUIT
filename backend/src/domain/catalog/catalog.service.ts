@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger, NotFoundException } from "@nestjs/common";
+import { Inject, Injectable, NotFoundException } from "@nestjs/common";
 import type { AuthenticatedUser } from "../../core/auth/types/jwt-payload.types";
 import { ShopService } from "../shop/shop.service";
 import {
@@ -16,8 +16,6 @@ const SHOP_BRANDS_CATALOG_LIMIT = 1000;
  */
 @Injectable()
 export class CatalogService {
-  private readonly logger = new Logger(CatalogService.name);
-
   constructor(
     @Inject(CATALOG_REPOSITORY)
     private readonly catalogRepo: ICatalogRepository,
@@ -63,26 +61,13 @@ export class CatalogService {
   ): Promise<CatalogProduct[]> {
     const shop = await this.shopService.getForUser(shopId, user);
     if (shop.brands.length === 0) {
-      this.logger.log(
-        `[by-shop-brands] shopId=${shopId} brands=[] → returning [] (no catalog search)`,
-      );
       return [];
     }
 
-    const criteria: CatalogSearchCriteria = {
+    return this.search({
       brands: shop.brands,
       limit: SHOP_BRANDS_CATALOG_LIMIT,
-    };
-    this.logger.log(`[by-shop-brands] calling catalogRepo.search with ${JSON.stringify(criteria)}`);
-
-    const products = await this.search(criteria);
-
-    this.logger.log(
-      `[by-shop-brands] shopId=${shopId} brands=${JSON.stringify(shop.brands)} count=${products.length}`,
-    );
-    this.logger.log(`[by-shop-brands] response body:\n${JSON.stringify(products, null, 2)}`);
-
-    return products;
+    });
   }
 
   /**
@@ -95,26 +80,12 @@ export class CatalogService {
   ): Promise<CatalogProduct[]> {
     const shop = await this.shopService.getForGuest(shopId, sessionId);
     if (shop.brands.length === 0) {
-      this.logger.log(
-        `[by-shop-brands] guest shopId=${shopId} brands=[] → returning [] (no catalog search)`,
-      );
       return [];
     }
 
-    const criteria: CatalogSearchCriteria = {
+    return this.search({
       brands: shop.brands,
       limit: SHOP_BRANDS_CATALOG_LIMIT,
-    };
-    this.logger.log(
-      `[by-shop-brands] guest calling catalogRepo.search with ${JSON.stringify(criteria)}`,
-    );
-
-    const products = await this.search(criteria);
-
-    this.logger.log(
-      `[by-shop-brands] guest shopId=${shopId} brands=${JSON.stringify(shop.brands)} count=${products.length}`,
-    );
-
-    return products;
+    });
   }
 }

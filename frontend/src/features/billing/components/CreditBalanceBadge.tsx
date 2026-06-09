@@ -1,0 +1,40 @@
+import { Coins } from 'lucide-react';
+
+import { cn } from '@shared/lib/cn';
+import { Badge } from '@shared/ui';
+
+import { useBilling } from '../hooks/useBilling';
+
+export interface CreditBalanceBadgeProps {
+  className?: string;
+}
+
+export function CreditBalanceBadge({ className }: CreditBalanceBadgeProps) {
+  const { summary, loading } = useBilling();
+
+  if (loading && !summary) {
+    return (
+      <Badge variant="warning" className={cn('gap-1', className)} aria-busy="true">
+        <Coins size={12} aria-hidden />
+        …
+      </Badge>
+    );
+  }
+
+  if (!summary) return null;
+
+  const label = summary.hasUnlimitedExports
+    ? 'Illimité'
+    : `${summary.balance} crédit${summary.balance > 1 ? 's' : ''}`;
+
+  return (
+    <Badge
+      variant="success"
+      className={cn('gap-1 whitespace-nowrap', className)}
+      title="Solde crédits disponibles"
+    >
+      <Coins size={12} aria-hidden />
+      {label}
+    </Badge>
+  );
+}

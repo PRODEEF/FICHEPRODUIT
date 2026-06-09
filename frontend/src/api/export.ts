@@ -13,6 +13,27 @@ import type { ExportBody } from './types/api.types';
 import { getApiBaseUrl } from './apiBase';
 import { authHeaders, extractErrorMessage } from './apiAuth';
 
+/** Levée lorsque l'export est refusé faute de crédits (HTTP 402). */
+export class ExportInsufficientCreditsError extends Error {
+  readonly status = 402;
+  readonly code = 'INSUFFICIENT_CREDITS';
+
+  constructor(message: string) {
+    super(message);
+    this.name = 'ExportInsufficientCreditsError';
+  }
+}
+
+function isInsufficientCreditsBody(parsed: unknown): boolean {
+  if (!parsed || typeof parsed !== 'object') return false;
+  const body = parsed as { error?: unknown; message?: unknown };
+  if (body.error === 'INSUFFICIENT_CREDITS') return true;
+  if (typeof body.message === 'string' && body.message.includes('INSUFFICIENT_CREDITS')) {
+    return true;
+  }
+  return false;
+}
+
 /**
  * Envoie une requête d'export et déclenche le téléchargement du CSV dans le navigateur.
  *
@@ -42,6 +63,11 @@ export async function downloadExportCsv(body: ExportBody, filename = 'export'): 
 
     if (res.status === 401) {
       throw new Error('Session expirée ou non autorisée. Reconnecte-toi.');
+    }
+    if (res.status === 402 && isInsufficientCreditsBody(parsed)) {
+      throw new ExportInsufficientCreditsError(
+        extractErrorMessage(parsed, 'Crédits insuffisants pour cet export.'),
+      );
     }
     throw new Error(extractErrorMessage(parsed, `Impossible de générer l'export (${res.status}).`));
   }

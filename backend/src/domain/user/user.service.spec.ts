@@ -1,6 +1,7 @@
 import { UserService } from "./user.service";
 import type { IUserRepository } from "./user.repository.interface";
 import type { AnalysisService } from "../analysis/analysis.service";
+import type { CreditService } from "../billing/credit.service";
 import type { ShopService } from "../shop/shop.service";
 
 describe("UserService", () => {
@@ -18,7 +19,16 @@ describe("UserService", () => {
     transferGuestShops: jest.fn(),
   } as unknown as jest.Mocked<ShopService>;
 
-  const service = new UserService(userRepoMock, analysisServiceMock, shopServiceMock);
+  const creditServiceMock = {
+    grantSignupCredits: jest.fn().mockResolvedValue(null),
+  } as unknown as jest.Mocked<CreditService>;
+
+  const service = new UserService(
+    userRepoMock,
+    analysisServiceMock,
+    creditServiceMock,
+    shopServiceMock,
+  );
 
   beforeEach(() => {
     jest.clearAllMocks();

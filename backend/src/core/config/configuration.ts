@@ -53,6 +53,13 @@ export default () => {
     tavilyApiKey: required("TAVILY_API_KEY"),
     tavilySearchDepth: optional("TAVILY_SEARCH_DEPTH", "basic"),
     tavilyCountry: parseTavilyCountry(),
+
+    // Stripe (optionnel en dev — checkout indisponible si vide)
+    stripeSecretKey: optional("STRIPE_SECRET_KEY", ""),
+    stripeWebhookSecret: optional("STRIPE_WEBHOOK_SECRET", ""),
+    stripeSuccessUrl: optional("STRIPE_SUCCESS_URL", "http://localhost:5173/billing/success"),
+    stripeCancelUrl: optional("STRIPE_CANCEL_URL", "http://localhost:5173/billing/cancel"),
+    stripePricePlatinum: optional("STRIPE_PRICE_PLATINUM", ""),
   };
 };
 

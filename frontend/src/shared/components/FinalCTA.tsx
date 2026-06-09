@@ -1,8 +1,9 @@
-import { Button } from '@shared/ui/Button';
 import { motion } from 'motion/react';
 
+import { Button } from '@shared/ui/Button';
 import { titleReveal } from '@lib/motionVariants';
-import { useScrollReveal } from '../hooks/useScrollReveal';
+
+import { useScrollReveal } from '../../features/landing/hooks/useScrollReveal';
 
 export function FinalCTA() {
   const { ref: titleRef, inView: titleInView } = useScrollReveal<HTMLHeadingElement>(0.5);
@@ -21,7 +22,7 @@ export function FinalCTA() {
         animate={titleInView ? 'visible' : 'hidden'}
         className="text-4xl font-extrabold mb-4"
       >
-        Lancez-vous — 14 jours gratuits, sans carte bancaire
+        Prêt à gagner des centaines d&apos;heures ?
       </motion.h2>
       <motion.p
         variants={titleReveal}
@@ -29,11 +30,15 @@ export function FinalCTA() {
         animate={titleInView ? 'visible' : 'hidden'}
         className="text-purple-200 mb-10 text-lg"
       >
-        Créez votre compte et commencez à générer des fiches en quelques minutes.
+        Commencez avec 3 crédits offerts. Aucune carte bancaire requise.
       </motion.p>
-      <motion.div variants={titleReveal} initial="hidden" animate={titleInView ? 'visible' : 'hidden'}>
+      <motion.div
+        variants={titleReveal}
+        initial="hidden"
+        animate={titleInView ? 'visible' : 'hidden'}
+      >
         <Button href="/signup" variant="secondary" size="lg" glow>
-        S&apos;inscrire gratuitement
+          S&apos;inscrire gratuitement
         </Button>
       </motion.div>
       <motion.p
