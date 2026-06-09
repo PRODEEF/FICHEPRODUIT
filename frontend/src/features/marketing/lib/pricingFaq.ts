@@ -9,19 +9,25 @@ export const PRICING_FAQ_ITEMS: PricingFaqItem[] = [
     id: 'credit-definition',
     question: "Qu'est-ce qu'un crédit ?",
     answer:
-      'Un crédit correspond à la génération d\'une fiche produit complète (texte SEO, attributs et export). Chaque fiche consomme un crédit, sauf pour les offres incluant les fiches à moins de 200 €.',
+      "Un crédit correspond à la génération d'une fiche produit complète (texte SEO, attributs et export). Chaque fiche consomme un crédit, sauf pour les offres incluant les fiches à moins de 200 €.",
   },
   {
     id: 'credit-expiry',
     question: 'Les crédits expirent-ils ?',
     answer:
-      "Non, vos crédits sont valables 12 mois à compter de l'achat. Pour le Platinium, les crédits sont mensuels et non reportables.",
+      "Oui, les crédits des packs sont valables 12 mois à compter de l'achat. Pour le Platinium, les exports sont illimités chaque mois (non reportables d'un mois sur l'autre).",
   },
   {
     id: 'sector-pricing',
     question: 'Pourquoi le tarif change selon mon secteur ?',
     answer:
       'La rédaction technique varie selon votre univers produit (vocabulaire, niveau de détail, conformité). ficheproduct adapte le tarif pour refléter cette complexité et vous proposer un prix juste.',
+  },
+  {
+    id: 'sector-not-found',
+    question: "Mon secteur n'est pas disponible, comment faire ?",
+    answer:
+      'Nous sommes en train de travailler sur la disponibilité de nouveaux secteurs. Vous pouvez nous contacter pour en discuter.',
   },
   {
     id: 'free-low-price',

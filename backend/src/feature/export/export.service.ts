@@ -2,7 +2,6 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 
 import { CatalogService } from "../../domain/catalog/catalog.service";
 import { CreditService } from "../../domain/billing/credit.service";
-import { InsufficientCreditsException } from "../../domain/billing/exceptions/insufficient-credits.exception";
 import { ProductTemplateService } from "../../domain/product-template/product-template.service";
 import { FieldMapperService } from "./mapper/field-mapper.service";
 import { AiContentService } from "./mapper/ai-content.service";
@@ -43,29 +42,34 @@ export class ExportService {
     const products = await this.catalogService.findByIds(req.productIds);
     if (products.length === 0) throw new NotFoundException("Aucun produit trouvé");
 
-    const debit = await this.creditService.computeExportDebit(
+    const exportProducts = products.map((p) => ({ id: p.id, price: p.price }));
+    const exportMetadata = {
+      productIds: req.productIds,
+      exportRowCount: products.length,
+    };
+
+    const exportAttemptId = await this.creditService.reserveCreditsForExport(
       user.id,
       user.accessToken,
-      products.map((p) => ({ id: p.id, price: p.price })),
+      exportProducts,
+      exportMetadata,
     );
-    if (debit.required > debit.available) {
-      throw new InsufficientCreditsException();
-    }
 
-    const mappedProducts: MappedProduct[] = await Promise.all(
-      products.map((product) => this.mapProduct(product, template.fields)),
-    );
+    let mappedProducts: MappedProduct[];
+    try {
+      mappedProducts = await Promise.all(
+        products.map((product) => this.mapProduct(product, template.fields)),
+      );
+    } catch (err) {
+      if (exportAttemptId) {
+        await this.creditService.refundExportReservation(user.id, exportAttemptId);
+      }
+      throw err;
+    }
 
     const csv = this.csvBuilder.build(mappedProducts, template.fields);
     const date = new Date().toISOString().split("T")[0];
     const sector = products[0]?.sector ?? "export";
-
-    await this.creditService.debitForExport(
-      user.id,
-      user.accessToken,
-      products.map((p) => ({ id: p.id, price: p.price })),
-      { productIds: req.productIds, exportRowCount: mappedProducts.length },
-    );
 
     return {
       csv,

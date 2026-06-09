@@ -1,7 +1,8 @@
 import { Card } from '@shared/ui';
 
 import type { SavingsSimulationResult } from '../lib/pricingSimulator';
-import { formatPriceEur } from '../lib/pricingFormat';
+import { PRICING_EXCL_TAX_NOTICE } from '../lib/pricingConstants';
+import { formatPriceEur, formatPriceEurExclTax } from '../lib/pricingFormat';
 
 const RANGE_CLASS =
   'h-2 w-full min-w-0 flex-1 cursor-pointer appearance-none rounded-full bg-purple-100 accent-purple-600';
@@ -65,6 +66,7 @@ function SavingsResultCard({ label, value, valueClassName }: SavingsResultCardPr
 }
 
 interface SavingsSimulatorProps {
+  ready: boolean;
   sheetCount: number;
   minSheetCount: number;
   maxSheetCount: number;
@@ -78,6 +80,7 @@ interface SavingsSimulatorProps {
 }
 
 export function SavingsSimulator({
+  ready,
   sheetCount,
   minSheetCount,
   maxSheetCount,
@@ -94,45 +97,54 @@ export function SavingsSimulator({
       <h2 className="mb-6 text-center text-xs font-bold tracking-widest text-text-muted uppercase">
         Simulateur d&apos;économies
       </h2>
-      <Card className="p-6 sm:p-8">
-        <div className="space-y-8">
-          <SimulatorSliderRow
-            id="pricing-sheet-count"
-            label="Fiches à générer par an"
-            valueLabel={`${sheetCount} fiches`}
-            min={minSheetCount}
-            max={maxSheetCount}
-            value={sheetCount}
-            onChange={onSheetCountChange}
-          />
-          <SimulatorSliderRow
-            id="pricing-manual-minutes"
-            label="Temps de rédaction manuelle"
-            valueLabel={`${manualMinutes} min`}
-            min={minManualMinutes}
-            max={maxManualMinutes}
-            step={manualMinutesStep}
-            value={manualMinutes}
-            onChange={onManualMinutesChange}
-          />
-        </div>
+      <Card className="p-6 sm:p-8" aria-busy={!ready}>
+        {!ready ? (
+          <p className="text-center text-sm text-text-muted" role="status">
+            Chargement des tarifs pour votre secteur…
+          </p>
+        ) : (
+          <>
+            <div className="space-y-8">
+              <SimulatorSliderRow
+                id="pricing-sheet-count"
+                label="Fiches à générer par an"
+                valueLabel={`${sheetCount} fiches`}
+                min={minSheetCount}
+                max={maxSheetCount}
+                value={sheetCount}
+                onChange={onSheetCountChange}
+              />
+              <SimulatorSliderRow
+                id="pricing-manual-minutes"
+                label="Temps de rédaction manuelle"
+                valueLabel={`${manualMinutes} min`}
+                min={minManualMinutes}
+                max={maxManualMinutes}
+                step={manualMinutesStep}
+                value={manualMinutes}
+                onChange={onManualMinutesChange}
+              />
+            </div>
 
-        <div className="mt-10 grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
-          <SavingsResultCard
-            label="Coût rédaction manuelle"
-            value={formatPriceEur(savings.manualCostEur, { decimals: 0 })}
-          />
-          <SavingsResultCard
-            label="Coût ficheproduct"
-            value={formatPriceEur(savings.ficheproductCostEur, { decimals: 0 })}
-            valueClassName="text-2xl font-extrabold text-purple-600"
-          />
-          <SavingsResultCard
-            label="Économie annuelle"
-            value={formatPriceEur(savings.annualSavingsEur, { decimals: 0 })}
-            valueClassName="text-2xl font-extrabold text-green-600"
-          />
-        </div>
+            <div className="mt-10 grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
+              <SavingsResultCard
+                label="Coût rédaction manuelle"
+                value={formatPriceEur(savings.manualCostEur, { decimals: 0 })}
+              />
+              <SavingsResultCard
+                label="Coût ficheproduct (HT)"
+                value={formatPriceEurExclTax(savings.ficheproductCostEur, { decimals: 0 })}
+                valueClassName="text-2xl font-extrabold text-purple-600"
+              />
+              <SavingsResultCard
+                label="Économie annuelle"
+                value={formatPriceEur(savings.annualSavingsEur, { decimals: 0 })}
+                valueClassName="text-2xl font-extrabold text-green-600"
+              />
+            </div>
+            <p className="mt-4 text-center text-xs text-text-muted">{PRICING_EXCL_TAX_NOTICE}</p>
+          </>
+        )}
       </Card>
     </section>
   );

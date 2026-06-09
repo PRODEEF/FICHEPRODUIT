@@ -8,9 +8,11 @@ import {
   ApiOkResponse,
   ApiOperation,
   ApiProduces,
+  ApiResponse,
   ApiTags,
   ApiUnauthorizedResponse,
 } from "@nestjs/swagger";
+import { INSUFFICIENT_CREDITS_ERROR } from "../../domain/billing/exceptions/insufficient-credits.exception";
 import { JwtGuard } from "../../core/auth/guards/jwt.guard";
 import { CurrentUser } from "../../core/auth/decorators/current-user.decorator";
 import type { AuthenticatedUser } from "../../core/auth/types/jwt-payload.types";
@@ -47,6 +49,10 @@ export class ExportController {
   })
   @ApiUnauthorizedResponse({ description: "JWT manquant ou invalide" })
   @ApiNotFoundResponse({ description: "Template introuvable ou aucun produit pour les IDs donnés" })
+  @ApiResponse({
+    status: 402,
+    description: `Crédits insuffisants — code métier \`${INSUFFICIENT_CREDITS_ERROR}\``,
+  })
   async exportCsv(
     @CurrentUser() user: AuthenticatedUser,
     @Body() body: ExportProductsDto,

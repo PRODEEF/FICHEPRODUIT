@@ -1,17 +1,13 @@
 import { createZodDto } from "nestjs-zod";
 import { z } from "zod";
+import { checkoutPlanIdSchema } from "../billing-plan.schema";
 import { shopSectorSchema } from "../../shop/dto/shop-sector.schema";
 
-export const billingPlanIdSchema = z.enum([
-  "starter",
-  "pro",
-  "business_silver",
-  "business_gold",
-  "platinum",
-]);
+export { billingPlanIdSchema, checkoutPlanIdSchema } from "../billing-plan.schema";
+export type { CheckoutPlanId } from "../billing-plan.schema";
 
 export const createCheckoutSchema = z.object({
-  planId: billingPlanIdSchema.describe("Identifiant du forfait choisi"),
+  planId: checkoutPlanIdSchema.describe("Identifiant du forfait choisi"),
   sector: shopSectorSchema.describe("Secteur boutique au moment de l'achat"),
 });
 

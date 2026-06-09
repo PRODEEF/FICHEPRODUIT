@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Post, Query, UseGuards } from "@nestjs/common";
 import {
   ApiBearerAuth,
   ApiOkResponse,
@@ -11,6 +11,7 @@ import { JwtGuard } from "../../core/auth/guards/jwt.guard";
 import { CurrentUser } from "../../core/auth/decorators/current-user.decorator";
 import type { AuthenticatedUser } from "../../core/auth/types/jwt-payload.types";
 import { BillingService } from "./billing.service";
+import { BillingPlansQueryDto, BillingPlansResponseDto } from "./dto/billing-plans-response.dto";
 import { BillingSummaryResponseDto } from "./dto/billing-summary-response.dto";
 import { CheckoutResponseDto, CreateCheckoutDto } from "./dto/create-checkout.dto";
 
@@ -18,6 +19,17 @@ import { CheckoutResponseDto, CreateCheckoutDto } from "./dto/create-checkout.dt
 @Controller("api/billing")
 export class BillingController {
   constructor(private readonly billingService: BillingService) {}
+
+  @Get("plans")
+  @ApiOperation({
+    summary: "Forfaits et tarifs par secteur",
+    description:
+      "Retourne les prix HT calculés côté serveur pour le secteur demandé. Endpoint public.",
+  })
+  @ApiOkResponse({ type: BillingPlansResponseDto })
+  getPlans(@Query() query: BillingPlansQueryDto) {
+    return this.billingService.getPlans(query.sector);
+  }
 
   @Get("me")
   @UseGuards(JwtGuard)

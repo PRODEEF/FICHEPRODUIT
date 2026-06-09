@@ -1,16 +1,60 @@
-import { Injectable, InternalServerErrorException, Logger } from "@nestjs/common";
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from "@nestjs/common";
 import { SupabaseService } from "../../../core/supabase/supabase.service";
 import type { Database } from "../../../core/supabase/database.types";
+import { InsufficientCreditsDebitError } from "../exceptions/insufficient-credits-debit.error";
 import type { ICreditLotRepository } from "./credit-lot.repository.interface";
 import type { CreateCreditLot, CreditLot } from "../types/billing.types";
 
 type CreditLotRow = Database["public"]["Tables"]["credit_lots"]["Row"];
+
+type RpcError = { code?: string; message?: string; details?: string };
+
+/** Client admin typé pour les RPC billing non encore présents dans `database.types`. */
+type BillingAdminRpcClient = {
+  rpc(
+    fn: "debit_credits_fifo",
+    args: {
+      p_user_id: string;
+      p_amount: number;
+      p_metadata: Record<string, unknown>;
+    },
+  ): Promise<{ error: RpcError | null }>;
+  rpc(
+    fn: "refund_export_debit",
+    args: { p_user_id: string; p_export_attempt_id: string },
+  ): Promise<{ error: RpcError | null }>;
+};
 
 @Injectable()
 export class CreditLotRepository implements ICreditLotRepository {
   private readonly logger = new Logger(CreditLotRepository.name);
 
   constructor(private readonly supabase: SupabaseService) {}
+
+  async findRecentLotsByUser(
+    userId: string,
+    accessToken: string,
+    limit = 20,
+  ): Promise<CreditLot[]> {
+    const { data, error } = await this.supabase
+      .forUser(accessToken)
+      .from("credit_lots")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      this.logger.error(`findRecentLotsByUser(${userId}) failed`, error);
+      throw new InternalServerErrorException("Échec de la récupération de l'historique d'achats");
+    }
+
+    return (data ?? []).map((row) => this.toEntity(row as CreditLotRow));
+  }
 
   async findActiveLotsByUser(userId: string, accessToken: string): Promise<CreditLot[]> {
     const now = new Date().toISOString();
@@ -24,25 +68,6 @@ export class CreditLotRepository implements ICreditLotRepository {
 
     if (error) {
       this.logger.error(`findActiveLotsByUser(${userId}) failed`, error);
-      throw new InternalServerErrorException("Échec de la récupération des lots de crédits");
-    }
-
-    return (data ?? []).map((row) => this.toEntity(row as CreditLotRow));
-  }
-
-  async findActiveLotsForDebitAdmin(userId: string): Promise<CreditLot[]> {
-    const now = new Date().toISOString();
-    const { data, error } = await this.supabase.admin
-      .from("credit_lots")
-      .select("*")
-      .eq("user_id", userId)
-      .gt("amount_remaining", 0)
-      .or(`expires_at.is.null,expires_at.gt.${now}`)
-      .order("expires_at", { ascending: true, nullsFirst: false })
-      .order("created_at", { ascending: true });
-
-    if (error) {
-      this.logger.error(`findActiveLotsForDebitAdmin(${userId}) failed`, error);
       throw new InternalServerErrorException("Échec de la récupération des lots de crédits");
     }
 
@@ -134,36 +159,52 @@ export class CreditLotRepository implements ICreditLotRepository {
     return this.toEntity(row as CreditLotRow);
   }
 
-  async decrementLotRemaining(lotId: string, amount: number): Promise<CreditLot> {
-    const { data: current, error: readError } = await this.supabase.admin
-      .from("credit_lots")
-      .select("amount_remaining")
-      .eq("id", lotId)
-      .single();
+  async debitCreditsFifoAdmin(
+    userId: string,
+    amount: number,
+    metadata: Record<string, unknown>,
+  ): Promise<void> {
+    const admin = this.supabase.admin as unknown as BillingAdminRpcClient;
+    const { error } = await admin.rpc("debit_credits_fifo", {
+      p_user_id: userId,
+      p_amount: amount,
+      p_metadata: metadata,
+    });
 
-    if (readError || !current) {
-      this.logger.error(`decrementLotRemaining read(${lotId}) failed`, readError);
-      throw new InternalServerErrorException("Échec de la lecture du lot de crédits");
+    if (!error) {
+      return;
     }
 
-    const nextRemaining = current.amount_remaining - amount;
-    if (nextRemaining < 0) {
-      throw new InternalServerErrorException("Solde du lot insuffisant pour le débit");
+    if (error.code === "P0001" || error.message?.includes("INSUFFICIENT_CREDITS")) {
+      throw new InsufficientCreditsDebitError(this.parseInsufficientCreditsDetail(error.details));
     }
 
-    const { data, error } = await this.supabase.admin
-      .from("credit_lots")
-      .update({ amount_remaining: nextRemaining })
-      .eq("id", lotId)
-      .select()
-      .single();
+    this.logger.error(`debitCreditsFifoAdmin(${userId}, ${amount}) failed`, error);
+    throw new InternalServerErrorException("Échec du débit des crédits");
+  }
 
-    if (error || !data) {
-      this.logger.error(`decrementLotRemaining(${lotId}) failed`, error);
-      throw new InternalServerErrorException("Échec de la mise à jour du lot de crédits");
+  async refundExportDebitAdmin(userId: string, exportAttemptId: string): Promise<void> {
+    const admin = this.supabase.admin as unknown as BillingAdminRpcClient;
+    const { error } = await admin.rpc("refund_export_debit", {
+      p_user_id: userId,
+      p_export_attempt_id: exportAttemptId,
+    });
+
+    if (error) {
+      this.logger.error(
+        `refundExportDebitAdmin(${userId}, ${exportAttemptId}) failed`,
+        error,
+      );
+      throw new InternalServerErrorException("Échec du remboursement des crédits");
     }
+  }
 
-    return this.toEntity(data as CreditLotRow);
+  private parseInsufficientCreditsDetail(details: string | undefined): number {
+    if (!details) {
+      return 0;
+    }
+    const parsed = Number.parseInt(details, 10);
+    return Number.isFinite(parsed) ? parsed : 0;
   }
 
   private toEntity(row: CreditLotRow): CreditLot {

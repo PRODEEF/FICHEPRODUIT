@@ -9,7 +9,6 @@ export type UpdateUserSubscription = {
 
 export interface IUserBillingRepository {
   findByUserId(userId: string, accessToken: string): Promise<UserBilling | null>;
-  findByUserIdAdmin(userId: string): Promise<UserBilling | null>;
   findByStripeCustomerId(stripeCustomerId: string): Promise<UserBilling | null>;
   upsertStripeCustomer(userId: string, stripeCustomerId: string): Promise<UserBilling>;
   updateSubscription(data: UpdateUserSubscription): Promise<UserBilling>;

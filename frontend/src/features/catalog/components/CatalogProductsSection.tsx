@@ -40,8 +40,13 @@ export function CatalogProductsSection({
   onBrandFilterChange,
   introVariant = 'shop',
 }: CatalogProductsSectionProps) {
-  const { exportProducts, insufficientCreditsOpen, dismissInsufficientCredits } =
-    useCatalogProductExport();
+  const {
+    exportProducts,
+    isExporting,
+    insufficientCreditsOpen,
+    insufficientCreditsDetails,
+    dismissInsufficientCredits,
+  } = useCatalogProductExport();
   const [removedIds, setRemovedIds] = useState<Set<string>>(() => new Set());
 
   const allProducts = products.filter((p) => !removedIds.has(p.id));
@@ -136,6 +141,7 @@ export function CatalogProductsSection({
         {displayProducts.length > 0 ? (
           <ProductResultsToolbar
             isConnected={isConnected}
+            isExporting={isExporting}
             totalCount={displayProducts.length}
             selectedCount={selectedInViewCount}
             onDelete={deleteSelected}
@@ -174,6 +180,8 @@ export function CatalogProductsSection({
       <InsufficientCreditsModal
         open={insufficientCreditsOpen}
         onClose={dismissInsufficientCredits}
+        requiredCredits={insufficientCreditsDetails.requiredCredits}
+        availableCredits={insufficientCreditsDetails.availableCredits}
       />
     </section>
   );

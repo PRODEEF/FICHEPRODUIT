@@ -8,6 +8,7 @@ import {
   Gem,
   Hammer,
   Home,
+  LayoutGrid,
   Mountain,
   Shirt,
   Tent,
@@ -108,9 +109,15 @@ const UNIVERSE_META: Record<ShopSectorLabel, Pick<Universe, 'icon' | 'color' | '
     color: 'text-indigo-400',
     example: 'Consoles, accessoires, univers joueurs',
   },
+  Autres: {
+    icon: LayoutGrid,
+    color: 'text-gray-400',
+    example: 'Catalogues hors secteurs listés',
+  },
 };
 
-export const universes: Universe[] = SHOP_SECTOR_LABELS.map((label) => ({
-  label,
-  ...UNIVERSE_META[label],
-}));
+export const universes: Universe[] = SHOP_SECTOR_LABELS.flatMap((label) => {
+  const meta = UNIVERSE_META[label];
+  if (!meta) return [];
+  return [{ label, ...meta }];
+});

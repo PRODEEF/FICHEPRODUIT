@@ -412,7 +412,7 @@ export type Database = {
     };
     Enums: {
       credit_lot_source: "signup_grant" | "pack_purchase" | "subscription_grant" | "manual";
-      credit_transaction_reason: "export" | "expiry" | "refund";
+      credit_transaction_reason: "export" | "expiry" | "refund" | "grant";
       user_entitlement_type: "free_low_price_exports";
       analysis_error_code:
         | "SITE_UNREACHABLE"
@@ -572,7 +572,7 @@ export const Constants = {
   public: {
     Enums: {
       credit_lot_source: ["signup_grant", "pack_purchase", "subscription_grant", "manual"],
-      credit_transaction_reason: ["export", "expiry", "refund"],
+      credit_transaction_reason: ["export", "expiry", "refund", "grant"],
       user_entitlement_type: ["free_low_price_exports"],
       analysis_error_code: ["SITE_UNREACHABLE", "UNANALYZABLE", "UNKNOWN_SECTOR", "INTERNAL_ERROR"],
       analysis_status: ["pending", "running", "done", "failed"],

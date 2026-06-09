@@ -3,14 +3,17 @@ import { Check } from 'lucide-react';
 import { cn } from '@shared/lib/cn';
 import { Badge, Button } from '@shared/ui';
 
-import type { ComputedPlan, PricingPlanId } from '../lib/pricingConfig';
+import type { BillingPlanId } from '@api/types/api.types';
+
+import type { ComputedPlan } from '../types';
+import { PRICE_EXCL_TAX_LABEL } from '../lib/pricingConstants';
 import { formatPriceEur } from '../lib/pricingFormat';
 
 interface PricingPlanCardProps {
   plan: ComputedPlan;
   isAuthenticated: boolean;
   checkoutLoading: boolean;
-  onSelectPlan: (planId: PricingPlanId) => void;
+  onSelectPlan: (planId: BillingPlanId) => void;
 }
 
 export function PricingPlanCard({
@@ -19,6 +22,9 @@ export function PricingPlanCard({
   checkoutLoading,
   onSelectPlan,
 }: PricingPlanCardProps) {
+  const priceDecimals = plan.priceEur % 1 === 0 ? 0 : 2;
+  const isBusinessCustom = plan.id === 'business_custom';
+
   return (
     <article
       className={cn(
@@ -36,14 +42,25 @@ export function PricingPlanCard({
         {plan.name}
       </p>
       <p className="text-2xl font-extrabold text-text-primary sm:text-3xl">
-        {formatPriceEur(plan.priceEur, { decimals: plan.priceEur % 1 === 0 ? 0 : 2 })}
+        {isBusinessCustom ? (
+          'Prix sur devis'
+        ) : (
+          <>
+            {formatPriceEur(plan.priceEur, { decimals: priceDecimals })}{' '}
+            <span className="text-[0.55em] font-bold">{PRICE_EXCL_TAX_LABEL}</span>
+          </>
+        )}
       </p>
       {plan.pricePerSheetEur !== null ? (
         <p className="mt-1 text-xs font-medium text-purple-600 sm:text-sm">
-          soit {formatPriceEur(plan.pricePerSheetEur)} / fiche
+          soit {formatPriceEur(plan.pricePerSheetEur)}{' '}
+          <span className="text-[0.85em] font-semibold">{PRICE_EXCL_TAX_LABEL}</span> / fiche
         </p>
       ) : plan.priceSuffix ? (
-        <p className="mt-1 text-xs font-medium text-purple-600 sm:text-sm">{plan.priceSuffix}</p>
+        <p className="mt-1 text-xs font-medium text-purple-600 sm:text-sm">
+          {plan.priceSuffix}
+          {!isBusinessCustom ? ` · ${PRICE_EXCL_TAX_LABEL}` : null}
+        </p>
       ) : null}
       <p className="mt-1.5 text-xs text-text-muted sm:text-sm">{plan.creditsLabel}</p>
 
@@ -72,25 +89,36 @@ export function PricingPlanCard({
         ))}
       </ul>
 
-      <Button
-        type="button"
-        href={isAuthenticated ? undefined : '/signup'}
-        variant={plan.ctaPrimary ? 'primary' : 'neutral-outline'}
-        size="sm"
-        className="w-full text-xs sm:text-sm"
-        glow={plan.ctaPrimary}
-        disabled={checkoutLoading}
-        aria-busy={checkoutLoading}
-        onClick={
-          isAuthenticated
-            ? () => {
-                onSelectPlan(plan.id);
-              }
-            : undefined
-        }
-      >
-        {checkoutLoading ? 'Redirection…' : plan.ctaLabel}
-      </Button>
+      {plan.ctaMailto ? (
+        <a
+          href={plan.ctaMailto}
+          className={cn(
+            'inline-flex w-full items-center justify-center rounded-lg border border-soft bg-bg-white px-4 py-2 text-xs font-medium text-text-primary transition-colors hover:border-purple-400 sm:text-sm',
+          )}
+        >
+          {plan.ctaLabel}
+        </a>
+      ) : (
+        <Button
+          type="button"
+          href={isAuthenticated ? undefined : '/signup'}
+          variant={plan.ctaPrimary ? 'primary' : 'neutral-outline'}
+          size="sm"
+          className="w-full text-xs sm:text-sm"
+          glow={plan.ctaPrimary}
+          disabled={checkoutLoading}
+          aria-busy={checkoutLoading}
+          onClick={
+            isAuthenticated
+              ? () => {
+                  onSelectPlan(plan.id);
+                }
+              : undefined
+          }
+        >
+          {checkoutLoading ? 'Redirection…' : plan.ctaLabel}
+        </Button>
+      )}
     </article>
   );
 }

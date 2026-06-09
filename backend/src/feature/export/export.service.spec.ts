@@ -41,8 +41,8 @@ describe("ExportService", () => {
   const mockTemplate = { getTemplateForShop: jest.fn() };
   const mockAi = { generateFields: jest.fn() };
   const mockCredit = {
-    computeExportDebit: jest.fn(),
-    debitForExport: jest.fn(),
+    reserveCreditsForExport: jest.fn(),
+    refundExportReservation: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -118,12 +118,7 @@ describe("ExportService", () => {
     mockTemplate.getTemplateForShop.mockResolvedValue(tpl);
     mockCatalog.findByIds.mockResolvedValue([catalogProduct()]);
     mockAi.generateFields.mockResolvedValue([]);
-    mockCredit.computeExportDebit.mockResolvedValue({
-      required: 1,
-      available: 3,
-      billableProductIds: [catalogProduct().id],
-    });
-    mockCredit.debitForExport.mockResolvedValue(undefined);
+    mockCredit.reserveCreditsForExport.mockResolvedValue("attempt-1");
 
     const result = await service.export(
       { productIds: [catalogProduct().id], templateId: tpl.id, shopId: tpl.shopId },
@@ -135,7 +130,7 @@ describe("ExportService", () => {
     expect(result.filename).toMatch(/^export-maison-\d{4}-\d{2}-\d{2}\.csv$/);
     expect(mockTemplate.getTemplateForShop).toHaveBeenCalledWith(tpl.id, tpl.shopId, user);
     expect(mockCatalog.findByIds).toHaveBeenCalledWith([catalogProduct().id]);
-    expect(mockCredit.debitForExport).toHaveBeenCalled();
+    expect(mockCredit.reserveCreditsForExport).toHaveBeenCalled();
   });
 
   it("lève InsufficientCreditsException si le solde est insuffisant", async () => {
@@ -147,11 +142,9 @@ describe("ExportService", () => {
     };
     mockTemplate.getTemplateForShop.mockResolvedValue(tpl);
     mockCatalog.findByIds.mockResolvedValue([catalogProduct()]);
-    mockCredit.computeExportDebit.mockResolvedValue({
-      required: 2,
-      available: 1,
-      billableProductIds: ["p1", "p2"],
-    });
+    mockCredit.reserveCreditsForExport.mockRejectedValue(
+      new InsufficientCreditsException(2, 1),
+    );
 
     await expect(
       service.export(
@@ -160,6 +153,28 @@ describe("ExportService", () => {
       ),
     ).rejects.toThrow(InsufficientCreditsException);
 
-    expect(mockCredit.debitForExport).not.toHaveBeenCalled();
+    expect(mockCredit.refundExportReservation).not.toHaveBeenCalled();
+  });
+
+  it("rembourse les crédits si le mapping IA échoue après réservation", async () => {
+    const tpl: ProductTemplate = {
+      id: "550e8400-e29b-41d4-a716-446655440002",
+      name: "T",
+      shopId: "550e8400-e29b-41d4-a716-446655440003",
+      fields: [{ name: "name", type: "text", required: false, order: 0 }],
+    };
+    mockTemplate.getTemplateForShop.mockResolvedValue(tpl);
+    mockCatalog.findByIds.mockResolvedValue([catalogProduct()]);
+    mockCredit.reserveCreditsForExport.mockResolvedValue("attempt-refund");
+    mockAi.generateFields.mockRejectedValue(new Error("Échec IA"));
+
+    await expect(
+      service.export(
+        { productIds: [catalogProduct().id], templateId: tpl.id, shopId: tpl.shopId },
+        user,
+      ),
+    ).rejects.toThrow("Échec IA");
+
+    expect(mockCredit.refundExportReservation).toHaveBeenCalledWith(user.id, "attempt-refund");
   });
 });

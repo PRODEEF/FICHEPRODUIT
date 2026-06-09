@@ -3,7 +3,11 @@ import { useEffect, useState } from 'react';
 
 import { badgeBounce, titleReveal } from '@lib/motionVariants';
 
-export function PricingHero() {
+interface PricingHeroProps {
+  variant?: 'visitor' | 'authenticated';
+}
+
+export function PricingHero({ variant = 'visitor' }: PricingHeroProps) {
   const [prefersReduced, setPrefersReduced] = useState(false);
 
   useEffect(() => {
@@ -30,10 +34,10 @@ export function PricingHero() {
         animate="visible"
         className="mb-4 text-[clamp(1.8rem,4vw,3rem)] font-black leading-[1.15] text-text-primary"
       >
-        Un prix juste.
+        Un prix juste et
         <br />
         <span className="bg-gradient-to-br from-purple-600 to-purple-400 bg-clip-text text-transparent">
-          Adapté à votre marché.
+          adapté à votre marché
         </span>
       </motion.h1>
       <motion.p
@@ -46,8 +50,9 @@ export function PricingHero() {
           ease: [0.22, 1, 0.36, 1],
         }}
       >
-        ficheproduct adapte son tarif à votre univers produit. Sélectionnez votre secteur pour voir
-        le pricing qui vous correspond.
+        {variant === 'authenticated'
+          ? 'Tarifs calculés pour votre univers produit.'
+          : 'FicheProduct adapte son tarif à votre univers produit. Sélectionnez votre secteur pour voir le pricing qui vous correspond.'}
       </motion.p>
     </section>
   );

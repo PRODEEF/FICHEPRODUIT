@@ -2,18 +2,12 @@
 export type CreditLotSource = "signup_grant" | "pack_purchase" | "subscription_grant" | "manual";
 
 /** Motif d’une écriture dans le journal crédits. */
-export type CreditTransactionReason = "export" | "expiry" | "refund";
+export type CreditTransactionReason = "export" | "expiry" | "refund" | "grant";
 
 /** Type d’avantage utilisateur (ex. fiches < 200 € offertes). */
 export type UserEntitlementType = "free_low_price_exports";
 
-/** Identifiants des forfaits tarifaires (packs + abonnement). */
-export type BillingPlanId =
-  | "starter"
-  | "pro"
-  | "business_silver"
-  | "business_gold"
-  | "platinum";
+export type { BillingPlanId, CheckoutPlanId } from "../billing-plan.schema";
 
 export type CreditLot = {
   id: string;
@@ -88,10 +82,23 @@ export type BillingTransactionSummary = {
   metadata: Record<string, unknown>;
 };
 
+export type BillingCreditLotSummary = {
+  id: string;
+  amountInitial: number;
+  amountRemaining: number;
+  source: CreditLotSource;
+  planId: string | null;
+  planName: string | null;
+  sector: string | null;
+  expiresAt: string | null;
+  createdAt: string;
+};
+
 export type BillingSummary = {
   balance: number;
   hasUnlimitedExports: boolean;
   subscription: BillingSubscriptionSummary | null;
   entitlements: BillingEntitlementSummary[];
+  recentPurchases: BillingCreditLotSummary[];
   recentTransactions: BillingTransactionSummary[];
 };

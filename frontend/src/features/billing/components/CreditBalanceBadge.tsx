@@ -10,13 +10,26 @@ export interface CreditBalanceBadgeProps {
 }
 
 export function CreditBalanceBadge({ className }: CreditBalanceBadgeProps) {
-  const { summary, loading } = useBilling();
+  const { summary, loading, error } = useBilling();
 
   if (loading && !summary) {
     return (
       <Badge variant="warning" className={cn('gap-1', className)} aria-busy="true">
         <Coins size={12} aria-hidden />
         …
+      </Badge>
+    );
+  }
+
+  if (error) {
+    return (
+      <Badge
+        variant="warning"
+        className={cn('gap-1 whitespace-nowrap', className)}
+        title={error}
+      >
+        <Coins size={12} aria-hidden />
+        Solde indisponible
       </Badge>
     );
   }
@@ -28,13 +41,15 @@ export function CreditBalanceBadge({ className }: CreditBalanceBadgeProps) {
     : `${summary.balance} crédit${summary.balance > 1 ? 's' : ''}`;
 
   return (
-    <Badge
-      variant="success"
-      className={cn('gap-1 whitespace-nowrap', className)}
-      title="Solde crédits disponibles"
-    >
-      <Coins size={12} aria-hidden />
-      {label}
-    </Badge>
+    <a href="/pricing" className="no-underline">
+      <Badge
+        variant="success"
+        className={cn('gap-1 whitespace-nowrap transition-opacity hover:opacity-90', className)}
+        title="Voir le solde et acheter des crédits"
+      >
+        <Coins size={12} aria-hidden />
+        {label}
+      </Badge>
+    </a>
   );
 }

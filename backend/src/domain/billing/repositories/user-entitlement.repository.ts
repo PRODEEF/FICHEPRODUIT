@@ -68,19 +68,30 @@ export class UserEntitlementRepository implements IUserEntitlementRepository {
     return this.toEntity(row as UserEntitlementRow);
   }
 
-  async revokeActiveByUserAndType(userId: string, type: UserEntitlementType): Promise<void> {
+  async revokeActiveEntitlementIfExpiresAt(
+    userId: string,
+    type: UserEntitlementType,
+    expiresAt: string,
+  ): Promise<boolean> {
     const now = new Date().toISOString();
-    const { error } = await this.supabase.admin
+    const { data, error } = await this.supabase.admin
       .from("user_entitlements")
       .update({ revoked_at: now })
       .eq("user_id", userId)
       .eq("type", type)
-      .is("revoked_at", null);
+      .eq("expires_at", expiresAt)
+      .is("revoked_at", null)
+      .select("id");
 
     if (error) {
-      this.logger.error(`revokeActiveByUserAndType(${userId}, ${type}) failed`, error);
+      this.logger.error(
+        `revokeActiveEntitlementIfExpiresAt(${userId}, ${type}) failed`,
+        error,
+      );
       throw new InternalServerErrorException("Échec de la révocation de l'avantage");
     }
+
+    return (data?.length ?? 0) > 0;
   }
 
   private toEntity(row: UserEntitlementRow): UserEntitlement {

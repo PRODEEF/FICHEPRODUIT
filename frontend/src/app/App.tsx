@@ -5,6 +5,7 @@ import { Toaster } from 'sonner';
 import { useAuth } from '@shared/hooks/useAuth';
 
 import { AuthProvider } from '../features/auth/AuthContext';
+import { BillingProvider } from '../features/billing/context/BillingContext';
 import { RequireAuthRoute } from '../features/auth/components/RequireAuthRoute';
 import { BackgroundGlow } from '../features/layout/components/BackgroundGlow';
 import { MarketingNavLinks } from '../features/layout/components/MarketingNavLinks';
@@ -161,6 +162,7 @@ export function App() {
 
   return (
     <AuthProvider>
+      <BillingProvider>
       <BrowserRouter>
         <Toaster richColors position="bottom-right" />
         <Suspense fallback={<RouteFallback />}>
@@ -188,6 +190,7 @@ export function App() {
           </Routes>
         </Suspense>
       </BrowserRouter>
+      </BillingProvider>
     </AuthProvider>
   );
 }

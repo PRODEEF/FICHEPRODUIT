@@ -12,7 +12,7 @@ vi.mock('./nestHttpClient', () => ({
   }),
 }));
 
-import { createCheckoutSession, fetchBillingMe } from './billing';
+import { createCheckoutSession, fetchBillingMe, fetchBillingPlans } from './billing';
 
 describe('billing API', () => {
   beforeEach(() => {
@@ -25,6 +25,7 @@ describe('billing API', () => {
       hasUnlimitedExports: false,
       subscription: null,
       entitlements: [],
+      recentPurchases: [],
       recentTransactions: [],
     });
 
@@ -35,6 +36,21 @@ describe('billing API', () => {
       method: 'GET',
       path: '/billing/me',
       authHeaders: expect.any(Function),
+    });
+  });
+
+  it('fetchBillingPlans appelle GET /billing/plans avec le secteur', async () => {
+    mockRequestNestJson.mockResolvedValue({
+      sector: 'Glisse',
+      multiplier: 1,
+      plans: [],
+    });
+
+    await fetchBillingPlans('Glisse');
+
+    expect(mockRequestNestJson).toHaveBeenCalledWith({
+      method: 'GET',
+      path: '/billing/plans?sector=Glisse',
     });
   });
 

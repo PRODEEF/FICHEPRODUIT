@@ -31,21 +31,6 @@ export class UserBillingRepository implements IUserBillingRepository {
     return data ? this.toEntity(data as UserBillingRow) : null;
   }
 
-  async findByUserIdAdmin(userId: string): Promise<UserBilling | null> {
-    const { data, error } = await this.supabase.admin
-      .from("user_billing")
-      .select("*")
-      .eq("user_id", userId)
-      .maybeSingle();
-
-    if (error) {
-      this.logger.error(`findByUserIdAdmin(${userId}) failed`, error);
-      throw new InternalServerErrorException("Échec de la récupération des informations de facturation");
-    }
-
-    return data ? this.toEntity(data as UserBillingRow) : null;
-  }
-
   async findByStripeCustomerId(stripeCustomerId: string): Promise<UserBilling | null> {
     const { data, error } = await this.supabase.admin
       .from("user_billing")

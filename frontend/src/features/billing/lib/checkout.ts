@@ -1,8 +1,7 @@
 import { createCheckoutSession } from '@api/billing';
 import { NestHttpError } from '@api/nestHttpClient';
+import type { BillingPlanId } from '@api/types/api.types';
 import type { ShopSectorLabel } from '@shared/lib/shopSectors';
-
-import type { PricingPlanId } from '../../marketing/lib/pricingConfig';
 
 export type CheckoutResult =
   | { ok: true }
@@ -13,7 +12,7 @@ export type CheckoutResult =
  * Redirige le navigateur vers l'URL Checkout en cas de succès.
  */
 export async function startPlanCheckout(
-  planId: PricingPlanId,
+  planId: BillingPlanId,
   sector: ShopSectorLabel,
 ): Promise<CheckoutResult> {
   try {

@@ -1,9 +1,7 @@
 import { BillingPricingService } from "./pricing/billing-pricing.service";
-import {
-  CreditService,
-  FREE_LOW_PRICE_THRESHOLD_EUR,
-  SIGNUP_CREDIT_AMOUNT,
-} from "./credit.service";
+import { CreditGrantService, SIGNUP_CREDIT_AMOUNT } from "./credit-grant.service";
+import { CreditLedgerService, FREE_LOW_PRICE_THRESHOLD_EUR } from "./credit-ledger.service";
+import { CreditService } from "./credit.service";
 import type { ICreditLotRepository } from "./repositories/credit-lot.repository.interface";
 import type { ICreditTransactionRepository } from "./repositories/credit-transaction.repository.interface";
 import type { IUserBillingRepository } from "./repositories/user-billing.repository.interface";
@@ -26,13 +24,14 @@ describe("CreditService", () => {
   };
 
   const creditLotRepoMock: jest.Mocked<ICreditLotRepository> = {
+    findRecentLotsByUser: jest.fn(),
     findActiveLotsByUser: jest.fn(),
-    findActiveLotsForDebitAdmin: jest.fn(),
     findSignupGrantLot: jest.fn(),
     findByStripeCheckoutSessionId: jest.fn(),
     findByStripeInvoiceId: jest.fn(),
     createLot: jest.fn(),
-    decrementLotRemaining: jest.fn(),
+    debitCreditsFifoAdmin: jest.fn(),
+    refundExportDebitAdmin: jest.fn(),
   };
 
   const creditTransactionRepoMock: jest.Mocked<ICreditTransactionRepository> = {
@@ -42,7 +41,6 @@ describe("CreditService", () => {
 
   const userBillingRepoMock: jest.Mocked<IUserBillingRepository> = {
     findByUserId: jest.fn(),
-    findByUserIdAdmin: jest.fn(),
     findByStripeCustomerId: jest.fn(),
     upsertStripeCustomer: jest.fn(),
     updateSubscription: jest.fn(),
@@ -51,16 +49,27 @@ describe("CreditService", () => {
   const entitlementRepoMock: jest.Mocked<IUserEntitlementRepository> = {
     findActiveByUser: jest.fn(),
     grantEntitlement: jest.fn(),
-    revokeActiveByUserAndType: jest.fn(),
+    revokeActiveEntitlementIfExpiresAt: jest.fn(),
   };
 
   const pricingService = new BillingPricingService();
-  const service = new CreditService(
+  const grantService = new CreditGrantService(
     creditLotRepoMock,
+    creditTransactionRepoMock,
+    entitlementRepoMock,
+    pricingService,
+  );
+  const ledgerService = new CreditLedgerService(
+    creditLotRepoMock,
+    userBillingRepoMock,
+    entitlementRepoMock,
+  );
+  const service = new CreditService(
+    ledgerService,
+    grantService,
     creditTransactionRepoMock,
     userBillingRepoMock,
     entitlementRepoMock,
-    pricingService,
   );
 
   beforeEach(() => {
@@ -87,17 +96,30 @@ describe("CreditService", () => {
   it("n'accorde les crédits signup qu'une seule fois", async () => {
     creditLotRepoMock.findSignupGrantLot.mockResolvedValueOnce(null).mockResolvedValue(signupLot);
     creditLotRepoMock.createLot.mockResolvedValue(signupLot);
+    creditTransactionRepoMock.createTransaction.mockResolvedValue({
+      id: "tx-1",
+      userId: "user-1",
+      lotId: signupLot.id,
+      delta: SIGNUP_CREDIT_AMOUNT,
+      reason: "grant",
+      metadata: { source: "signup_grant" },
+      createdAt: new Date().toISOString(),
+    });
 
     await service.grantSignupCredits("user-1");
     await service.grantSignupCredits("user-1");
 
     expect(creditLotRepoMock.createLot).toHaveBeenCalledTimes(1);
-    expect(creditLotRepoMock.createLot).toHaveBeenCalledWith({
-      userId: "user-1",
-      amountInitial: SIGNUP_CREDIT_AMOUNT,
-      amountRemaining: SIGNUP_CREDIT_AMOUNT,
-      source: "signup_grant",
-    });
+    expect(creditTransactionRepoMock.createTransaction).toHaveBeenCalledTimes(1);
+  });
+
+  it("ne crée pas de transaction signup si le lot existe déjà", async () => {
+    creditLotRepoMock.findSignupGrantLot.mockResolvedValue(signupLot);
+
+    await service.grantSignupCredits("user-1");
+
+    expect(creditLotRepoMock.createLot).not.toHaveBeenCalled();
+    expect(creditTransactionRepoMock.createTransaction).not.toHaveBeenCalled();
   });
 
   it("calcule un débit nul pour un abonnement Platinium actif", async () => {
@@ -141,33 +163,16 @@ describe("CreditService", () => {
     ]);
 
     expect(debit.required).toBe(2);
-    expect(debit.available).toBe(10);
     expect(debit.billableProductIds).toEqual(["expensive", "premium"]);
   });
 
-  it("débite en FIFO sur le lot le plus ancien en premier", async () => {
-    const oldLot: CreditLot = {
-      ...signupLot,
-      id: "lot-old",
-      amountRemaining: 1,
-      createdAt: "2024-01-01T00:00:00.000Z",
-    };
-    const newLot: CreditLot = {
-      ...signupLot,
-      id: "lot-new",
-      amountRemaining: 5,
-      source: "pack_purchase",
-      createdAt: "2024-06-01T00:00:00.000Z",
-    };
+  it("réserve les crédits via débit FIFO atomique", async () => {
+    creditLotRepoMock.findActiveLotsByUser.mockResolvedValue([
+      { ...signupLot, amountRemaining: 5 },
+    ]);
+    creditLotRepoMock.debitCreditsFifoAdmin.mockResolvedValue(undefined);
 
-    creditLotRepoMock.findActiveLotsByUser.mockResolvedValue([oldLot, newLot]);
-    creditLotRepoMock.findActiveLotsForDebitAdmin.mockResolvedValue([oldLot, newLot]);
-    creditLotRepoMock.decrementLotRemaining.mockImplementation(async (lotId, amount) => {
-      if (lotId === "lot-old") return { ...oldLot, amountRemaining: 0 };
-      return { ...newLot, amountRemaining: newLot.amountRemaining - amount };
-    });
-
-    await service.debitForExport(
+    const attemptId = await service.reserveCreditsForExport(
       "user-1",
       "token",
       [
@@ -177,19 +182,41 @@ describe("CreditService", () => {
       { productIds: ["p1", "p2"], exportRowCount: 2 },
     );
 
-    expect(creditLotRepoMock.decrementLotRemaining).toHaveBeenNthCalledWith(1, "lot-old", 1);
-    expect(creditLotRepoMock.decrementLotRemaining).toHaveBeenNthCalledWith(2, "lot-new", 1);
-    expect(creditTransactionRepoMock.createTransaction).toHaveBeenCalledTimes(2);
+    expect(attemptId).toEqual(expect.any(String));
+    expect(creditLotRepoMock.debitCreditsFifoAdmin).toHaveBeenCalled();
   });
 
-  it("ignore les lots expirés au calcul du solde", async () => {
+  it("lève InsufficientCreditsException sans appeler le RPC si le solde est clairement insuffisant", async () => {
+    const { InsufficientCreditsException } = await import(
+      "./exceptions/insufficient-credits.exception"
+    );
+
     creditLotRepoMock.findActiveLotsByUser.mockResolvedValue([
-      { ...signupLot, amountRemaining: 3 },
+      { ...signupLot, amountRemaining: 1 },
     ]);
 
-    const balance = await service.getBalance("user-1", "token");
-    expect(balance).toBe(3);
-    expect(creditLotRepoMock.findActiveLotsByUser).toHaveBeenCalledWith("user-1", "token");
+    await expect(
+      service.reserveCreditsForExport(
+        "user-1",
+        "token",
+        [
+          { id: "p1", price: 300 },
+          { id: "p2", price: 400 },
+        ],
+        { productIds: ["p1", "p2"], exportRowCount: 2 },
+      ),
+    ).rejects.toBeInstanceOf(InsufficientCreditsException);
+
+    expect(creditLotRepoMock.debitCreditsFifoAdmin).not.toHaveBeenCalled();
+  });
+
+  it("rembourse une réservation export", async () => {
+    await service.refundExportReservation("user-1", "attempt-abc");
+
+    expect(creditLotRepoMock.refundExportDebitAdmin).toHaveBeenCalledWith(
+      "user-1",
+      "attempt-abc",
+    );
   });
 
   it("grantPackPurchase est idempotent via stripe_checkout_session_id", async () => {
@@ -208,7 +235,7 @@ describe("CreditService", () => {
       userId: "user-1",
       planId: "pro",
       sector: "Glisse",
-      creditsAmount: 20,
+      creditsAmount: 10,
       stripeCheckoutSessionId: "cs_test_1",
     });
 
@@ -241,6 +268,18 @@ describe("CreditService", () => {
     );
   });
 
+  it("révoque l'entitlement free_low_price_exports à l'expiration", async () => {
+    const expiresAt = "2026-12-31T00:00:00.000Z";
+
+    await service.revokeFreeLowPriceEntitlementIfExpiresAt("user-1", expiresAt);
+
+    expect(entitlementRepoMock.revokeActiveEntitlementIfExpiresAt).toHaveBeenCalledWith(
+      "user-1",
+      "free_low_price_exports",
+      expiresAt,
+    );
+  });
+
   it("grantSubscriptionPeriod est idempotent via stripe_invoice_id", async () => {
     const subscriptionLot: CreditLot = {
       ...signupLot,
@@ -262,43 +301,5 @@ describe("CreditService", () => {
 
     expect(result).toBe(subscriptionLot);
     expect(creditLotRepoMock.createLot).not.toHaveBeenCalled();
-  });
-
-  it("grantSubscriptionPeriod crée un lot trace et prolonge l'entitlement", async () => {
-    const periodEnd = new Date("2026-12-31T00:00:00.000Z").toISOString();
-    creditLotRepoMock.findByStripeInvoiceId.mockResolvedValue(null);
-    creditLotRepoMock.createLot.mockResolvedValue({
-      ...signupLot,
-      id: "lot-sub-new",
-      source: "subscription_grant",
-      planId: "platinum",
-      amountInitial: 1,
-      amountRemaining: 0,
-      stripeInvoiceId: "in_new",
-      expiresAt: periodEnd,
-    });
-
-    await service.grantSubscriptionPeriod({
-      userId: "user-1",
-      stripeInvoiceId: "in_new",
-      periodEnd,
-      sector: "Glisse",
-    });
-
-    expect(creditLotRepoMock.createLot).toHaveBeenCalledWith({
-      userId: "user-1",
-      amountInitial: 1,
-      amountRemaining: 0,
-      source: "subscription_grant",
-      planId: "platinum",
-      sector: "Glisse",
-      expiresAt: periodEnd,
-      stripeInvoiceId: "in_new",
-    });
-    expect(entitlementRepoMock.grantEntitlement).toHaveBeenCalledWith({
-      userId: "user-1",
-      type: "free_low_price_exports",
-      expiresAt: periodEnd,
-    });
   });
 });

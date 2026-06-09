@@ -11,10 +11,22 @@ const billingEntitlementSchema = z.object({
   expiresAt: z.string().describe("Expiration de l'avantage (ISO 8601)"),
 });
 
+const billingCreditLotSchema = z.object({
+  id: z.uuid(),
+  amountInitial: z.number().int().nonnegative(),
+  amountRemaining: z.number().int().nonnegative(),
+  source: z.enum(["signup_grant", "pack_purchase", "subscription_grant", "manual"]),
+  planId: z.string().nullable(),
+  planName: z.string().nullable(),
+  sector: z.string().nullable(),
+  expiresAt: z.string().nullable(),
+  createdAt: z.string(),
+});
+
 const billingTransactionSchema = z.object({
   id: z.uuid(),
   delta: z.number().int(),
-  reason: z.enum(["export", "expiry", "refund"]),
+  reason: z.enum(["export", "expiry", "refund", "grant"]),
   createdAt: z.string(),
   metadata: z.record(z.string(), z.unknown()),
 });
@@ -26,6 +38,7 @@ export const billingSummaryResponseSchema = z.object({
     .describe("Abonnement Platinium actif — exports sans débit"),
   subscription: billingSubscriptionSchema.nullable(),
   entitlements: z.array(billingEntitlementSchema),
+  recentPurchases: z.array(billingCreditLotSchema).describe("Lots crédits (achats et offres)"),
   recentTransactions: z.array(billingTransactionSchema),
 });
 

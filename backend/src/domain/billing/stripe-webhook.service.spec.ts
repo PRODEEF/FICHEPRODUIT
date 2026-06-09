@@ -1,68 +1,44 @@
 import { BadRequestException } from "@nestjs/common";
-import type { ConfigService } from "@nestjs/config";
 import Stripe from "stripe";
 import { CreditService } from "./credit.service";
-import { BillingPricingService } from "./pricing/billing-pricing.service";
 import { StripeWebhookService } from "./stripe-webhook.service";
 import type { IUserBillingRepository } from "./repositories/user-billing.repository.interface";
-import type { IUserEntitlementRepository } from "./repositories/user-entitlement.repository.interface";
-
-jest.mock("stripe");
+import type { StripeService } from "./stripe.service";
+import type { CreditLot } from "./types/billing.types";
 
 describe("StripeWebhookService", () => {
   const creditServiceMock = {
     grantPackPurchase: jest.fn(),
-    grantSignupCredits: jest.fn(),
     grantSubscriptionPeriod: jest.fn(),
+    grantFreeLowPriceEntitlementIfApplicable: jest.fn(),
+    revokeFreeLowPriceEntitlementIfExpiresAt: jest.fn(),
   } as unknown as jest.Mocked<CreditService>;
 
   const userBillingRepoMock: jest.Mocked<IUserBillingRepository> = {
     findByUserId: jest.fn(),
-    findByUserIdAdmin: jest.fn(),
     findByStripeCustomerId: jest.fn(),
     upsertStripeCustomer: jest.fn(),
     updateSubscription: jest.fn(),
   };
 
-  const entitlementRepoMock: jest.Mocked<IUserEntitlementRepository> = {
-    findActiveByUser: jest.fn(),
-    grantEntitlement: jest.fn(),
-    revokeActiveByUserAndType: jest.fn(),
-  };
-
-  const configMock = {
-    get: jest.fn((key: string) => {
-      if (key === "stripeSecretKey") return "sk_test_xxx";
-      if (key === "stripeWebhookSecret") return "whsec_test";
-      return "";
-    }),
-  } as unknown as ConfigService;
-
-  const constructEventMock = jest.fn();
+  const constructWebhookEventMock = jest.fn();
   const subscriptionsRetrieveMock = jest.fn();
+
+  const stripeServiceMock = {
+    constructWebhookEvent: constructWebhookEventMock,
+    retrieveSubscription: subscriptionsRetrieveMock,
+    getClient: jest.fn(),
+  } as unknown as jest.Mocked<StripeService>;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    (Stripe as jest.MockedClass<typeof Stripe>).mockImplementation(
-      () =>
-        ({
-          webhooks: { constructEvent: constructEventMock },
-          subscriptions: { retrieve: subscriptionsRetrieveMock },
-        }) as unknown as Stripe,
-    );
   });
 
   const createService = () =>
-    new StripeWebhookService(
-      configMock,
-      creditServiceMock,
-      new BillingPricingService(),
-      userBillingRepoMock,
-      entitlementRepoMock,
-    );
+    new StripeWebhookService(stripeServiceMock, creditServiceMock, userBillingRepoMock);
 
   it("rejette une signature invalide", () => {
-    constructEventMock.mockImplementation(() => {
+    constructWebhookEventMock.mockImplementation(() => {
       throw new Error("Invalid signature");
     });
 
@@ -79,7 +55,7 @@ describe("StripeWebhookService", () => {
         user_id: "user-1",
         plan_id: "pro",
         sector: "Glisse",
-        credits_amount: "20",
+        credits_amount: "10",
       },
     };
 
@@ -88,8 +64,8 @@ describe("StripeWebhookService", () => {
       data: { object: session },
     } as Stripe.Event;
 
-    constructEventMock.mockReturnValue(event);
-    creditServiceMock.grantPackPurchase = jest.fn().mockResolvedValue({ id: "lot-1" });
+    constructWebhookEventMock.mockReturnValue(event);
+    creditServiceMock.grantPackPurchase.mockResolvedValue({ id: "lot-1" } as CreditLot);
 
     const service = createService();
     await service.handleEvent(event);
@@ -98,9 +74,33 @@ describe("StripeWebhookService", () => {
       userId: "user-1",
       planId: "pro",
       sector: "Glisse",
-      creditsAmount: 20,
+      creditsAmount: 10,
       stripeCheckoutSessionId: "cs_test_1",
     });
+  });
+
+  it("ignore un plan_id invalide sur checkout.session.completed", async () => {
+    const session: Partial<Stripe.Checkout.Session> = {
+      id: "cs_test_bad",
+      mode: "payment",
+      payment_status: "paid",
+      metadata: {
+        user_id: "user-1",
+        plan_id: "invalid_plan",
+        sector: "Glisse",
+        credits_amount: "10",
+      },
+    };
+
+    const event = {
+      type: "checkout.session.completed",
+      data: { object: session },
+    } as Stripe.Event;
+
+    const service = createService();
+    await service.handleEvent(event);
+
+    expect(creditServiceMock.grantPackPurchase).not.toHaveBeenCalled();
   });
 
   it("ne crédite pas deux fois si grantPackPurchase est idempotent", async () => {
@@ -121,7 +121,7 @@ describe("StripeWebhookService", () => {
       data: { object: session },
     } as Stripe.Event;
 
-    creditServiceMock.grantPackPurchase = jest.fn().mockResolvedValue({ id: "lot-existing" });
+    creditServiceMock.grantPackPurchase.mockResolvedValue({ id: "lot-existing" } as CreditLot);
 
     const service = createService();
     await service.handleEvent(event);
@@ -165,6 +165,7 @@ describe("StripeWebhookService", () => {
         subscriptionStatus: "active",
       }),
     );
+    expect(creditServiceMock.grantFreeLowPriceEntitlementIfApplicable).toHaveBeenCalled();
   });
 
   it("synchronise Platinium sur checkout.session.completed (mode subscription)", async () => {
@@ -233,7 +234,7 @@ describe("StripeWebhookService", () => {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });
-    creditServiceMock.grantSubscriptionPeriod = jest.fn().mockResolvedValue({ id: "lot-sub" });
+    creditServiceMock.grantSubscriptionPeriod.mockResolvedValue({ id: "lot-sub" } as CreditLot);
 
     const invoice = {
       id: "in_1",
@@ -328,9 +329,9 @@ describe("StripeWebhookService", () => {
         subscriptionStatus: "canceled",
       }),
     );
-    expect(entitlementRepoMock.revokeActiveByUserAndType).toHaveBeenCalledWith(
+    expect(creditServiceMock.revokeFreeLowPriceEntitlementIfExpiresAt).toHaveBeenCalledWith(
       "user-1",
-      "free_low_price_exports",
+      expect.any(String),
     );
   });
 });

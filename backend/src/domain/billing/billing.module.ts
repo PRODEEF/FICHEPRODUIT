@@ -2,10 +2,13 @@ import { Module } from "@nestjs/common";
 import { AuthModule } from "../../core/auth/auth.module";
 import { BillingController } from "./billing.controller";
 import { BillingService } from "./billing.service";
+import { CreditGrantService } from "./credit-grant.service";
+import { CreditLedgerService } from "./credit-ledger.service";
 import { CreditService } from "./credit.service";
 import { StripeWebhookController } from "./stripe-webhook.controller";
 import { StripeWebhookService } from "./stripe-webhook.service";
 import { BillingPricingService } from "./pricing/billing-pricing.service";
+import { StripeService } from "./stripe.service";
 import { CreditLotRepository } from "./repositories/credit-lot.repository";
 import { CREDIT_LOT_REPOSITORY } from "./repositories/credit-lot.repository.interface";
 import { CreditTransactionRepository } from "./repositories/credit-transaction.repository";
@@ -21,7 +24,10 @@ import { USER_ENTITLEMENT_REPOSITORY } from "./repositories/user-entitlement.rep
   providers: [
     BillingService,
     CreditService,
+    CreditLedgerService,
+    CreditGrantService,
     StripeWebhookService,
+    StripeService,
     BillingPricingService,
     {
       provide: CREDIT_LOT_REPOSITORY,
@@ -40,6 +46,6 @@ import { USER_ENTITLEMENT_REPOSITORY } from "./repositories/user-entitlement.rep
       useClass: UserEntitlementRepository,
     },
   ],
-  exports: [CreditService, BillingService],
+  exports: [CreditService],
 })
 export class BillingModule {}

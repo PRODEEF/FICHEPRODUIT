@@ -3,21 +3,15 @@ import {
   Inject,
   Injectable,
   Logger,
-  ServiceUnavailableException,
 } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
 import Stripe from "stripe";
+import { billingPlanIdSchema } from "./billing-plan.schema";
 import { CreditService } from "./credit.service";
-import { BillingPricingService } from "./pricing/billing-pricing.service";
 import {
   USER_BILLING_REPOSITORY,
   type IUserBillingRepository,
 } from "./repositories/user-billing.repository.interface";
-import {
-  USER_ENTITLEMENT_REPOSITORY,
-  type IUserEntitlementRepository,
-} from "./repositories/user-entitlement.repository.interface";
-import type { BillingPlanId } from "./types/billing.types";
+import { StripeService } from "./stripe.service";
 
 const HANDLED_EVENTS = new Set([
   "checkout.session.completed",
@@ -29,26 +23,17 @@ const HANDLED_EVENTS = new Set([
 @Injectable()
 export class StripeWebhookService {
   private readonly logger = new Logger(StripeWebhookService.name);
-  private stripeClient: Stripe | null = null;
 
   constructor(
-    private readonly config: ConfigService,
+    private readonly stripeService: StripeService,
     private readonly creditService: CreditService,
-    private readonly pricingService: BillingPricingService,
     @Inject(USER_BILLING_REPOSITORY)
     private readonly userBillingRepo: IUserBillingRepository,
-    @Inject(USER_ENTITLEMENT_REPOSITORY)
-    private readonly entitlementRepo: IUserEntitlementRepository,
   ) {}
 
   constructEvent(payload: Buffer, signature: string): Stripe.Event {
-    const webhookSecret = this.config.get<string>("stripeWebhookSecret")?.trim();
-    if (!webhookSecret) {
-      throw new ServiceUnavailableException("Webhook Stripe non configuré sur ce serveur");
-    }
-
     try {
-      return this.getStripeClient().webhooks.constructEvent(payload, signature, webhookSecret);
+      return this.stripeService.constructWebhookEvent(payload, signature);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Signature invalide";
       throw new BadRequestException(`Webhook Stripe invalide : ${message}`);
@@ -73,8 +58,6 @@ export class StripeWebhookService {
       case "customer.subscription.deleted":
         await this.handleSubscriptionDeleted(event.data.object as Stripe.Subscription);
         break;
-      default:
-        break;
     }
   }
 
@@ -85,15 +68,25 @@ export class StripeWebhookService {
 
     const metadata = session.metadata ?? {};
     const userId = metadata.user_id;
-    const planId = metadata.plan_id as BillingPlanId | undefined;
+    const planIdRaw = metadata.plan_id;
     const sector = metadata.sector;
 
-    if (!userId || !planId || !sector) {
+    if (!userId || !planIdRaw || !sector) {
       this.logger.warn(
         `checkout.session.completed ${session.id} : metadata incomplètes (user_id/plan_id/sector)`,
       );
       return;
     }
+
+    const planIdParsed = billingPlanIdSchema.safeParse(planIdRaw);
+    if (!planIdParsed.success) {
+      this.logger.warn(
+        `checkout.session.completed ${session.id} : plan_id invalide (${planIdRaw})`,
+      );
+      return;
+    }
+
+    const planId = planIdParsed.data;
 
     if (session.mode === "payment") {
       const creditsRaw = metadata.credits_amount;
@@ -121,7 +114,7 @@ export class StripeWebhookService {
           ? session.subscription
           : session.subscription.id;
 
-      const subscription = await this.getStripeClient().subscriptions.retrieve(subscriptionId);
+      const subscription = await this.stripeService.retrieveSubscription(subscriptionId);
       await this.syncSubscriptionForUser(userId, subscription);
     }
   }
@@ -132,7 +125,7 @@ export class StripeWebhookService {
       return;
     }
 
-    const subscription = await this.getStripeClient().subscriptions.retrieve(subscriptionId);
+    const subscription = await this.stripeService.retrieveSubscription(subscriptionId);
     const customerId =
       typeof subscription.customer === "string" ? subscription.customer : subscription.customer.id;
 
@@ -181,17 +174,22 @@ export class StripeWebhookService {
       return;
     }
 
+    const periodEnd =
+      this.timestampToIso(subscription.ended_at) ?? billing.subscriptionPeriodEnd;
+
     await this.userBillingRepo.updateSubscription({
       userId: billing.userId,
       activeSubscriptionId: null,
       subscriptionStatus: "canceled",
-      subscriptionPeriodEnd: this.timestampToIso(subscription.ended_at),
+      subscriptionPeriodEnd: periodEnd,
     });
 
-    await this.entitlementRepo.revokeActiveByUserAndType(
-      billing.userId,
-      "free_low_price_exports",
-    );
+    if (periodEnd) {
+      await this.creditService.revokeFreeLowPriceEntitlementIfExpiresAt(
+        billing.userId,
+        periodEnd,
+      );
+    }
   }
 
   private async syncSubscriptionForUser(
@@ -210,12 +208,12 @@ export class StripeWebhookService {
 
     if (status === "active" && periodEnd) {
       const expiresAt = this.timestampToIso(periodEnd);
-      if (expiresAt && this.pricingService.planGrantsFreeLowPriceExports("platinum")) {
-        await this.entitlementRepo.grantEntitlement({
+      if (expiresAt) {
+        await this.creditService.grantFreeLowPriceEntitlementIfApplicable(
           userId,
-          type: "free_low_price_exports",
+          "platinum",
           expiresAt,
-        });
+        );
       }
     }
   }
@@ -276,19 +274,5 @@ export class StripeWebhookService {
       return null;
     }
     return new Date(timestamp * 1000).toISOString();
-  }
-
-  private getStripeClient(): Stripe {
-    const secretKey = this.config.get<string>("stripeSecretKey")?.trim();
-    if (!secretKey) {
-      throw new ServiceUnavailableException(
-        "Le paiement en ligne n'est pas configuré sur ce serveur",
-      );
-    }
-
-    if (!this.stripeClient) {
-      this.stripeClient = new Stripe(secretKey);
-    }
-    return this.stripeClient;
   }
 }
