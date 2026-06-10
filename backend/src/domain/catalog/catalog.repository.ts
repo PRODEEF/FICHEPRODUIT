@@ -57,20 +57,6 @@ export class CatalogRepository implements ICatalogRepository {
     const brands = this.normalizeTextArray(criteria.brands);
 
     if (brands.length > 0) {
-      this.logger.log(
-        `[catalog.search] merged-by-brand path brands=${JSON.stringify(brands)} limit=${limit} otherCriteria=${JSON.stringify(
-          {
-            sector: criteria.sector,
-            categories: criteria.categories,
-            subcategories: criteria.subcategories,
-            minYear: criteria.minYear,
-            maxYear: criteria.maxYear,
-            minPrice: criteria.minPrice,
-            maxPrice: criteria.maxPrice,
-            attributes: criteria.attributes,
-          },
-        )}`,
-      );
       return this.searchMergedByBrandIlike(brands, criteria, limit);
     }
 
@@ -122,22 +108,6 @@ export class CatalogRepository implements ICatalogRepository {
     criteria: CatalogSearchCriteria,
     limit: number,
   ): Promise<CatalogProduct[]> {
-    const { count: totalCatalogCount, error: countError } = await this.supabase.anon
-      .from("catalog_products")
-      .select("*", { count: "exact", head: true });
-
-    this.logger.log(
-      `[catalog.search.brands] table=catalog_products headCount=${totalCatalogCount ?? "null"} countError=${countError ? this.formatSupabaseError(countError) : "none"}`,
-    );
-
-    const { data: probeRows, error: probeError } = await this.supabase.anon
-      .from("catalog_products")
-      .select("id, brand")
-      .limit(1);
-    this.logger.log(
-      `[catalog.search.brands] probe select id,brand limit=1 error=${probeError ? this.formatSupabaseError(probeError) : "none"} rows=${JSON.stringify(probeRows ?? [])}`,
-    );
-
     const byId = new Map<string, CatalogProductRow>();
 
     for (const brand of brands) {
@@ -159,19 +129,7 @@ export class CatalogRepository implements ICatalogRepository {
       for (const row of rows) {
         if (!byId.has(row.id)) byId.set(row.id, row);
       }
-      this.logger.log(
-        `[catalog.search.brands] brand=${JSON.stringify(brand)} ilikePattern=${JSON.stringify(ilikePattern)} rowCount=${rows.length} mergedUniqueAfter=${byId.size}`,
-      );
-      if (rows.length > 0 && rows.length <= 3) {
-        this.logger.log(
-          `[catalog.search.brands] sample ids/brands: ${JSON.stringify(rows.map((r) => ({ id: r.id, brand: r.brand })))}`,
-        );
-      }
     }
-
-    this.logger.log(
-      `[catalog.search.brands] done mergedUnique=${byId.size} returningSlice=${Math.min(byId.size, limit)}`,
-    );
 
     return [...byId.values()].slice(0, limit).map((row) => this.toEntity(row));
   }

@@ -11,7 +11,7 @@ import { useAuth } from '@shared/hooks/useAuth';
 import { useUrlSearch } from '@shared/hooks/useUrlSearch';
 
 import { ExpertiseGrid } from '../components/ExpertiseGrid';
-import { FinalCTA } from '../components/FinalCTA';
+import { FinalCTA } from '../../../shared/components/FinalCTA';
 import { HowItWorks } from '../components/HowItWorks';
 // import { LandingFooter } from '../components/LandingFooter';
 import { SellingPoints } from '../components/SellingPoints';

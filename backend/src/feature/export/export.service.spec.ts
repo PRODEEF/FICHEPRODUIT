@@ -3,6 +3,8 @@ import { Test, TestingModule } from "@nestjs/testing";
 
 import { ExportService } from "./export.service";
 import { CatalogService } from "../../domain/catalog/catalog.service";
+import { CreditService } from "../../domain/billing/credit.service";
+import { InsufficientCreditsException } from "../../domain/billing/exceptions/insufficient-credits.exception";
 import { ProductTemplateService } from "../../domain/product-template/product-template.service";
 import { FieldMapperService } from "./mapper/field-mapper.service";
 import { AiContentService } from "./mapper/ai-content.service";
@@ -38,6 +40,10 @@ describe("ExportService", () => {
   const mockCatalog = { findByIds: jest.fn() };
   const mockTemplate = { getTemplateForShop: jest.fn() };
   const mockAi = { generateFields: jest.fn() };
+  const mockCredit = {
+    reserveCreditsForExport: jest.fn(),
+    refundExportReservation: jest.fn(),
+  };
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -48,6 +54,7 @@ describe("ExportService", () => {
         CsvBuilderService,
         { provide: CatalogService, useValue: mockCatalog },
         { provide: ProductTemplateService, useValue: mockTemplate },
+        { provide: CreditService, useValue: mockCredit },
         { provide: AiContentService, useValue: mockAi },
       ],
     }).compile();
@@ -111,6 +118,7 @@ describe("ExportService", () => {
     mockTemplate.getTemplateForShop.mockResolvedValue(tpl);
     mockCatalog.findByIds.mockResolvedValue([catalogProduct()]);
     mockAi.generateFields.mockResolvedValue([]);
+    mockCredit.reserveCreditsForExport.mockResolvedValue("attempt-1");
 
     const result = await service.export(
       { productIds: [catalogProduct().id], templateId: tpl.id, shopId: tpl.shopId },
@@ -122,5 +130,51 @@ describe("ExportService", () => {
     expect(result.filename).toMatch(/^export-maison-\d{4}-\d{2}-\d{2}\.csv$/);
     expect(mockTemplate.getTemplateForShop).toHaveBeenCalledWith(tpl.id, tpl.shopId, user);
     expect(mockCatalog.findByIds).toHaveBeenCalledWith([catalogProduct().id]);
+    expect(mockCredit.reserveCreditsForExport).toHaveBeenCalled();
+  });
+
+  it("lève InsufficientCreditsException si le solde est insuffisant", async () => {
+    const tpl: ProductTemplate = {
+      id: "550e8400-e29b-41d4-a716-446655440002",
+      name: "T",
+      shopId: "550e8400-e29b-41d4-a716-446655440003",
+      fields: [{ name: "name", type: "text", required: false, order: 0 }],
+    };
+    mockTemplate.getTemplateForShop.mockResolvedValue(tpl);
+    mockCatalog.findByIds.mockResolvedValue([catalogProduct()]);
+    mockCredit.reserveCreditsForExport.mockRejectedValue(
+      new InsufficientCreditsException(2, 1),
+    );
+
+    await expect(
+      service.export(
+        { productIds: [catalogProduct().id], templateId: tpl.id, shopId: tpl.shopId },
+        user,
+      ),
+    ).rejects.toThrow(InsufficientCreditsException);
+
+    expect(mockCredit.refundExportReservation).not.toHaveBeenCalled();
+  });
+
+  it("rembourse les crédits si le mapping IA échoue après réservation", async () => {
+    const tpl: ProductTemplate = {
+      id: "550e8400-e29b-41d4-a716-446655440002",
+      name: "T",
+      shopId: "550e8400-e29b-41d4-a716-446655440003",
+      fields: [{ name: "name", type: "text", required: false, order: 0 }],
+    };
+    mockTemplate.getTemplateForShop.mockResolvedValue(tpl);
+    mockCatalog.findByIds.mockResolvedValue([catalogProduct()]);
+    mockCredit.reserveCreditsForExport.mockResolvedValue("attempt-refund");
+    mockAi.generateFields.mockRejectedValue(new Error("Échec IA"));
+
+    await expect(
+      service.export(
+        { productIds: [catalogProduct().id], templateId: tpl.id, shopId: tpl.shopId },
+        user,
+      ),
+    ).rejects.toThrow("Échec IA");
+
+    expect(mockCredit.refundExportReservation).toHaveBeenCalledWith(user.id, "attempt-refund");
   });
 });

@@ -9,23 +9,24 @@ export default () => {
 
   const optional = (key: string, fallback: string): string => process.env[key]?.trim() || fallback;
 
-  const nodeEnv = optional("NODE_ENV", "development");
+  const nodeEnv = optional("NODE_ENV", "preview");
   const corsOriginRaw = process.env["CORS_ORIGIN"]?.trim();
   let corsOrigin: string;
   if (nodeEnv === "production") {
     if (!corsOriginRaw || corsOriginRaw === "*") {
-      throw new Error(
-        "CORS_ORIGIN doit être défini explicitement en production (origines séparées par des virgules, pas *).",
-      );
+      throw new Error("CORS_ORIGIN doit être défini explicitement en production.");
     }
     corsOrigin = corsOriginRaw;
   } else {
     corsOrigin = corsOriginRaw || "*";
   }
 
+  const vercelEnv = process.env["VERCEL_ENV"]?.trim() || undefined;
+
   return {
     port: parseInt(optional("PORT", "3000"), 10),
     nodeEnv,
+    vercelEnv,
 
     /** Origines CORS séparées par des virgules, ou `*` en dev uniquement. */
     corsOrigin,
@@ -53,6 +54,13 @@ export default () => {
     tavilyApiKey: required("TAVILY_API_KEY"),
     tavilySearchDepth: optional("TAVILY_SEARCH_DEPTH", "basic"),
     tavilyCountry: parseTavilyCountry(),
+
+    // Stripe (optionnel en dev — checkout indisponible si vide)
+    stripeSecretKey: optional("STRIPE_SECRET_KEY", ""),
+    stripeWebhookSecret: optional("STRIPE_WEBHOOK_SECRET", ""),
+    stripeSuccessUrl: optional("STRIPE_SUCCESS_URL", "http://localhost:5173/billing/success"),
+    stripeCancelUrl: optional("STRIPE_CANCEL_URL", "http://localhost:5173/billing/cancel"),
+    stripePricePlatinum: optional("STRIPE_PRICE_PLATINUM", ""),
   };
 };
 

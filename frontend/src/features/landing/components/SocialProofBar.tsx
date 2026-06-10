@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { animate, motion, useInView, useMotionValue, useTransform } from 'motion/react';
 
 import { fadeIn } from '@lib/motionVariants';
-import { universes } from '../types';
+import { universes } from '@shared/lib/universes';
 
 function AnimatedCounter({ target }: { target: number }) {
   const ref = useRef<HTMLSpanElement>(null);

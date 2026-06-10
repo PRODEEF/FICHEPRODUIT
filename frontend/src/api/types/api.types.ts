@@ -207,6 +207,91 @@ export interface ExportBody {
 }
 
 // ---------------------------------------------------------------------------
+// Billing
+// ---------------------------------------------------------------------------
+
+export type BillingPlanId =
+  | 'starter'
+  | 'pro'
+  | 'business_silver'
+  | 'business_custom'
+  | 'platinum';
+
+export type BillingEntitlementType = 'free_low_price_exports';
+
+export type BillingTransactionReason = 'export' | 'expiry' | 'refund' | 'grant';
+
+export interface BillingSubscriptionSummary {
+  status: string | null;
+  periodEnd: string | null;
+}
+
+export interface BillingEntitlementSummary {
+  type: BillingEntitlementType;
+  expiresAt: string;
+}
+
+export type BillingCreditLotSource =
+  | 'signup_grant'
+  | 'pack_purchase'
+  | 'subscription_grant'
+  | 'manual';
+
+export interface BillingCreditLotSummary {
+  id: string;
+  amountInitial: number;
+  amountRemaining: number;
+  source: BillingCreditLotSource;
+  planId: string | null;
+  planName: string | null;
+  sector: string | null;
+  expiresAt: string | null;
+  createdAt: string;
+}
+
+export interface BillingTransactionSummary {
+  id: string;
+  delta: number;
+  reason: BillingTransactionReason;
+  createdAt: string;
+  metadata: Record<string, unknown>;
+}
+
+export interface BillingSummary {
+  balance: number;
+  hasUnlimitedExports: boolean;
+  subscription: BillingSubscriptionSummary | null;
+  entitlements: BillingEntitlementSummary[];
+  recentPurchases: BillingCreditLotSummary[];
+  recentTransactions: BillingTransactionSummary[];
+}
+
+export interface PublicPricingPlan {
+  id: BillingPlanId;
+  name: string;
+  priceEur: number;
+  pricePerSheetEur: number | null;
+  priceSuffix: string | null;
+  creditsLabel: string;
+  multiplier: number;
+}
+
+export interface BillingPlansResponse {
+  sector: string;
+  multiplier: number;
+  plans: PublicPricingPlan[];
+}
+
+export interface CreateCheckoutBody {
+  planId: BillingPlanId;
+  sector: string;
+}
+
+export interface CheckoutResponse {
+  url: string;
+}
+
+// ---------------------------------------------------------------------------
 // Suggest URLs
 // ---------------------------------------------------------------------------
 

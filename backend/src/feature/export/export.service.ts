@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 
 import { CatalogService } from "../../domain/catalog/catalog.service";
+import { CreditService } from "../../domain/billing/credit.service";
 import { ProductTemplateService } from "../../domain/product-template/product-template.service";
 import { FieldMapperService } from "./mapper/field-mapper.service";
 import { AiContentService } from "./mapper/ai-content.service";
@@ -18,6 +19,7 @@ export class ExportService {
   constructor(
     private readonly catalogService: CatalogService,
     private readonly templateService: ProductTemplateService,
+    private readonly creditService: CreditService,
     private readonly fieldMapper: FieldMapperService,
     private readonly aiContent: AiContentService,
     private readonly csvBuilder: CsvBuilderService,
@@ -40,9 +42,30 @@ export class ExportService {
     const products = await this.catalogService.findByIds(req.productIds);
     if (products.length === 0) throw new NotFoundException("Aucun produit trouvé");
 
-    const mappedProducts: MappedProduct[] = await Promise.all(
-      products.map((product) => this.mapProduct(product, template.fields)),
+    const exportProducts = products.map((p) => ({ id: p.id, price: p.price }));
+    const exportMetadata = {
+      productIds: req.productIds,
+      exportRowCount: products.length,
+    };
+
+    const exportAttemptId = await this.creditService.reserveCreditsForExport(
+      user.id,
+      user.accessToken,
+      exportProducts,
+      exportMetadata,
     );
+
+    let mappedProducts: MappedProduct[];
+    try {
+      mappedProducts = await Promise.all(
+        products.map((product) => this.mapProduct(product, template.fields)),
+      );
+    } catch (err) {
+      if (exportAttemptId) {
+        await this.creditService.refundExportReservation(user.id, exportAttemptId);
+      }
+      throw err;
+    }
 
     const csv = this.csvBuilder.build(mappedProducts, template.fields);
     const date = new Date().toISOString().split("T")[0];

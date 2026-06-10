@@ -5,8 +5,10 @@ import { Toaster } from 'sonner';
 import { useAuth } from '@shared/hooks/useAuth';
 
 import { AuthProvider } from '../features/auth/AuthContext';
+import { BillingProvider } from '../features/billing/context/BillingContext';
 import { RequireAuthRoute } from '../features/auth/components/RequireAuthRoute';
 import { BackgroundGlow } from '../features/layout/components/BackgroundGlow';
+import { MarketingNavLinks } from '../features/layout/components/MarketingNavLinks';
 import { Navbar } from '../features/layout/components/Navbar';
 // import { bootCrisp } from './crisp';
 
@@ -50,6 +52,26 @@ const MyStore = lazy(async () => {
   const m = await import('../features/store/pages/Store');
   return { default: m.MyStore };
 });
+const Pricing = lazy(async () => {
+  const m = await import('../features/marketing/pages/Pricing');
+  return { default: m.Pricing };
+});
+const DemoRequest = lazy(async () => {
+  const m = await import('../features/marketing/pages/DemoRequest');
+  return { default: m.DemoRequest };
+});
+const About = lazy(async () => {
+  const m = await import('../features/marketing/pages/About');
+  return { default: m.About };
+});
+const BillingSuccess = lazy(async () => {
+  const m = await import('../features/billing/pages/BillingSuccess');
+  return { default: m.BillingSuccess };
+});
+const BillingCancel = lazy(async () => {
+  const m = await import('../features/billing/pages/BillingCancel');
+  return { default: m.BillingCancel };
+});
 
 function RouteFallback() {
   return (
@@ -78,6 +100,7 @@ function AppHeader({ drawerOpen, onDrawerToggle }: AppHeaderProps) {
       loading={loading || profileLoading}
       drawerOpen={drawerOpen}
       onDrawerToggle={onDrawerToggle}
+      center={<MarketingNavLinks />}
       onLogout={async () => {
         void navigate('/', { replace: true });
         try {
@@ -139,6 +162,7 @@ export function App() {
 
   return (
     <AuthProvider>
+      <BillingProvider>
       <BrowserRouter>
         <Toaster richColors position="bottom-right" />
         <Suspense fallback={<RouteFallback />}>
@@ -150,6 +174,11 @@ export function App() {
               <Route path="/signup" element={<Signup />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/auth/reset-password" element={<ResetPassword />} />
+              <Route path="/pricing" element={<Pricing />} />
+              <Route path="/billing/success" element={<BillingSuccess />} />
+              <Route path="/billing/cancel" element={<BillingCancel />} />
+              <Route path="/demo" element={<DemoRequest />} />
+              <Route path="/about" element={<About />} />
 
               <Route element={<RequireAuthRoute />}>
                 <Route path="/catalog" element={<Catalog />} />
@@ -161,6 +190,7 @@ export function App() {
           </Routes>
         </Suspense>
       </BrowserRouter>
+      </BillingProvider>
     </AuthProvider>
   );
 }

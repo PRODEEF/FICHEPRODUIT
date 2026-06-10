@@ -16,6 +16,7 @@ export const SHOP_SECTOR_LABELS = [
   'Montres',
   'Gastronomie',
   'Gaming',
+  'Autres',
 ] as const;
 
 export type ShopSectorLabel = (typeof SHOP_SECTOR_LABELS)[number];

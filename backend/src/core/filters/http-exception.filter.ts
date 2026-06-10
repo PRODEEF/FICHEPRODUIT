@@ -40,7 +40,7 @@ export class AllHttpExceptionsFilter implements ExceptionFilter {
     const reply = ctx.getResponse<FastifyReply>();
     const request = ctx.getRequest<FastifyRequest>();
 
-    const { statusCode, message } = this.extractStatus(exception);
+    const { statusCode, message, errorCode } = this.extractStatus(exception);
 
     const isServerError = statusCode >= 500;
 
@@ -54,7 +54,7 @@ export class AllHttpExceptionsFilter implements ExceptionFilter {
     const body: ErrorResponse = {
       statusCode,
       message,
-      error: HttpStatus[statusCode] ?? "Error",
+      error: errorCode,
       timestamp: new Date().toISOString(),
       path: request.url,
     };
@@ -65,27 +65,33 @@ export class AllHttpExceptionsFilter implements ExceptionFilter {
   private extractStatus(exception: unknown): {
     statusCode: number;
     message: string | string[];
+    errorCode: string;
   } {
     if (exception instanceof HttpException) {
       const statusCode = exception.getStatus();
       const response = exception.getResponse();
+      const defaultError = HttpStatus[statusCode] ?? "Error";
 
       if (typeof response === "string") {
-        return { statusCode, message: response };
+        return { statusCode, message: response, errorCode: defaultError };
       }
 
       if (typeof response === "object" && response !== null) {
         const r = response as Record<string, unknown>;
+        const customError = r["error"];
+        const errorCode = typeof customError === "string" ? customError : defaultError;
 
         // ZodValidationPipe produit { message: string[] } ou { message: string }
         const msg = r["message"];
-        if (typeof msg === "string") return { statusCode, message: msg };
+        if (typeof msg === "string") return { statusCode, message: msg, errorCode };
         if (Array.isArray(msg) && msg.every((m) => typeof m === "string")) {
-          return { statusCode, message: msg as string[] };
+          return { statusCode, message: msg as string[], errorCode };
         }
+
+        return { statusCode, message: exception.message, errorCode };
       }
 
-      return { statusCode, message: exception.message };
+      return { statusCode, message: exception.message, errorCode: defaultError };
     }
 
     // Erreurs non-NestJS (Supabase SDK, réseau, AWS Bedrock, etc.)
@@ -96,6 +102,10 @@ export class AllHttpExceptionsFilter implements ExceptionFilter {
         ? exception.message
         : String(exception);
 
-    return { statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message };
+    return {
+      statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+      message,
+      errorCode: HttpStatus[HttpStatus.INTERNAL_SERVER_ERROR],
+    };
   }
 }

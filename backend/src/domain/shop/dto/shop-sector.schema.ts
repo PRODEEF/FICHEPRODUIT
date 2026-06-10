@@ -18,6 +18,7 @@ export const SHOP_SECTOR_VALUES = [
   "Montres",
   "Gastronomie",
   "Gaming",
+  "Autres",
 ] as const;
 
 export type ShopSector = (typeof SHOP_SECTOR_VALUES)[number];
