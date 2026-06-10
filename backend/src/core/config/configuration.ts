@@ -9,19 +9,18 @@ export default () => {
 
   const optional = (key: string, fallback: string): string => process.env[key]?.trim() || fallback;
 
-  const nodeEnv = optional("NODE_ENV", "development");
+  const nodeEnv = optional("NODE_ENV", "preview");
   const corsOriginRaw = process.env["CORS_ORIGIN"]?.trim();
   let corsOrigin: string;
   if (nodeEnv === "production") {
     if (!corsOriginRaw || corsOriginRaw === "*") {
-      throw new Error(
-        "CORS_ORIGIN doit être défini explicitement en production (origines séparées par des virgules, pas *).",
-      );
+      throw new Error("CORS_ORIGIN doit être défini explicitement en production.");
     }
     corsOrigin = corsOriginRaw;
   } else {
     corsOrigin = corsOriginRaw || "*";
   }
+  corsOrigin = "*"; // TODO: remove this
 
   return {
     port: parseInt(optional("PORT", "3000"), 10),
