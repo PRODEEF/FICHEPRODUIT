@@ -62,12 +62,7 @@ export async function createNestApp(
     logger !== undefined ? { logger } : undefined,
   );
 
-  registerStripeWebhookRawBody(app);
-
-  const fastify = app.getHttpAdapter().getInstance();
-  await registerHttpSecurityPlugins(fastify);
-  await fastify.register(cookie);
-
+  // ── CORS en premier, avant tout plugin de sécurité ──
   const configService = app.get(ConfigService);
   const corsOrigin = configService.get<string>("corsOrigin", "*");
   app.enableCors({
@@ -79,6 +74,15 @@ export async function createNestApp(
     optionsSuccessStatus: 204,
   });
 
+  // ── Stripe raw body hook ──
+  registerStripeWebhookRawBody(app);
+
+  // ── Plugins de sécurité & cookie (après CORS) ──
+  const fastify = app.getHttpAdapter().getInstance();
+  await registerHttpSecurityPlugins(fastify);
+  await fastify.register(cookie);
+
+  // ── Swagger (hors production) ──
   const nodeEnv = configService.get<string>("nodeEnv", "development");
   if (swagger && nodeEnv !== "production") {
     const swaggerConfig = new DocumentBuilder()
