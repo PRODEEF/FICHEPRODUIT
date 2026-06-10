@@ -64,7 +64,7 @@ describe("BillingService", () => {
 
     expect(result.sector).toBe("Vélo");
     expect(result.multiplier).toBe(2);
-    expect(result.plans.find((p) => p.id === "starter")?.priceEur).toBe(30);
+    expect(result.plans.find((p) => p.id === "starter")?.priceEur).toBe(0);
   });
 
   it("délègue getMe à CreditService.getBillingSummary", async () => {

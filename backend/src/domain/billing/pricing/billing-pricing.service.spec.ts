@@ -3,8 +3,8 @@ import { BillingPricingService } from "./billing-pricing.service";
 describe("BillingPricingService", () => {
   const service = new BillingPricingService();
 
-  it("applique le multiplicateur Vélo ×2 sur STARTER (30 €)", () => {
-    expect(service.getCheckoutAmountCents("starter", "Vélo")).toBe(3000);
+  it("applique le multiplicateur Vélo ×2 sur STARTER (0 €)", () => {
+    expect(service.getCheckoutAmountCents("starter", "Vélo")).toBe(0);
   });
 
   it("retourne le nombre de crédits par pack", () => {
@@ -23,7 +23,7 @@ describe("BillingPricingService", () => {
 
     expect(result.multiplier).toBe(0.7);
     expect(result.plans).toHaveLength(5);
-    expect(result.plans.find((p) => p.id === "starter")?.priceEur).toBe(10.5);
+    expect(result.plans.find((p) => p.id === "starter")?.priceEur).toBe(0);
   });
 
   it("expose le libellé Pro avec 10 crédits", () => {

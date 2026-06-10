@@ -15,11 +15,11 @@ export function formatCreditsLabel(amount: number): string {
 
 /** Prix de référence HT en euros — secteur Glisse (×1,0). */
 export const REFERENCE_PLAN_PRICES_EUR: Record<BillingPlanId, number> = {
-  starter: 15,
-  pro: 200,
-  business_silver: 800,
-  business_custom: 2500,
-  platinum: 500,
+  starter: 0,
+  pro: 0,
+  business_silver: 0,
+  business_custom: 0,
+  platinum: 0,
 };
 
 /** Multiplicateurs tarifaires par secteur — source unique des tarifs. */
@@ -63,17 +63,17 @@ type ReferencePlanDisplay = {
 export const REFERENCE_PLAN_DISPLAY: Record<BillingPlanId, ReferencePlanDisplay> = {
   starter: {
     name: "STARTER",
-    pricePerSheetEur: 15,
+    pricePerSheetEur: 0,
     priceSuffix: null,
   },
   pro: {
     name: "PRO",
-    pricePerSheetEur: 10,
+    pricePerSheetEur: 0,
     priceSuffix: null,
   },
   business_silver: {
     name: "BUSINESS SILVER",
-    pricePerSheetEur: 8,
+    pricePerSheetEur: 0,
     priceSuffix: null,
   },
   business_custom: {

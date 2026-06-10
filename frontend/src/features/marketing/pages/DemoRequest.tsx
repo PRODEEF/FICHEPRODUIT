@@ -1,10 +1,25 @@
-import { PageSection } from '@shared/ui';
+import { FinalCTA } from '@shared/components/FinalCTA';
+import { useAuth } from '@shared/hooks/useAuth';
+
+import { DemoBenefitsSection } from '../components/DemoBenefitsSection';
+import { DemoRequestPanel } from '../components/DemoRequestPanel';
+import { MarketingPageHero } from '../components/MarketingPageHero';
 
 export function DemoRequest() {
+  const { userEmail } = useAuth();
+  const isAuthenticated = Boolean(userEmail);
+
   return (
-    <PageSection className="max-w-3xl">
-      <h1 className="mb-4 text-2xl font-extrabold text-text-primary">Demander une démo</h1>
-      <p className="text-text-secondary">Contenu à venir.</p>
-    </PageSection>
+    <div className="relative z-[1] flex-1">
+      <MarketingPageHero
+        badge="✦ Démo personnalisée en 15 minutes"
+        title="Découvrez ficheproduct"
+        titleHighlight="adapté à votre univers"
+        subtitle="Planifiez une démonstration guidée : nous vous montrons comment transformer votre catalogue en fiches produits optimisées SEO, prêtes pour PrestaShop ou Shopify."
+      />
+      <DemoBenefitsSection />
+      {userEmail ? <DemoRequestPanel initialEmail={userEmail} /> : <DemoRequestPanel />}
+      {!isAuthenticated ? <FinalCTA /> : null}
+    </div>
   );
 }
