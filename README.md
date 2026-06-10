@@ -65,6 +65,8 @@ Résumé :
 | `CORS_ORIGIN`                                                    | Origines autorisées, **séparées par des virgules** (en prod : ne pas laisser `*`) |
 | `NODE_ENV`                                                       | `production` en prod                                                              |
 
+**Preview cross-origin** : si le front et le backend sont sur deux projets Vercel, désactiver **Deployment Protection** sur les previews backend et définir `VITE_API_URL` (env Preview) sur le frontend — voir [backend/DEPLOY.md](backend/DEPLOY.md).
+
 Le pipeline d’analyse s’enregistre avec `waitUntil` ([`@vercel/functions`](https://vercel.com/docs/functions/functions-api-reference/vercel-functions-package)) pour laisser le scrape et l’IA se terminer après la réponse HTTP. `maxDuration` est à **60** secondes dans `vercel.json` (ajuster selon le plan Vercel).
 
 Le frontend est une SPA Vite : build classique (`npm run build` dans `frontend/`), hébergement statique ou CDN, avec `VITE_API_URL` pointant vers l’URL du backend si le front et l’API ne sont pas sur la même origine.

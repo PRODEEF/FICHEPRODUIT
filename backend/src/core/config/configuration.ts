@@ -20,11 +20,13 @@ export default () => {
   } else {
     corsOrigin = corsOriginRaw || "*";
   }
-  corsOrigin = "*"; // TODO: remove this
+
+  const vercelEnv = process.env["VERCEL_ENV"]?.trim() || undefined;
 
   return {
     port: parseInt(optional("PORT", "3000"), 10),
     nodeEnv,
+    vercelEnv,
 
     /** Origines CORS séparées par des virgules, ou `*` en dev uniquement. */
     corsOrigin,

@@ -2,6 +2,7 @@ import { Test, TestingModule } from "@nestjs/testing";
 import cookie from "@fastify/cookie";
 import { FastifyAdapter, NestFastifyApplication } from "@nestjs/platform-fastify";
 import { ConfigService } from "@nestjs/config";
+import { buildCorsOptions } from "../src/core/http/cors-origin";
 import { AppModule } from "../src/app.module";
 
 describe("AppController (e2e)", () => {
@@ -16,15 +17,13 @@ describe("AppController (e2e)", () => {
     const fastify = app.getHttpAdapter().getInstance();
     await fastify.register(cookie);
     const configService = app.get(ConfigService);
-    const corsOrigin = configService.get<string>("corsOrigin", "*");
-    app.enableCors({
-      origin: corsOrigin === "*" ? true : corsOrigin.split(",").map((o) => o.trim()),
-      credentials: true,
-      methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-      allowedHeaders: ["Content-Type", "Authorization", "x-session-id", "Cookie"],
-      preflightContinue: false,
-      optionsSuccessStatus: 204,
-    });
+    app.enableCors(
+      buildCorsOptions({
+        corsOrigin: configService.get<string>("corsOrigin", "*"),
+        nodeEnv: configService.get<string>("nodeEnv", "development"),
+        vercelEnv: configService.get<string | undefined>("vercelEnv"),
+      }),
+    );
     await app.init();
     await app.getHttpAdapter().getInstance().ready();
   });

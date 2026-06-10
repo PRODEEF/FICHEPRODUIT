@@ -7,6 +7,7 @@ import type { FastifyRequest } from "fastify";
 import { Readable } from "node:stream";
 import { cleanupOpenApiDoc } from "nestjs-zod";
 import { AppModule } from "../../app.module";
+import { buildCorsOptions } from "./cors-origin";
 import { registerHttpSecurityPlugins } from "./fastify-security-plugins";
 
 /** Route webhook Stripe — nécessite le corps brut pour la vérification de signature. */
@@ -64,15 +65,13 @@ export async function createNestApp(
 
   // ── CORS en premier, avant tout plugin de sécurité ──
   const configService = app.get(ConfigService);
-  const corsOrigin = configService.get<string>("corsOrigin", "*");
-  app.enableCors({
-    origin: corsOrigin === "*" ? true : corsOrigin.split(",").map((o) => o.trim()),
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "x-session-id", "Cookie"],
-    preflightContinue: false,
-    optionsSuccessStatus: 204,
-  });
+  app.enableCors(
+    buildCorsOptions({
+      corsOrigin: configService.get<string>("corsOrigin", "*"),
+      nodeEnv: configService.get<string>("nodeEnv", "development"),
+      vercelEnv: configService.get<string | undefined>("vercelEnv"),
+    }),
+  );
 
   // ── Stripe raw body hook ──
   registerStripeWebhookRawBody(app);
