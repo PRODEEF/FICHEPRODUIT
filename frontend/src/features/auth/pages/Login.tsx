@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 
 import { useAuth } from '@shared/hooks/useAuth';
 import { getSupabaseClient } from '@shared/supabase';
-import { Banner, Button, Card, InputField, PageSection, TextLink } from '@ui';
+import { Button, Card, InputField, PageSection, TextLink } from '@ui';
 
 import { PasswordField } from '../components/PasswordField';
 import { buildAuthEmailQuery, parseAuthEmailFromQuery } from '../lib/authEmailQuery';
@@ -15,7 +15,7 @@ import { loginSchema, type LoginInput } from '../lib/authSchemas';
 export function Login() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { userEmail, loading: authLoading, configError } = useAuth();
+  const { userEmail, loading: authLoading } = useAuth();
   const [formError, setFormError] = useState<string | null>(null);
 
   const {
@@ -44,9 +44,9 @@ export function Login() {
   }, [emailFromQuery, setValue]);
 
   useEffect(() => {
-    if (authLoading || configError) return;
+    if (authLoading) return;
     if (userEmail) void navigate('/catalog', { replace: true });
-  }, [authLoading, userEmail, configError, navigate]);
+  }, [authLoading, userEmail, navigate]);
 
   const onSubmit = async (data: LoginInput) => {
     setFormError(null);
@@ -69,22 +69,6 @@ export function Login() {
     }
     void navigate('/catalog', { replace: true });
   };
-
-  if (configError) {
-    return (
-      <PageSection className="max-w-2xl pt-8">
-        <Card className="mx-auto w-full max-w-[30rem]">
-          <h1>Connexion</h1>
-          <Banner variant="error">
-            Variables d'environnement Supabase manquantes. Copiez{' '}
-            <code className="break-all text-[0.8em]">frontend/.env.example</code> vers{' '}
-            <code className="break-all text-[0.8em]">frontend/.env</code> et renseignez l'URL ainsi
-            que la clé anonyme.
-          </Banner>
-        </Card>
-      </PageSection>
-    );
-  }
 
   const isDisabled = isSubmitting || authLoading;
 

@@ -1,6 +1,7 @@
 import { Inject, Injectable } from "@nestjs/common";
 import type { AuthenticatedUser } from "../../core/auth/types/jwt-payload.types";
 import { AnalysisService } from "../analysis/analysis.service";
+import { CreditService } from "../billing/credit.service";
 import { ShopService } from "../shop/shop.service";
 import type { UpdateUserProfileDto } from "./dto/update-user-profile.dto";
 import { sanitizeSignupMetadata } from "./signup-metadata.validation";
@@ -13,11 +14,13 @@ export class UserService {
     @Inject(USER_REPOSITORY)
     private readonly userRepo: IUserRepository,
     private readonly analysisService: AnalysisService,
+    private readonly creditService: CreditService,
     private readonly shopService: ShopService,
   ) {}
 
   async getMe(user: AuthenticatedUser) {
     let profile = await this.userRepo.ensureRow(user.id, user.accessToken);
+    await this.creditService.grantSignupCredits(user.id);
     profile = await this.reconcileSignupMetadataIfNeeded(user, profile);
     return this.composeMe(profile, user.email);
   }

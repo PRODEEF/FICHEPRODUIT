@@ -1,5 +1,8 @@
 import '../styles/product-app.css';
+import { capturePasswordRecoveryIntent } from '../features/auth/lib/passwordRecoveryGate';
 import { StrictMode } from 'react';
+
+capturePasswordRecoveryIntent();
 import { createRoot } from 'react-dom/client';
 import { App } from './App';
 

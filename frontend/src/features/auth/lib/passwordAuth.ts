@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { authErrorMessage } from './authErrorMessage';
+import { clearPasswordRecoveryIntent } from './passwordRecoveryGate';
 
 /**
  * Absolute return URL after sending the reset email (Supabase appends tokens in the hash).
@@ -64,6 +65,19 @@ export async function changePasswordWithVerification(
 }
 
 /**
+ * Applique le nouveau mot de passe après lien recovery en conservant la session.
+ */
+export async function completePasswordRecovery(
+  supabase: SupabaseClient,
+  password: string,
+): Promise<UpdatePasswordResult> {
+  const result = await updatePassword(supabase, password);
+  if (!result.ok) return result;
+  clearPasswordRecoveryIntent();
+  return { ok: true };
+}
+
+/**
  * Applique le nouveau mot de passe puis termine la session locale (`signOut`).
  */
 export async function updatePasswordAndSignOut(
@@ -73,5 +87,6 @@ export async function updatePasswordAndSignOut(
   const result = await updatePassword(supabase, password);
   if (!result.ok) return result;
   await supabase.auth.signOut();
+  clearPasswordRecoveryIntent();
   return { ok: true };
 }

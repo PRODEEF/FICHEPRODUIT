@@ -29,7 +29,7 @@ import { signupSchema, type SignupInput } from '../lib/authSchemas';
 export function Signup() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { userEmail, loading: authLoading, configError, refreshProfile } = useAuth();
+  const { userEmail, loading: authLoading, refreshProfile } = useAuth();
   const [signupUrlAnalysisActive, setSignupUrlAnalysisActive] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [verifyEmailSent, setVerifyEmailSent] = useState(false);
@@ -86,12 +86,12 @@ export function Signup() {
   }, [urlFromQuery, setValue]);
 
   useEffect(() => {
-    if (authLoading || configError) return;
+    if (authLoading) return;
     if (!userEmail) return;
     if (signupPostAuthRef.current) return;
     if (signupUrlAnalysisActive || analysisOpen) return;
     void navigate('/catalog', { replace: true });
-  }, [authLoading, configError, userEmail, signupUrlAnalysisActive, analysisOpen, navigate]);
+  }, [authLoading, userEmail, signupUrlAnalysisActive, analysisOpen, navigate]);
 
   const onSubmit = useCallback(
     async (data: SignupInput) => {
@@ -199,22 +199,6 @@ export function Signup() {
     [navigate, refreshProfile, runAnalysis, searchParams, setError],
   );
 
-  if (configError) {
-    return (
-      <PageSection className="max-w-2xl pt-8">
-        <Card className="mx-auto w-full max-w-[34rem]">
-          <h1>Inscription</h1>
-          <Banner variant="error">
-            Variables d'environnement Supabase manquantes. Copiez{' '}
-            <code className="break-all text-[0.8em]">frontend/.env.example</code> vers{' '}
-            <code className="break-all text-[0.8em]">frontend/.env</code> et renseignez l'URL ainsi
-            que la clé anonyme.
-          </Banner>
-        </Card>
-      </PageSection>
-    );
-  }
-
   const isDisabled = isSubmitting || authLoading || signupUrlAnalysisActive;
 
   return (
@@ -304,9 +288,9 @@ export function Signup() {
                 {formError}
               </p>
             ) : null}
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-3">
               {emailAlreadyRegistered ? (
-                <p className="m-0 text-center text-sm text-text-secondary">
+                <p className="m-0 pb-1 text-center text-sm text-text-secondary">
                   Ce mail existe déjà,{' '}
                   <TextLink to={`/login${buildAuthEmailQuery(emailValue)}`}>se connecter ?</TextLink>
                 </p>

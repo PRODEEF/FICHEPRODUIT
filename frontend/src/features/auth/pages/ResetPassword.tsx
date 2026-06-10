@@ -10,7 +10,7 @@ import { Banner, Button, Card, PageSection, TextLink } from '@shared/ui';
 import { PasswordField } from '../components/PasswordField';
 import { resetPasswordSchema, type ResetPasswordInput } from '../lib/authSchemas';
 import { subscribePasswordRecoveryGate } from '../lib/passwordRecoveryGate';
-import { updatePasswordAndSignOut } from '../lib/passwordAuth';
+import { completePasswordRecovery } from '../lib/passwordAuth';
 import type { PasswordRecoveryGateState } from '../types';
 
 export function ResetPassword() {
@@ -41,19 +41,9 @@ export function ResetPassword() {
     }
 
     return subscribePasswordRecoveryGate(supabase, (ok) => {
-      if (ok) {
-        setGate('ready');
-        return;
-      }
-      void supabase.auth.getSession().then(({ data: { session } }) => {
-        if (session) {
-          void navigate('/profile', { replace: true });
-          return;
-        }
-        setGate('invalid');
-      });
+      setGate(ok ? 'ready' : 'invalid');
     });
-  }, [navigate]);
+  }, []);
 
   const onSubmit = async (data: ResetPasswordInput) => {
     setFormError(null);
@@ -62,13 +52,13 @@ export function ResetPassword() {
       setFormError('Configuration Supabase manquante.');
       return;
     }
-    const result = await updatePasswordAndSignOut(supabase, data.password);
+    const result = await completePasswordRecovery(supabase, data.password);
     if (!result.ok) {
       setFormError(result.message);
       return;
     }
-    toast.success('Mot de passe enregistré. Connectez-vous avec votre nouveau mot de passe.');
-    void navigate('/login', { replace: true });
+    toast.success('Mot de passe enregistré.');
+    void navigate('/catalog', { replace: true });
   };
 
   return (

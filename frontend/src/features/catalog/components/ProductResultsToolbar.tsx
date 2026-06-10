@@ -2,6 +2,7 @@ import { Button } from '@shared/ui';
 
 interface ProductResultsToolbarProps {
   isConnected: boolean;
+  isExporting?: boolean;
   totalCount: number;
   selectedCount: number;
   onDelete: () => void;
@@ -13,13 +14,14 @@ const EXPORT_AUTH_TOOLTIP =
 
 export function ProductResultsToolbar({
   isConnected,
+  isExporting = false,
   totalCount,
   selectedCount,
   onDelete,
   onExport,
 }: ProductResultsToolbarProps) {
   const hasSelection = selectedCount > 0;
-  const exportDisabled = !isConnected || !hasSelection;
+  const exportDisabled = !isConnected || !hasSelection || isExporting;
   const showExportAuthTooltip = !isConnected && hasSelection;
 
   return (
@@ -43,13 +45,14 @@ export function ProductResultsToolbar({
           size="sm"
           className="py-1.5 font-medium"
           disabled={exportDisabled}
+          aria-busy={isExporting}
           tooltip={showExportAuthTooltip ? EXPORT_AUTH_TOOLTIP : undefined}
           onClick={() => {
-            if (!isConnected || !hasSelection) return;
+            if (!isConnected || !hasSelection || isExporting) return;
             onExport?.();
           }}
         >
-          Exporter
+          {isExporting ? 'Export…' : 'Exporter'}
         </Button>
         <Button
           type="button"

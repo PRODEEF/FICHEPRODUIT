@@ -5,6 +5,11 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
  */
 let client: SupabaseClient | null = null;
 
+/** Indique si les variables VITE_SUPABASE_URL et VITE_SUPABASE_ANON_KEY sont renseignées. */
+export function isSupabaseConfigured(): boolean {
+  return getSupabaseClient() !== null;
+}
+
 export function getSupabaseClient(): SupabaseClient | null {
   const url = import.meta.env.VITE_SUPABASE_URL;
   const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -16,7 +21,15 @@ export function getSupabaseClient(): SupabaseClient | null {
   ) {
     return null;
   }
-  client ??= createClient(url, anonKey);
+  if (client === null) {
+    client = createClient(url, anonKey, {
+      auth: {
+        detectSessionInUrl: true,
+        persistSession: true,
+        flowType: 'pkce',
+      },
+    });
+  }
 
   return client;
 }

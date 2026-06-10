@@ -11,3 +11,4 @@ dist/
 backend/logs/
 
 frontend-test/
+.env*

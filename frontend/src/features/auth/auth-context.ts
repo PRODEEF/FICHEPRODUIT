@@ -11,7 +11,6 @@ export interface AuthContextValue {
   displayLabel: string | null;
   profileLoading: boolean;
   loading: boolean;
-  configError: boolean;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }

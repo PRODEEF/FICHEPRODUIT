@@ -14,6 +14,7 @@ import { AnalysisModule } from "./domain/analysis/analysis.module";
 import { CatalogModule } from "./domain/catalog/catalog.module";
 import { ProductTemplateModule } from "./domain/product-template/product-template.module";
 import { ShopModule } from "./domain/shop/shop.module";
+import { BillingModule } from "./domain/billing/billing.module";
 import { UserModule } from "./domain/user/user.module";
 
 // feature/
@@ -39,6 +40,7 @@ import { SuggestUrlsModule } from "./feature/suggest-urls/suggest-urls.module";
     CatalogModule,
     ProductTemplateModule,
     ShopModule,
+    BillingModule,
     UserModule,
 
     // feature/ — orchestration transverse

@@ -2,6 +2,7 @@ import { TableOfContents } from 'lucide-react';
 import { NavLink } from 'react-router';
 import type { ReactNode } from 'react';
 
+import { CreditBalanceBadge } from '../../billing/components/CreditBalanceBadge';
 import { cn } from '@shared/lib/cn';
 import { Badge, Button } from '@shared/ui';
 
@@ -69,8 +70,13 @@ export function Navbar({
           )}
           <Badge className="ml-2 shrink-0">BETA</Badge>
         </div>
-        {center ?? null}
+        {center ? (
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+            {center}
+          </div>
+        ) : null}
         <div className="flex shrink-0 items-center gap-4" style={{ flexShrink: 0 }}>
+          {authed ? <CreditBalanceBadge /> : null}
           {loading ? (
             <span
               className="max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap text-sm text-text-secondary"
