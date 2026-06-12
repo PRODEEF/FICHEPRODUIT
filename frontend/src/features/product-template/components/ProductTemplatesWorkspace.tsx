@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import type { ProductTemplate } from '@types-api';
 import { useAuth } from '@shared/hooks/useAuth';
@@ -12,6 +12,7 @@ import {
   fieldsToRows,
   newRowId,
 } from '../lib/templateFieldMappers';
+import { findDuplicateFieldRowIds } from '../lib/templateSchemas';
 import type { TemplateDraftSource, TemplateDraftState } from '../types';
 import { EditTemplateView } from './EditTemplateView';
 import { NewTemplatePanel } from './NewTemplatePanel';
@@ -74,6 +75,22 @@ export function ProductTemplatesWorkspace({
 
   const loading = profileLoading || shopLoading || templatesLoading;
   const loadError = shopError ?? templatesError;
+  const existingTemplateNames = useMemo(
+    () => templates.map((t) => t.name),
+    [templates],
+  );
+  const editDuplicateRowIds = useMemo(
+    () => findDuplicateFieldRowIds(fieldRows),
+    [fieldRows],
+  );
+  const draftDuplicateRowIds = useMemo(
+    () => (draft !== null ? findDuplicateFieldRowIds(draft.fieldRows) : new Set<string>()),
+    [draft],
+  );
+  const manualDuplicateRowIds = useMemo(
+    () => findDuplicateFieldRowIds(manualDraft.fieldRows),
+    [manualDraft.fieldRows],
+  );
 
   const refineDisabled =
     !shopReady ||
@@ -104,7 +121,7 @@ export function ProductTemplatesWorkspace({
     if (!file) return;
     setActionError(null);
     clearAiRefineHint();
-    const result = await csvImport.importFromFile(file, templates.length);
+    const result = await csvImport.importFromFile(file, existingTemplateNames);
     if ('error' in result) {
       setActionError(result.error);
       return;
@@ -126,7 +143,7 @@ export function ProductTemplatesWorkspace({
       );
       setDraftSource('product_page');
       setDraft({
-        templateName: defaultNewTemplateName(templates.length),
+        templateName: defaultNewTemplateName(existingTemplateNames),
         fieldRows: fieldsToRows(result.fields),
       });
     } catch (err) {
@@ -189,7 +206,7 @@ export function ProductTemplatesWorkspace({
   const openManualModal = () => {
     setModalError(null);
     setManualDraft({
-      templateName: defaultNewTemplateName(templates.length),
+      templateName: defaultNewTemplateName(existingTemplateNames),
       fieldRows: [{ id: newRowId(), name: '', type: 'text', required: false }],
     });
     setManualModalOpen(true);
@@ -253,6 +270,7 @@ export function ProductTemplatesWorkspace({
           refineDisabled={refineDisabled || saving}
           saving={saving}
           actionError={actionError}
+          duplicateRowIds={editDuplicateRowIds}
           onRefine={() => void handleRefineEdit()}
           onSave={() => void handleSaveEdit()}
           onCancel={() => {
@@ -323,6 +341,8 @@ export function ProductTemplatesWorkspace({
           refiningAi={refiningAi}
           refineDisabled={refineDisabled || draftSaving}
           draftSaving={draftSaving}
+          draftDuplicateRowIds={draftDuplicateRowIds}
+          manualDuplicateRowIds={manualDuplicateRowIds}
           onRefineDraft={() => void handleRefineDraft()}
           onSaveDraft={() => void handleSaveDraft()}
           onCancelDraft={handleCancelDraft}

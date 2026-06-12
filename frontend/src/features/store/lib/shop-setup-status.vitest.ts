@@ -34,9 +34,9 @@ describe('needsShopSetup', () => {
     );
   });
 
-  it('retourne false si un secteur est renseigné', () => {
+  it('retourne true si seul un secteur est renseigné sans marques', () => {
     expect(
-      needsShopSetup(makeShop({ url: 'https://example.com', sector: 'Mode & accessoires' })),
-    ).toBe(false);
+      needsShopSetup(makeShop({ url: 'https://example.com', sector: 'Mode' })),
+    ).toBe(true);
   });
 });

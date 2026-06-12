@@ -1,4 +1,4 @@
-import { Inject, Injectable, NotFoundException } from "@nestjs/common";
+import { ConflictException, Inject, Injectable, NotFoundException } from "@nestjs/common";
 import {
   PRODUCT_TEMPLATE_REPOSITORY,
   type IProductTemplateRepository,
@@ -57,6 +57,7 @@ export class ProductTemplateService {
 
   async create(data: CreateProductTemplate, user: AuthenticatedUser): Promise<ProductTemplate> {
     await this.shopService.getForUser(data.shopId, user);
+    await this.assertUniqueTemplateName(data.shopId, data.name, user, undefined);
     return this.templateRepo.create(data, user.accessToken, user.id);
   }
 
@@ -67,7 +68,27 @@ export class ProductTemplateService {
     user: AuthenticatedUser,
   ): Promise<ProductTemplate> {
     await this.getOneInShop(shopId, id, user);
+    if (patch.name !== undefined) {
+      await this.assertUniqueTemplateName(shopId, patch.name, user, id);
+    }
     return this.templateRepo.update(id, patch, user.accessToken);
+  }
+
+  private async assertUniqueTemplateName(
+    shopId: string,
+    name: string,
+    user: AuthenticatedUser,
+    excludeId: string | undefined,
+  ): Promise<void> {
+    const exists = await this.templateRepo.existsByNameInShop(
+      shopId,
+      name,
+      user.accessToken,
+      excludeId,
+    );
+    if (exists) {
+      throw new ConflictException("Une fiche avec ce nom existe déjà.");
+    }
   }
 
   async deleteInShop(shopId: string, id: string, user: AuthenticatedUser): Promise<void> {

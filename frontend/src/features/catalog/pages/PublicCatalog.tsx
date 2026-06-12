@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router';
 
 import { isValidAnalysisId } from '@lib/analysis/analysisStorage';
@@ -8,10 +8,10 @@ import {
 } from '@lib/analysis/guestSessionStorage';
 
 import { CatalogProductsSection } from '../components/CatalogProductsSection';
-import { EmptyProducts } from '../components/EmptyProducts';
 import { ErrorState, LoadingState } from '../components/CatalogSectionStates';
 import { GuestCatalogCTA } from '../components/GuestCatalogCTA';
 import { ShopSummarySection } from '../components/ShopSummarySection';
+import { useActiveBrandForAnalysis } from '../hooks/useActiveBrandForAnalysis';
 import { useAnalysisDetail } from '../hooks/useAnalysisDetail';
 import { resolveCatalogWorkflowStatus } from '../lib/catalogWorkflowStatus';
 
@@ -40,20 +40,14 @@ export function PublicCatalog() {
     catalogProductsLoading,
   } = useAnalysisDetail(analysisId, undefined, false);
 
-  const [activeBrand, setActiveBrand] = useState('');
-  const [activeBrandForAnalysisId, setActiveBrandForAnalysisId] = useState<string | undefined>(
-    undefined,
-  );
-  const analysisIdKey = analysisId !== undefined && analysisId !== '' ? analysisId : '';
-  if (analysisIdKey !== activeBrandForAnalysisId) {
-    setActiveBrandForAnalysisId(analysisIdKey);
-    setActiveBrand('');
-  }
+  const { activeBrand, setActiveBrand } = useActiveBrandForAnalysis(analysisId);
 
   const allProducts = useMemo(() => catalogProducts ?? [], [catalogProducts]);
 
   const handleBrandToggle = (brand: string) => {
-    setActiveBrand((prev) => (prev === brand ? '' : brand));
+    setActiveBrand((prev) =>
+      prev.trim().toLowerCase() === brand.trim().toLowerCase() ? '' : brand,
+    );
   };
 
   const hasShopWithBrands = Boolean(shop?.brands.some((b) => b.trim()));
@@ -130,9 +124,7 @@ export function PublicCatalog() {
           <LoadingState label="Chargement des exemples de fiches…" />
         ) : productsError ? (
           <ErrorState message={productsError} />
-        ) : catalogProducts !== null && catalogProducts.length === 0 ? (
-          <EmptyProducts />
-        ) : (
+        ) : catalogProducts !== null ? (
           <CatalogProductsSection
             shopName={shop.name}
             isConnected={false}
@@ -145,7 +137,7 @@ export function PublicCatalog() {
             onBrandFilterChange={setActiveBrand}
             introVariant={hasShopWithBrands ? 'shop' : 'all'}
           />
-        )}
+        ) : null}
       </div>
     </div>
   );

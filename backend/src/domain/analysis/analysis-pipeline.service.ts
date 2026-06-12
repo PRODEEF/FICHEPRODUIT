@@ -68,7 +68,7 @@ export class AnalysisPipelineService {
         {
           url: analysis.url,
           cms: scrapeResult.cms,
-          sector: classification.sector,
+          sector: null,
           brands: classification.brands,
           categories: classification.categories,
           ownerId: analysis.userId,
@@ -79,12 +79,11 @@ export class AnalysisPipelineService {
       const shopId = shop.id;
 
       // 4. Marquer l'analyse done
-      const errorCode = !classification.sector ? "UNKNOWN_SECTOR" : null;
       await this.analysisRepo.updateStatus(
         analysis.id,
         {
           status: "done",
-          errorCode,
+          errorCode: null,
           shopId,
         },
         accessToken,

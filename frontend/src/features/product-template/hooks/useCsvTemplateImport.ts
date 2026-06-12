@@ -17,7 +17,7 @@ export interface UseCsvTemplateImportResult {
   openFilePicker: () => void;
   importFromFile: (
     file: File,
-    existingTemplateCount: number,
+    existingNames: readonly string[],
   ) => Promise<CsvImportResult | { error: string }>;
 }
 
@@ -29,7 +29,7 @@ export function useCsvTemplateImport(): UseCsvTemplateImportResult {
   }, []);
 
   const importFromFile = useCallback(
-    (file: File, existingTemplateCount: number): Promise<CsvImportResult | { error: string }> => {
+    (file: File, existingNames: readonly string[]): Promise<CsvImportResult | { error: string }> => {
       return new Promise((resolve) => {
         const reader = new FileReader();
         reader.onload = () => {
@@ -43,7 +43,7 @@ export function useCsvTemplateImport(): UseCsvTemplateImportResult {
           const sampleValues = Object.keys(sampleByHeader).length > 0 ? sampleByHeader : null;
           resolve({
             draft: {
-              templateName: defaultNewTemplateName(existingTemplateCount),
+              templateName: defaultNewTemplateName(existingNames),
               fieldRows: headers.map((name) => ({
                 id: newRowId(),
                 name,

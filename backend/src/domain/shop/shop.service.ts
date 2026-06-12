@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Inject,
   Injectable,
   InternalServerErrorException,
@@ -95,6 +96,17 @@ export class ShopService {
     accessToken: string,
   ): Promise<Shop> {
     const shop = await this.getOrCreateMyShop(ownerId, accessToken);
+    if (dto.sector !== undefined) {
+      const currentSector = shop.sector?.trim() ? shop.sector : null;
+      if (currentSector !== null) {
+        if (dto.sector === null) {
+          throw new BadRequestException("Le secteur ne peut plus être modifié.");
+        }
+        if (dto.sector !== currentSector) {
+          throw new BadRequestException("Le secteur ne peut plus être modifié.");
+        }
+      }
+    }
     return this.shopRepo.update(shop.id, dto, accessToken);
   }
 

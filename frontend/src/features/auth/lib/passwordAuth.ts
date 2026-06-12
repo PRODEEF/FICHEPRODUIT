@@ -1,4 +1,4 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { AuthError, SupabaseClient } from '@supabase/supabase-js';
 
 import { authErrorMessage } from './authErrorMessage';
 import { clearPasswordRecoveryIntent } from './passwordRecoveryGate';
@@ -37,6 +37,13 @@ export async function requestPasswordResetEmail(
 
 export type UpdatePasswordResult = { ok: true } | { ok: false; message: string };
 
+const CURRENT_PASSWORD_INCORRECT_MESSAGE = 'Mot de passe actuel incorrect.';
+
+function isCurrentPasswordVerificationError(error: AuthError): boolean {
+  const code = error.code?.toLowerCase() ?? '';
+  return code === 'invalid_credentials' || code === 'invalid_grant';
+}
+
 /** Met à jour le mot de passe sans déconnecter (profil connecté). */
 export async function updatePassword(
   supabase: SupabaseClient,
@@ -60,7 +67,12 @@ export async function changePasswordWithVerification(
     email: email.trim(),
     password: currentPassword,
   });
-  if (signInError) return { ok: false, message: authErrorMessage(signInError) };
+  if (signInError) {
+    const message = isCurrentPasswordVerificationError(signInError)
+      ? CURRENT_PASSWORD_INCORRECT_MESSAGE
+      : authErrorMessage(signInError);
+    return { ok: false, message };
+  }
   return updatePassword(supabase, newPassword);
 }
 

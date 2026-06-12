@@ -1,4 +1,4 @@
-import { InternalServerErrorException } from "@nestjs/common";
+import { BadRequestException, InternalServerErrorException } from "@nestjs/common";
 
 import { ShopService } from "./shop.service";
 import { type IShopRepository } from "./shop.repository.interface";
@@ -118,5 +118,35 @@ describe("ShopService", () => {
 
     expect(out.name).toBe("Renommé");
     expect(repo.update).toHaveBeenCalledWith("shop-x", { name: "Renommé" }, "tok");
+  });
+
+  it("updateMyShop autorise la première saisie du secteur", async () => {
+    repo.findAllByOwner.mockResolvedValue([sampleShop]);
+    repo.update.mockResolvedValue({ ...sampleShop, sector: "Vélo" });
+
+    const out = await service.updateMyShop("user-1", { sector: "Vélo" }, "tok");
+
+    expect(out.sector).toBe("Vélo");
+    expect(repo.update).toHaveBeenCalledWith("shop-1", { sector: "Vélo" }, "tok");
+  });
+
+  it("updateMyShop refuse de modifier un secteur déjà renseigné", async () => {
+    const shopWithSector = { ...sampleShop, sector: "Glisse" };
+    repo.findAllByOwner.mockResolvedValue([shopWithSector]);
+
+    await expect(
+      service.updateMyShop("user-1", { sector: "Vélo" }, "tok"),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    expect(repo.update).not.toHaveBeenCalled();
+  });
+
+  it("updateMyShop refuse d'effacer un secteur déjà renseigné", async () => {
+    const shopWithSector = { ...sampleShop, sector: "Glisse" };
+    repo.findAllByOwner.mockResolvedValue([shopWithSector]);
+
+    await expect(
+      service.updateMyShop("user-1", { sector: null }, "tok"),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    expect(repo.update).not.toHaveBeenCalled();
   });
 });

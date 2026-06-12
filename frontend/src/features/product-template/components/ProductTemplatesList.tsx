@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { ChevronDown, Trash2 } from 'lucide-react';
 import type { ProductTemplate } from '@types-api';
 
-import { productTemplateFieldTypeLabel } from '../lib/productTemplates';
 import { DeleteTemplateConfirmModal } from './DeleteTemplateConfirmModal';
+import { TemplateFieldsPreview } from './TemplateFieldsPreview';
 
 export interface ProductTemplatesListProps {
   templates: ProductTemplate[];
@@ -130,26 +130,7 @@ export function ProductTemplatesList({ templates, onEdit, onDelete }: ProductTem
                 : 'max-h-0 opacity-0'
             }`}
           >
-            <div className="analyses-table-wrap product-templates-card-table pt-1">
-            <table className="analyses-table">
-              <thead>
-                <tr>
-                  <th>Nom</th>
-                  <th>Type</th>
-                  <th>Requis</th>
-                </tr>
-              </thead>
-              <tbody>
-                {t.fields.map((f) => (
-                  <tr key={`${t.id}-${f.name}-${f.type}`}>
-                    <td>{f.name}</td>
-                    <td>{productTemplateFieldTypeLabel(f.type)}</td>
-                    <td>{f.required ? 'Oui' : 'Non'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            </div>
+            <TemplateFieldsPreview fields={t.fields} templateId={t.id} />
           </div>
         </li>
       ))}

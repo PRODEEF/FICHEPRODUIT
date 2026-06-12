@@ -7,7 +7,8 @@ import { useAuth } from '@shared/hooks/useAuth';
  *
  * Tant que la session Supabase n'est pas hydratée (`loading`), affiche un fallback de
  * chargement commun pour éviter le flash d'une redirection avant restauration de la session.
- * Si aucune session n'est disponible une fois l'hydratation terminée, redirige vers `/login`.
+ * Si aucune session n'est disponible une fois l'hydratation terminée, redirige vers `/`
+ * (page publique — évite aussi la course déconnexion /login sur les routes protégées).
  * Sinon, délègue le rendu aux routes enfants via `<Outlet />`.
  *
  * Utiliser ce composant comme `element` d'une route parente regroupant les routes privées
@@ -32,7 +33,7 @@ export function RequireAuthRoute() {
       </div>
     );
 
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) return <Navigate to="/" replace />;
   
   return <Outlet />;
 }

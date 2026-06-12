@@ -1,3 +1,4 @@
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { RefreshCcw } from 'lucide-react';
 
 import { SHOP_SECTOR_LABELS } from '@shared/lib/shopSectors';
@@ -32,6 +33,30 @@ export function ProductFilters({
   subCategoryOptions,
   yearOptions,
 }: ProductFiltersProps) {
+  const [isResetAnimating, setIsResetAnimating] = useState(false);
+  const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (resetTimerRef.current !== null) {
+        clearTimeout(resetTimerRef.current);
+      }
+    };
+  }, []);
+
+  const handleResetClick = useCallback(() => {
+    if (!canReset || !onReset) return;
+    setIsResetAnimating(true);
+    if (resetTimerRef.current !== null) {
+      clearTimeout(resetTimerRef.current);
+    }
+    resetTimerRef.current = setTimeout(() => {
+      setIsResetAnimating(false);
+      resetTimerRef.current = null;
+    }, 500);
+    onReset();
+  }, [canReset, onReset]);
+
   return (
     <div className="flex flex-wrap items-end gap-3" role="search" aria-label="Filtrer les produits">
       <InputField
@@ -123,12 +148,18 @@ export function ProductFilters({
           variant="primary"
           size="sm"
           className={cn(CATALOG_FILTER_CONTROL_HEIGHT_CLASS, 'w-10 shrink-0 p-0')}
-          onClick={onReset}
+          onClick={handleResetClick}
           disabled={!canReset}
           tooltip="Réinitialiser les filtres"
           aria-label="Réinitialiser les filtres"
         >
-          <RefreshCcw className="h-5 w-5" aria-hidden />
+          <RefreshCcw
+            className={cn(
+              'h-5 w-5',
+              isResetAnimating && 'animate-spin motion-reduce:animate-none',
+            )}
+            aria-hidden
+          />
         </Button>
       ) : null}
     </div>

@@ -8,6 +8,10 @@ import type { Shop } from '../types';
 import { ShopInfoSection } from '../components/ShopInfoSection';
 import { StoreUrlAnalysisBanner } from '../components/StoreUrlAnalysisBanner';
 import { TagListEditor } from '../components/TagListEditor';
+import {
+  findTagCaseInsensitive,
+  shopTagDuplicateMessage,
+} from '../lib/shopSchemas';
 import { needsShopSetup } from '../lib/shop-setup-status';
 import { useShop } from '../hooks/useShop';
 
@@ -28,9 +32,20 @@ interface StoreLoadedProps {
   updateShop: (shop: Shop) => void;
   onUrlSaved: (url: string) => void;
   hideUrlRow: boolean;
+  showAnalyzeAction: boolean;
+  onAnalyze: () => void;
+  analyzeDisabled: boolean;
 }
 
-function StoreLoaded({ shop, updateShop, onUrlSaved, hideUrlRow }: StoreLoadedProps) {
+function StoreLoaded({
+  shop,
+  updateShop,
+  onUrlSaved,
+  hideUrlRow,
+  showAnalyzeAction,
+  onAnalyze,
+  analyzeDisabled,
+}: StoreLoadedProps) {
   const [patching, setPatching] = useState(false);
 
   const patchShop = useCallback(
@@ -49,6 +64,22 @@ function StoreLoaded({ shop, updateShop, onUrlSaved, hideUrlRow }: StoreLoadedPr
     [onUrlSaved, updateShop],
   );
 
+  const validateBrandBeforeAdd = useCallback(
+    (tag: string) => {
+      const existing = findTagCaseInsensitive(shop.brands, tag);
+      return existing ? shopTagDuplicateMessage(existing) : null;
+    },
+    [shop.brands],
+  );
+
+  const validateCategoryBeforeAdd = useCallback(
+    (tag: string) => {
+      const existing = findTagCaseInsensitive(shop.categories, tag);
+      return existing ? shopTagDuplicateMessage(existing) : null;
+    },
+    [shop.categories],
+  );
+
   return (
     <>
       <ShopInfoSection
@@ -56,14 +87,17 @@ function StoreLoaded({ shop, updateShop, onUrlSaved, hideUrlRow }: StoreLoadedPr
         onSavePartial={patchShop}
         saving={patching}
         hideUrlRow={hideUrlRow}
+        showAnalyzeAction={showAnalyzeAction}
+        onAnalyze={onAnalyze}
+        analyzeDisabled={analyzeDisabled}
       />
 
       <TagListEditor
         label="Marques"
         tags={shop.brands}
         disabled={patching}
+        onValidateBeforeAdd={validateBrandBeforeAdd}
         onAdd={async (tag) => {
-          if (shop.brands.includes(tag)) return;
           await patchShop({ brands: [...shop.brands, tag] });
         }}
         onRemove={async (tag) => {
@@ -74,8 +108,8 @@ function StoreLoaded({ shop, updateShop, onUrlSaved, hideUrlRow }: StoreLoadedPr
         label="Catégories"
         tags={shop.categories}
         disabled={patching}
+        onValidateBeforeAdd={validateCategoryBeforeAdd}
         onAdd={async (tag) => {
-          if (shop.categories.includes(tag)) return;
           await patchShop({ categories: [...shop.categories, tag] });
         }}
         onRemove={async (tag) => {
@@ -89,19 +123,33 @@ function StoreLoaded({ shop, updateShop, onUrlSaved, hideUrlRow }: StoreLoadedPr
 export function MyStore() {
   const navigate = useNavigate();
   const { shop, loading, error, updateShop } = useShop();
-  const [urlAnalysisPrompt, setUrlAnalysisPrompt] = useState<string | null>(null);
+  const [pendingAnalysisUrl, setPendingAnalysisUrl] = useState<string | null>(null);
+  const [analysisBannerOpen, setAnalysisBannerOpen] = useState(false);
   const [setupHeroDismissed, setSetupHeroDismissed] = useState(false);
 
   const handleUrlSaved = useCallback((url: string) => {
     if (url.trim()) {
-      setUrlAnalysisPrompt(url);
+      setPendingAnalysisUrl(url);
+      setAnalysisBannerOpen(true);
     }
   }, []);
 
   const handleAnalysisSuccess = useCallback(() => {
-    setUrlAnalysisPrompt(null);
+    setPendingAnalysisUrl(null);
+    setAnalysisBannerOpen(false);
     void navigate('/catalog', { replace: true });
   }, [navigate]);
+
+  const handleAnalysisHeroDismiss = useCallback(() => {
+    setAnalysisBannerOpen(false);
+    if (pendingAnalysisUrl === null) {
+      setSetupHeroDismissed(true);
+    }
+  }, [pendingAnalysisUrl]);
+
+  const handleReopenAnalysis = useCallback(() => {
+    setAnalysisBannerOpen(true);
+  }, []);
 
   useEffect(() => {
     if (!loading && shop === null && !error) {
@@ -127,17 +175,15 @@ export function MyStore() {
   }
 
   const showAnalysisHero =
-    urlAnalysisPrompt !== null || (needsShopSetup(shop) && !setupHeroDismissed);
-  const analysisBannerVariant = urlAnalysisPrompt !== null ? 'prompt' : 'onboarding';
-  const analysisBannerUrl = urlAnalysisPrompt ?? shop.url;
+    analysisBannerOpen &&
+    (pendingAnalysisUrl !== null || (needsShopSetup(shop) && !setupHeroDismissed));
+  const analysisBannerVariant = pendingAnalysisUrl !== null ? 'prompt' : 'onboarding';
+  const analysisBannerUrl = pendingAnalysisUrl ?? shop.url;
 
-  const handleAnalysisHeroDismiss = () => {
-    if (urlAnalysisPrompt !== null) {
-      setUrlAnalysisPrompt(null);
-      return;
-    }
-    setSetupHeroDismissed(true);
-  };
+  const showAnalyzeAction =
+    !showAnalysisHero &&
+    ((pendingAnalysisUrl !== null && shop.url.trim() === pendingAnalysisUrl.trim()) ||
+      (needsShopSetup(shop) && setupHeroDismissed && pendingAnalysisUrl === null));
 
   return (
     <div className="relative z-[1] w-full px-12 pb-12 pt-9">
@@ -159,6 +205,9 @@ export function MyStore() {
         updateShop={updateShop}
         onUrlSaved={handleUrlSaved}
         hideUrlRow={showAnalysisHero}
+        showAnalyzeAction={showAnalyzeAction}
+        onAnalyze={handleReopenAnalysis}
+        analyzeDisabled={false}
       />
     </div>
   );

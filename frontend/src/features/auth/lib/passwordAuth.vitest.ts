@@ -101,6 +101,26 @@ describe('changePasswordWithVerification', () => {
     });
     expect(updateUser).toHaveBeenCalledWith({ password: 'NewP@ssw0rd!' });
   });
+
+  it('retourne un message dédié si le mot de passe actuel est incorrect', async () => {
+    const signInWithPassword = vi.fn().mockResolvedValue({
+      error: { code: 'invalid_credentials', message: 'Invalid login credentials' },
+    });
+    const updateUser = vi.fn();
+    const supabase = {
+      auth: { signInWithPassword, updateUser },
+    } as unknown as SupabaseClient;
+
+    const result = await changePasswordWithVerification(
+      supabase,
+      'user@example.com',
+      'wrong-pass',
+      'NewP@ssw0rd!',
+    );
+
+    expect(result).toEqual({ ok: false, message: 'Mot de passe actuel incorrect.' });
+    expect(updateUser).not.toHaveBeenCalled();
+  });
 });
 
 describe('completePasswordRecovery', () => {

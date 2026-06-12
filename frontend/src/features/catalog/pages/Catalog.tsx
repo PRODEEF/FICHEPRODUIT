@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import { AnalysisProgress } from '@shared/components/AnalysisProgress';
 import { useAuth } from '@shared/hooks/useAuth';
@@ -6,9 +6,9 @@ import { useSiteAnalysis } from '@shared/hooks/useSiteAnalysis';
 
 import { useSignupAutoAnalyze } from '../../auth/hooks/useSignupAutoAnalyze';
 import { CatalogProductsSection } from '../components/CatalogProductsSection';
-import { EmptyProducts } from '../components/EmptyProducts';
 import { ErrorState, LoadingState } from '../components/CatalogSectionStates';
 import { ShopSummarySection } from '../components/ShopSummarySection';
+import { useActiveBrandForAnalysis } from '../hooks/useActiveBrandForAnalysis';
 import { useCatalogAnalysis } from '../hooks/useCatalogAnalysis';
 import { useCatalogProducts } from '../hooks/useCatalogProducts';
 import { resolveCatalogWorkflowStatus } from '../lib/catalogWorkflowStatus';
@@ -21,7 +21,7 @@ import { useShop } from '../../store/hooks/useShop';
  * du compte s'affiche en complément lorsqu'elle existe.
  */
 export function Catalog() {
-  const { profile } = useAuth();
+  const { userEmail } = useAuth();
   const { shop, loading: shopLoading, error: shopError } = useShop();
 
   const { runAnalysis, analysisOpen, siteAnalysis, dismissError } = useSiteAnalysis();
@@ -45,20 +45,14 @@ export function Catalog() {
     shopLoading,
   });
 
-  const [activeBrand, setActiveBrand] = useState('');
-  const [activeBrandForAnalysisId, setActiveBrandForAnalysisId] = useState<string | undefined>(
-    undefined,
-  );
-  const analysisIdKey = analysisId ?? '';
-  if (analysisIdKey !== activeBrandForAnalysisId) {
-    setActiveBrandForAnalysisId(analysisIdKey);
-    setActiveBrand('');
-  }
+  const { activeBrand, setActiveBrand } = useActiveBrandForAnalysis(analysisId);
 
   const allProducts = useMemo(() => catalogProducts ?? [], [catalogProducts]);
 
   const handleBrandToggle = (brand: string) => {
-    setActiveBrand((prev) => (prev === brand ? '' : brand));
+    setActiveBrand((prev) =>
+      prev.trim().toLowerCase() === brand.trim().toLowerCase() ? '' : brand,
+    );
   };
 
   const hasShopWithBrands = Boolean(shop?.brands.some((b) => b.trim()));
@@ -103,12 +97,10 @@ export function Catalog() {
             <LoadingState label="Chargement des exemples de fiches…" />
           ) : productsError ? (
             <ErrorState message={productsError} />
-          ) : catalogProducts !== null && catalogProducts.length === 0 ? (
-            <EmptyProducts />
-          ) : (
+          ) : catalogProducts !== null ? (
             <CatalogProductsSection
               shopName={shop?.name ?? ''}
-              isConnected={!!profile}
+              isConnected={Boolean(userEmail)}
               products={allProducts}
               productPayload={productPayload}
               isLoadingProducts={isLoadingProducts}
@@ -118,7 +110,7 @@ export function Catalog() {
               onBrandFilterChange={setActiveBrand}
               introVariant={hasShopWithBrands ? 'shop' : 'all'}
             />
-          )}
+          ) : null}
         </div>
       </div>
     </>

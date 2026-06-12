@@ -12,6 +12,8 @@ import {
   buildCategoryOptions,
   buildSubCategoryOptions,
   buildYearOptions,
+  findOptionCaseInsensitive,
+  optionIncludedCaseInsensitive,
 } from '../lib/catalogFilterOptions';
 
 interface UseProductFiltersResult {
@@ -51,10 +53,14 @@ function pruneDependentFilters(
     subCategory = '';
     brand = '';
     year = '';
-  } else if (brand && !brandOptions.includes(brand)) {
+  } else if (brand && !optionIncludedCaseInsensitive(brandOptions, brand)) {
     brand = '';
     year = '';
-  } else if (year && !yearOptions.includes(year)) {
+  } else if (brand) {
+    brand = findOptionCaseInsensitive(brandOptions, brand) ?? brand;
+  }
+
+  if (year && !yearOptions.includes(year)) {
     year = '';
   }
 

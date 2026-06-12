@@ -2,12 +2,15 @@ import { useId, useState, type KeyboardEvent } from 'react';
 
 import { Button, InputField, Modal, Tag } from '@shared/ui';
 
+import { SHOP_TAG_MAX_LENGTH, shopTagSchema } from '../lib/shopSchemas';
+
 interface TagListEditorProps {
   label: string;
   tags: string[];
   disabled?: boolean;
   onAdd: (tag: string) => void | Promise<void>;
   onRemove: (tag: string) => void | Promise<void>;
+  onValidateBeforeAdd?: (tag: string) => string | null;
 }
 
 export function TagListEditor({
@@ -16,6 +19,7 @@ export function TagListEditor({
   disabled = false,
   onAdd,
   onRemove,
+  onValidateBeforeAdd,
 }: TagListEditorProps) {
   const baseId = useId();
   const inputId = `${baseId}-tag-input`;
@@ -25,12 +29,24 @@ export function TagListEditor({
   const [error, setError] = useState<string | null>(null);
 
   const submit = async () => {
-    const trimmed = input.trim();
-    if (!trimmed || disabled || busy) return;
+    if (disabled || busy) return;
     setError(null);
+
+    const parsed = shopTagSchema.safeParse(input);
+    if (!parsed.success) {
+      setError(parsed.error.issues[0]?.message ?? 'Valeur invalide.');
+      return;
+    }
+
+    const duplicateMessage = onValidateBeforeAdd?.(parsed.data) ?? null;
+    if (duplicateMessage) {
+      setError(duplicateMessage);
+      return;
+    }
+
     setBusy(true);
     try {
-      await onAdd(trimmed);
+      await onAdd(parsed.data);
       setInput('');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Impossible d’ajouter.');
@@ -65,7 +81,6 @@ export function TagListEditor({
   return (
     <div className="mt-8">
       <h2 className="mb-3 text-sm font-semibold text-gray-900">{label}</h2>
-      {error ? <p className="mb-2 text-sm text-red-600">{error}</p> : null}
       <div className="flex flex-wrap items-center gap-2">
         {tags.map((tag) => (
           <Tag
@@ -83,10 +98,17 @@ export function TagListEditor({
           id={inputId}
           label={`Ajouter une nouvelle ${label.slice(0, -1)}`}
           value={input}
-          onChange={(e) => void setInput(e.target.value)}
+          onChange={(e) => {
+            setError(null);
+            setInput(e.target.value);
+          }}
           onKeyDown={onKeyDown}
           placeholder="Ajouter…"
           disabled={locked}
+          maxLength={SHOP_TAG_MAX_LENGTH}
+          showCharacterCount
+          error={error ?? undefined}
+          errorId={`${inputId}-error`}
         />
         <Button
           type="button"

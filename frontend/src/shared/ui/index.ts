@@ -9,3 +9,9 @@ export { Card } from './Card';
 export { Modal } from './Modal';
 export { PageSection } from './PageSection';
 export { TextLink } from './TextLink';
+export {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from './DropdownMenu';

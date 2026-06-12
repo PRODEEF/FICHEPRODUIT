@@ -21,6 +21,8 @@ export interface NewTemplatePanelProps {
   refiningAi: boolean;
   refineDisabled: boolean;
   draftSaving: boolean;
+  draftDuplicateRowIds?: Set<string> | undefined;
+  manualDuplicateRowIds?: Set<string> | undefined;
   onRefineDraft: () => void;
   onSaveDraft: () => void;
   onCancelDraft: () => void;
@@ -51,6 +53,8 @@ export function NewTemplatePanel({
   refiningAi,
   refineDisabled,
   draftSaving,
+  draftDuplicateRowIds,
+  manualDuplicateRowIds,
   onRefineDraft,
   onSaveDraft,
   onCancelDraft,
@@ -134,6 +138,7 @@ export function NewTemplatePanel({
           refiningAi={refiningAi}
           refineDisabled={refineDisabled}
           saving={draftSaving}
+          duplicateRowIds={draftDuplicateRowIds}
           onRefine={onRefineDraft}
           onSave={onSaveDraft}
           onCancel={onCancelDraft}
@@ -146,6 +151,7 @@ export function NewTemplatePanel({
         onDraftChange={onManualDraftChange}
         saving={modalSaving}
         error={modalError}
+        duplicateRowIds={manualDuplicateRowIds}
         onSave={onSaveManual}
         onClose={onCloseManual}
       />

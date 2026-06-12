@@ -1,4 +1,9 @@
-import { Injectable, InternalServerErrorException, Logger } from "@nestjs/common";
+import {
+  ConflictException,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from "@nestjs/common";
 import { SupabaseService } from "../../core/supabase/supabase.service";
 import type { Database, Json } from "../../core/supabase/database.types";
 import type { IProductTemplateRepository } from "./product-template.repository.interface";
@@ -42,6 +47,31 @@ export class ProductTemplateRepository implements IProductTemplateRepository {
     return data ? this.toEntity(data as unknown as ProductTemplateRowDb) : null;
   }
 
+  async existsByNameInShop(
+    shopId: string,
+    name: string,
+    accessToken: string,
+    excludeId?: string,
+  ): Promise<boolean> {
+    const normalized = name.trim().toLowerCase();
+    const { data, error } = await this.supabase
+      .forUser(accessToken)
+      .from("product_templates")
+      .select("id, name")
+      .eq("shop_id", shopId);
+
+    if (error) {
+      this.logger.error(`existsByNameInShop(${shopId}) failed`, error);
+      throw new InternalServerErrorException("Échec de la vérification du nom de gabarit");
+    }
+
+    return (data ?? []).some((row) => {
+      if (excludeId && row.id === excludeId) return false;
+      const rowName = typeof row.name === "string" ? row.name.trim().toLowerCase() : "";
+      return rowName === normalized;
+    });
+  }
+
   async findAllByShop(shopId: string, accessToken: string): Promise<ProductTemplate[]> {
     const { data, error } = await this.supabase
       .forUser(accessToken)
@@ -71,6 +101,9 @@ export class ProductTemplateRepository implements IProductTemplateRepository {
 
     if (error) {
       this.logger.error("create failed", error);
+      if (error.code === "23505") {
+        throw new ConflictException("Une fiche avec ce nom existe déjà.");
+      }
       throw new InternalServerErrorException("Échec de la création du gabarit");
     }
     return this.toEntity(row as unknown as ProductTemplateRowDb);
@@ -104,6 +137,9 @@ export class ProductTemplateRepository implements IProductTemplateRepository {
 
     if (error) {
       this.logger.error(`update(${id}) failed`, error);
+      if (error.code === "23505") {
+        throw new ConflictException("Une fiche avec ce nom existe déjà.");
+      }
       throw new InternalServerErrorException("Échec de la mise à jour du gabarit");
     }
     return this.toEntity(row as unknown as ProductTemplateRowDb);

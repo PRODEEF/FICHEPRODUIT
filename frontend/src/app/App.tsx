@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { BrowserRouter, Outlet, Route, Routes, useLocation, useNavigate } from 'react-router';
 import { Toaster } from 'sonner';
 
@@ -93,6 +93,18 @@ function AppHeader({ drawerOpen, onDrawerToggle }: AppHeaderProps) {
   const navigate = useNavigate();
   const { userEmail, displayLabel, loading, profileLoading, signOut } = useAuth();
 
+  const handleLogout = async () => {
+    if (drawerOpen) {
+      onDrawerToggle();
+    }
+    navigate('/', { replace: true });
+    try {
+      await signOut();
+    } catch {
+      window.alert('Une erreur est survenue lors de la déconnexion.');
+    }
+  };
+
   return (
     <Navbar
       userEmail={userEmail}
@@ -101,29 +113,21 @@ function AppHeader({ drawerOpen, onDrawerToggle }: AppHeaderProps) {
       drawerOpen={drawerOpen}
       onDrawerToggle={onDrawerToggle}
       center={<MarketingNavLinks />}
-      onLogout={async () => {
-        void navigate('/', { replace: true });
-        try {
-          await signOut();
-        } catch {
-          window.alert('Une erreur est survenue lors de la déconnexion.');
-        }
-      }}
+      onLogout={handleLogout}
     />
   );
 }
 
 function AppShellLayout({ userEmail }: { userEmail: string | null }) {
+  const location = useLocation();
   const [drawerOpen, setDrawerOpen] = useState(true);
-  const [prevUserEmail, setPrevUserEmail] = useState(userEmail);
   const drawerExpanded = drawerOpen && Boolean(userEmail);
 
-  if (userEmail !== prevUserEmail) {
-    setPrevUserEmail(userEmail);
+  useEffect(() => {
     if (userEmail) {
       setDrawerOpen(true);
     }
-  }
+  }, [userEmail]);
 
   return (
     <div
@@ -137,7 +141,9 @@ function AppShellLayout({ userEmail }: { userEmail: string | null }) {
           drawerExpanded ? 'ml-[260px]' : 'ml-0'
         }`}
       >
-        <Outlet />
+        <Suspense key={location.key} fallback={<RouteFallback />}>
+          <Outlet />
+        </Suspense>
       </main>
     </div>
   );
@@ -165,30 +171,28 @@ export function App() {
       <BillingProvider>
       <BrowserRouter>
         <Toaster richColors position="bottom-right" />
-        <Suspense fallback={<RouteFallback />}>
-          <Routes>
-            <Route element={<AppShell />}>
-              <Route path="/" element={<Home />} />
-              <Route path="/catalog/public/:analysisId" element={<PublicCatalog />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Signup />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/auth/reset-password" element={<ResetPassword />} />
-              <Route path="/pricing" element={<Pricing />} />
-              <Route path="/billing/success" element={<BillingSuccess />} />
-              <Route path="/billing/cancel" element={<BillingCancel />} />
-              <Route path="/demo" element={<DemoRequest />} />
-              <Route path="/about" element={<About />} />
+        <Routes>
+          <Route element={<AppShell />}>
+            <Route path="/" element={<Home />} />
+            <Route path="/catalog/public/:analysisId" element={<PublicCatalog />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/auth/reset-password" element={<ResetPassword />} />
+            <Route path="/pricing" element={<Pricing />} />
+            <Route path="/billing/success" element={<BillingSuccess />} />
+            <Route path="/billing/cancel" element={<BillingCancel />} />
+            <Route path="/demo" element={<DemoRequest />} />
+            <Route path="/about" element={<About />} />
 
-              <Route element={<RequireAuthRoute />}>
-                <Route path="/catalog" element={<Catalog />} />
-                <Route path="/product-sheet" element={<ProductSheet />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/store" element={<MyStore />} />
-              </Route>
+            <Route element={<RequireAuthRoute />}>
+              <Route path="/catalog" element={<Catalog />} />
+              <Route path="/product-sheet" element={<ProductSheet />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/store" element={<MyStore />} />
             </Route>
-          </Routes>
-        </Suspense>
+          </Route>
+        </Routes>
       </BrowserRouter>
       </BillingProvider>
     </AuthProvider>

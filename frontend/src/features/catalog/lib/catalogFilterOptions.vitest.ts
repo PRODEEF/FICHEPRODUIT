@@ -7,7 +7,9 @@ import {
   buildCategoryOptions,
   buildSubCategoryOptions,
   buildYearOptions,
+  findOptionCaseInsensitive,
   getProductsForFilterScope,
+  optionIncludedCaseInsensitive,
 } from './catalogFilterOptions';
 
 function product(overrides: Partial<CatalogProduct>): CatalogProduct {
@@ -142,5 +144,22 @@ describe('comparaison secteur insensible à la casse', () => {
       brand: '',
     });
     expect(options).toEqual(['Planches', 'Voiles']);
+  });
+});
+
+describe('findOptionCaseInsensitive', () => {
+  it('retrouve une option malgré une casse différente', () => {
+    expect(findOptionCaseInsensitive(['Salomon', 'Nike'], 'salomon')).toBe('Salomon');
+  });
+
+  it('retourne undefined si aucune correspondance', () => {
+    expect(findOptionCaseInsensitive(['Salomon'], 'Adidas')).toBeUndefined();
+  });
+});
+
+describe('optionIncludedCaseInsensitive', () => {
+  it('valide la présence sans tenir compte de la casse', () => {
+    expect(optionIncludedCaseInsensitive(['Salomon'], 'SALOMON')).toBe(true);
+    expect(optionIncludedCaseInsensitive(['Salomon'], 'Adidas')).toBe(false);
   });
 });

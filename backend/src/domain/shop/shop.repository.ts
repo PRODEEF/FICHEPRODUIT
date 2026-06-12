@@ -139,7 +139,6 @@ export class ShopRepository implements IShopRepository {
         .update({
           name: data.name,
           cms: data.cms,
-          sector: data.sector,
           brands: data.brands,
           categories: data.categories,
         })
@@ -160,7 +159,7 @@ export class ShopRepository implements IShopRepository {
         name: data.name,
         url: data.url,
         cms: data.cms,
-        sector: data.sector,
+        sector: null,
         brands: data.brands,
         categories: data.categories,
         user_id: data.ownerId,

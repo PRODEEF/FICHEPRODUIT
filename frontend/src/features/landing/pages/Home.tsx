@@ -39,6 +39,7 @@ export function Home() {
   const search = useUrlSearch({ onSubmit: runAnalysis });
 
   const [prefersReduced, setPrefersReduced] = useState(false);
+
   useEffect(() => {
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
     const apply = () => void setPrefersReduced(mq.matches);

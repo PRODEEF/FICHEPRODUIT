@@ -1,12 +1,12 @@
 import { roundPrice } from './pricingFormat';
 
 /** Taux horaire rédaction manuelle (€/h) — base du simulateur. */
-export const MANUAL_WRITING_HOURLY_RATE_EUR = 25;
+export const MANUAL_WRITING_HOURLY_RATE_EUR = 20;
 
 export const SIMULATOR_SHEET_COUNT = {
   min: 10,
-  max: 500,
-  default: 250,
+  max: 2000,
+  default: 200,
 } as const;
 
 export const SIMULATOR_MANUAL_MINUTES = {

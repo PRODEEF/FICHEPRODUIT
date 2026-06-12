@@ -75,8 +75,6 @@ function errorCodeToMessage(code: Analysis['errorCode']): string {
       return 'Le site est inaccessible ou introuvable.';
     case 'UNANALYZABLE':
       return "Le site n'a pas pu être analysé (structure non reconnue).";
-    case 'UNKNOWN_SECTOR':
-      return "Le secteur d'activité du site n'a pas pu être déterminé.";
     case 'INTERNAL_ERROR':
     default:
       return 'Analyse terminée avec erreur inconnue.';

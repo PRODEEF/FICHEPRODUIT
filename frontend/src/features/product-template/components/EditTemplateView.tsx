@@ -12,6 +12,7 @@ export interface EditTemplateViewProps {
   refineDisabled: boolean;
   saving: boolean;
   actionError: string | null;
+  duplicateRowIds?: Set<string> | undefined;
   onRefine: () => void;
   onSave: () => void;
   onCancel: () => void;
@@ -26,6 +27,7 @@ export function EditTemplateView({
   refineDisabled,
   saving,
   actionError,
+  duplicateRowIds,
   onRefine,
   onSave,
   onCancel,
@@ -59,7 +61,11 @@ export function EditTemplateView({
           ])
         }
       />
-      <TemplateFieldsEditor rows={fieldRows} onChange={onFieldRowsChange} />
+      <TemplateFieldsEditor
+        rows={fieldRows}
+        onChange={onFieldRowsChange}
+        duplicateRowIds={duplicateRowIds}
+      />
 
       {actionError ? (
         <p className="analyses-status analyses-status-error" role="alert">

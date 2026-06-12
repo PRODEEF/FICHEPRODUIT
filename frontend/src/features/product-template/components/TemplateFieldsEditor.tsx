@@ -22,10 +22,12 @@ import type { ProductTemplateFieldType } from '@api/types/api.types';
 
 function SortableFieldRow({
   row,
+  isDuplicate,
   onPatch,
   onRemove,
 }: {
   row: TemplateFieldRow;
+  isDuplicate: boolean;
   onPatch: (id: string, patch: Partial<TemplateFieldRow>) => void;
   onRemove: (id: string) => void;
 }) {
@@ -43,7 +45,9 @@ function SortableFieldRow({
     <div
       ref={setNodeRef}
       style={style}
-      className="flex flex-wrap items-end gap-2 rounded-xl border border-soft bg-bg-main px-3 py-2"
+      className={`flex flex-wrap items-end gap-2 rounded-xl border bg-bg-main px-3 py-2 ${
+        isDuplicate ? 'border-red-400 bg-red-50/40' : 'border-soft'
+      }`}
       data-dragging={isDragging ? 'true' : undefined}
     >
       <button
@@ -61,8 +65,13 @@ function SortableFieldRow({
         </span>
         <input
           type="text"
-          className="rounded-xl border border-soft bg-bg-white px-3 py-2 text-sm text-text-primary outline-none transition focus:border-purple-400 focus:shadow-[0_0_0_3px_rgba(168,85,247,0.2)]"
+          className={`rounded-xl border bg-bg-white px-3 py-2 text-sm text-text-primary outline-none transition focus:shadow-[0_0_0_3px_rgba(168,85,247,0.2)] ${
+            isDuplicate
+              ? 'border-red-400 focus:border-red-500'
+              : 'border-soft focus:border-purple-400'
+          }`}
           value={row.name}
+          aria-invalid={isDuplicate}
           onChange={(e) => void onPatch(row.id, { name: e.target.value })}
         />
       </label>
@@ -106,9 +115,14 @@ function SortableFieldRow({
 export interface TemplateFieldsEditorProps {
   rows: TemplateFieldRow[];
   onChange: (rows: TemplateFieldRow[]) => void;
+  duplicateRowIds?: Set<string> | undefined;
 }
 
-export function TemplateFieldsEditor({ rows, onChange }: TemplateFieldsEditorProps) {
+export function TemplateFieldsEditor({
+  rows,
+  onChange,
+  duplicateRowIds,
+}: TemplateFieldsEditorProps) {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor, {
@@ -135,15 +149,28 @@ export function TemplateFieldsEditor({ rows, onChange }: TemplateFieldsEditorPro
     onChange(rows.filter((r) => r.id !== id));
   };
 
+  const hasDuplicates = duplicateRowIds !== undefined && duplicateRowIds.size > 0;
+
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
       <SortableContext items={ids} strategy={verticalListSortingStrategy}>
         <div className="flex w-full flex-col gap-2.5">
           {rows.map((row) => (
-            <SortableFieldRow key={row.id} row={row} onPatch={patchRow} onRemove={removeRow} />
+            <SortableFieldRow
+              key={row.id}
+              row={row}
+              isDuplicate={duplicateRowIds?.has(row.id) ?? false}
+              onPatch={patchRow}
+              onRemove={removeRow}
+            />
           ))}
         </div>
       </SortableContext>
+      {hasDuplicates ? (
+        <p className="mt-2 text-sm text-red-600" role="alert">
+          Certains champs ont le même nom. Renommez-les avant d&apos;enregistrer.
+        </p>
+      ) : null}
     </DndContext>
   );
 }

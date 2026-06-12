@@ -9,6 +9,7 @@ export interface ManualTemplateModalProps {
   onDraftChange: (draft: TemplateDraftState) => void;
   saving: boolean;
   error: string | null;
+  duplicateRowIds?: Set<string> | undefined;
   onSave: () => void;
   onClose: () => void;
 }
@@ -19,6 +20,7 @@ export function ManualTemplateModal({
   onDraftChange,
   saving,
   error,
+  duplicateRowIds,
   onSave,
   onClose,
 }: ManualTemplateModalProps) {
@@ -63,6 +65,7 @@ export function ManualTemplateModal({
         <TemplateFieldsEditor
           rows={draft.fieldRows}
           onChange={(fieldRows) => void onDraftChange({ ...draft, fieldRows })}
+          duplicateRowIds={duplicateRowIds}
         />
         {error ? (
           <p className="analyses-status analyses-status-error" role="alert">

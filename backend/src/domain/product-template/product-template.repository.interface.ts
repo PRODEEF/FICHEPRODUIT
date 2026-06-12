@@ -7,6 +7,12 @@ import type {
 export interface IProductTemplateRepository {
   findById(id: string, accessToken: string): Promise<ProductTemplate | null>;
   findAllByShop(shopId: string, accessToken: string): Promise<ProductTemplate[]>;
+  existsByNameInShop(
+    shopId: string,
+    name: string,
+    accessToken: string,
+    excludeId?: string,
+  ): Promise<boolean>;
   create(
     data: CreateProductTemplate,
     accessToken: string,

@@ -5,6 +5,6 @@ import type { Shop } from '../types';
  * (URL manquante ou fiche non enrichie par une analyse).
  */
 export function needsShopSetup(shop: Shop): boolean {
-  const noEnrichment = shop.brands.length === 0 && shop.sector === null;
+  const noEnrichment = shop.brands.length === 0;
   return !shop.url.trim() || noEnrichment;
 }

@@ -3,7 +3,7 @@ import type { ShopSectorLabel } from '@shared/lib/shopSectors';
 /** Secteur affiché par défaut sur la page tarifs. */
 export const DEFAULT_PRICING_SECTOR: ShopSectorLabel = 'Glisse';
 
-const DEFAULT_CONTACT_EMAIL = 'contact@prodeef.com';
+const DEFAULT_CONTACT_EMAIL = 'yann@prodeef.com';
 
 /** Adresse de contact commerciale (variable `VITE_CONTACT_EMAIL`). */
 export function getContactEmail(): string {
