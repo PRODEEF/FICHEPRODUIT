@@ -1,4 +1,4 @@
-import { NotFoundException } from "@nestjs/common";
+import { ConflictException, NotFoundException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 import {
   PRODUCT_TEMPLATE_REPOSITORY,
@@ -14,6 +14,7 @@ describe("ProductTemplateService", () => {
   const templateRepo: jest.Mocked<IProductTemplateRepository> = {
     findById: jest.fn(),
     findAllByShop: jest.fn(),
+    existsByNameInShop: jest.fn(),
     create: jest.fn(),
     update: jest.fn(),
     delete: jest.fn(),
@@ -87,6 +88,89 @@ describe("ProductTemplateService", () => {
 
     expect(shopService.getForUser).toHaveBeenCalledWith(shopId, user);
     expect(scrapeFields.scrape).toHaveBeenCalledWith("https://product.test");
+  });
+
+  it("create vérifie l'unicité du nom", async () => {
+    templateRepo.existsByNameInShop.mockResolvedValue(false);
+    templateRepo.create.mockResolvedValue({
+      id: "tpl-new",
+      name: "Ma fiche",
+      shopId,
+      fields: [{ name: "Nom", type: "text", required: false, order: 0 }],
+      createdAt: "",
+      updatedAt: "",
+    });
+
+    await service.create(
+      {
+        shopId,
+        name: "Ma fiche",
+        fields: [{ name: "Nom", type: "text", required: false, order: 0 }],
+      },
+      user,
+    );
+
+    expect(templateRepo.existsByNameInShop).toHaveBeenCalledWith(
+      shopId,
+      "Ma fiche",
+      user.accessToken,
+      undefined,
+    );
+    expect(templateRepo.create).toHaveBeenCalled();
+  });
+
+  it("create lève ConflictException si le nom existe déjà", async () => {
+    templateRepo.existsByNameInShop.mockResolvedValue(true);
+
+    await expect(
+      service.create(
+        {
+          shopId,
+          name: "Ma fiche",
+          fields: [{ name: "Nom", type: "text", required: false, order: 0 }],
+        },
+        user,
+      ),
+    ).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it("updateInShop conserve le nom actuel sans conflit", async () => {
+    templateRepo.findById.mockResolvedValue({
+      id: "tpl-1",
+      name: "Ma fiche",
+      shopId,
+      fields: [],
+    });
+    templateRepo.existsByNameInShop.mockResolvedValue(false);
+    templateRepo.update.mockResolvedValue({
+      id: "tpl-1",
+      name: "Ma fiche",
+      shopId,
+      fields: [],
+    });
+
+    await service.updateInShop(shopId, "tpl-1", { name: "Ma fiche" }, user);
+
+    expect(templateRepo.existsByNameInShop).toHaveBeenCalledWith(
+      shopId,
+      "Ma fiche",
+      user.accessToken,
+      "tpl-1",
+    );
+  });
+
+  it("updateInShop lève ConflictException si le nouveau nom existe", async () => {
+    templateRepo.findById.mockResolvedValue({
+      id: "tpl-1",
+      name: "Ancien",
+      shopId,
+      fields: [],
+    });
+    templateRepo.existsByNameInShop.mockResolvedValue(true);
+
+    await expect(
+      service.updateInShop(shopId, "tpl-1", { name: "Existant" }, user),
+    ).rejects.toBeInstanceOf(ConflictException);
   });
 
   it("refineWithAi exige l'accès au shop", async () => {

@@ -4,6 +4,7 @@ import type { CatalogProduct } from '@types-api';
 import { cn } from '@shared/lib/cn';
 import { Button } from '@shared/ui';
 
+import { CATALOG_TABLE_COLUMNS, CATALOG_TABLE_HEAD_CLASS } from '../lib/catalogTableColumns';
 import { formatPrice } from '../lib/productUtils';
 import { ProductPreview } from './ProductPreview';
 
@@ -33,13 +34,10 @@ export function ProductTable({
   return (
     <>
       <div className="max-w-none overflow-x-auto rounded-xl border border-soft bg-bg-white">
-        <table className="min-w-[920px] w-full border-collapse text-sm">
+        <table className="min-w-[920px] w-full table-fixed border-collapse text-sm">
           <thead>
             <tr>
-              <th
-                scope="col"
-                className="w-9 text-center align-middle bg-bg-main px-3 py-2 text-left font-bold text-text-secondary border-b border-soft"
-              >
+              <th scope="col" className={cn('w-9 text-center', CATALOG_TABLE_HEAD_CLASS)}>
                 <input
                   type="checkbox"
                   aria-label="Tout sélectionner"
@@ -50,26 +48,17 @@ export function ProductTable({
                   onChange={onToggleAll}
                 />
               </th>
-              {[
-                'Visuel',
-                'Titre',
-                'Année',
-                'Marque',
-                'Catégorie',
-                'Sous-cat.',
-                'Description',
-                'Prix',
-                'Aperçu',
-              ].map((h) => (
+              {CATALOG_TABLE_COLUMNS.map(({ label, className }) => (
                 <th
-                  key={h}
+                  key={label}
                   scope="col"
                   className={cn(
-                    'align-middle bg-bg-main px-3 py-2 font-bold text-text-secondary border-b border-soft',
-                    h === 'Prix' ? 'whitespace-nowrap text-right' : 'whitespace-nowrap text-left',
+                    CATALOG_TABLE_HEAD_CLASS,
+                    label === 'Prix' ? 'whitespace-nowrap text-right' : 'whitespace-nowrap text-left',
+                    className,
                   )}
                 >
-                  {h}
+                  {label}
                 </th>
               ))}
             </tr>
@@ -101,7 +90,7 @@ export function ProductTable({
                     </span>
                   )}
                 </td>
-                <td className="max-w-56 align-middle px-3 py-2 font-semibold text-text-primary border-b border-soft">
+                <td className="truncate align-middle px-3 py-2 font-semibold text-text-primary border-b border-soft">
                   {p.name}
                 </td>
                 <td className="align-middle px-3 py-2 border-b border-soft">
@@ -117,7 +106,9 @@ export function ProductTable({
                 <td className="align-middle px-3 py-2 border-b border-soft">{p.category}</td>
                 <td className="align-middle px-3 py-2 border-b border-soft">{p.subCategory ?? '—'}</td>
                 <td className="align-middle px-3 py-2 border-b border-soft">
-                  <span className="line-clamp-3 block break-words">{p.description || '—'}</span>
+                  <p className="m-0 line-clamp-3 overflow-hidden break-words text-text-primary">
+                    {p.description || '—'}
+                  </p>
                 </td>
                 <td className="align-middle whitespace-nowrap px-3 py-2 text-right border-b border-soft">
                   <strong>{formatPrice(p.price)}</strong>

@@ -9,20 +9,20 @@ import { UrlSearchForm } from '@shared/components/UrlSearchForm';
 import { UrlsSuggestions } from '@shared/components/UrlsSuggestions';
 import { useAuth } from '@shared/hooks/useAuth';
 import { useUrlSearch } from '@shared/hooks/useUrlSearch';
+import { FinalCTA } from '@shared/components/FinalCTA';
+import { useSiteAnalysis } from '@shared/hooks/useSiteAnalysis';
 
 import { ExpertiseGrid } from '../components/ExpertiseGrid';
-import { FinalCTA } from '../../../shared/components/FinalCTA';
 import { HowItWorks } from '../components/HowItWorks';
-// import { LandingFooter } from '../components/LandingFooter';
 import { SellingPoints } from '../components/SellingPoints';
 import { SocialProofBar } from '../components/SocialProofBar';
 import { Testimonials } from '../components/Testimonials';
-import { useGuestSiteAnalysis } from '../hooks/useGuestSiteAnalysis';
+// import { LandingFooter } from '../components/LandingFooter'; // TODO: Remettre une fois qu'on aura les CGU
 
 export function Home() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { runAnalysis, analysisOpen, siteAnalysis, dismissError } = useGuestSiteAnalysis({
+  const { runAnalysis, analysisOpen, siteAnalysis, dismissError } = useSiteAnalysis({
     onSuccess: (summary) => {
       // Les invités atterrissent sur la vue publique d'analyse,
       // les utilisateurs connectés sur leur catalogue privé.
@@ -39,6 +39,7 @@ export function Home() {
   const search = useUrlSearch({ onSubmit: runAnalysis });
 
   const [prefersReduced, setPrefersReduced] = useState(false);
+
   useEffect(() => {
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
     const apply = () => void setPrefersReduced(mq.matches);

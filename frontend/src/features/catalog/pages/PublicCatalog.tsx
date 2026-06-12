@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router';
 
 import { isValidAnalysisId } from '@lib/analysis/analysisStorage';
@@ -7,12 +7,12 @@ import {
   resolveGuestSessionId,
 } from '@lib/analysis/guestSessionStorage';
 
+import { CatalogPageLayout } from '../components/CatalogPageLayout';
 import { CatalogProductsSection } from '../components/CatalogProductsSection';
-import { EmptyProducts } from '../components/EmptyProducts';
-import { ErrorState, LoadingState } from '../components/CatalogSectionStates';
 import { GuestCatalogCTA } from '../components/GuestCatalogCTA';
-import { ShopSummarySection } from '../components/ShopSummarySection';
+import { useActiveBrandForAnalysis } from '../hooks/useActiveBrandForAnalysis';
 import { useAnalysisDetail } from '../hooks/useAnalysisDetail';
+import { useBrandToggle } from '../lib/useBrandToggle';
 import { resolveCatalogWorkflowStatus } from '../lib/catalogWorkflowStatus';
 
 /**
@@ -40,24 +40,10 @@ export function PublicCatalog() {
     catalogProductsLoading,
   } = useAnalysisDetail(analysisId, undefined, false);
 
-  const [activeBrand, setActiveBrand] = useState('');
-  const [activeBrandForAnalysisId, setActiveBrandForAnalysisId] = useState<string | undefined>(
-    undefined,
-  );
-  const analysisIdKey = analysisId !== undefined && analysisId !== '' ? analysisId : '';
-  if (analysisIdKey !== activeBrandForAnalysisId) {
-    setActiveBrandForAnalysisId(analysisIdKey);
-    setActiveBrand('');
-  }
+  const { activeBrand, setActiveBrand } = useActiveBrandForAnalysis(analysisId);
+  const handleBrandToggle = useBrandToggle(setActiveBrand);
 
   const allProducts = useMemo(() => catalogProducts ?? [], [catalogProducts]);
-
-  const handleBrandToggle = (brand: string) => {
-    setActiveBrand((prev) => (prev === brand ? '' : brand));
-  };
-
-  const hasShopWithBrands = Boolean(shop?.brands.some((b) => b.trim()));
-
   const shopLoading = analysisShopLoading || (analysis !== null && analysis.status !== 'done');
 
   const shopErrorMessage =
@@ -66,7 +52,6 @@ export function PublicCatalog() {
       : null;
 
   const productsLoading = shop !== null && analysis?.status === 'done' && catalogProductsLoading;
-
   const productsError = shop !== null ? detailError : null;
 
   const workflowStatus = resolveCatalogWorkflowStatus({
@@ -100,53 +85,32 @@ export function PublicCatalog() {
   }
 
   return (
-    <div className="relative z-[1] w-full px-12 pb-12 pt-9">
-      <header className="mb-5 flex flex-wrap items-center gap-4 text-left">
-        <h1 className="m-0 text-[1.75rem] font-extrabold text-text-primary">Mon catalogue</h1>
-      </header>
-
-      <GuestCatalogCTA websiteUrl={signupWebsiteUrl} guestSessionId={guestSessionId} />
-
-      <div className="mb-6 flex flex-col gap-4">
-        {shopLoading ? (
-          <LoadingState label="Chargement de votre boutique…" />
-        ) : shopErrorMessage !== null || shop === null ? (
-          <ErrorState
-            message={
-              shopErrorMessage ?? 'Une erreur est survenue lors du chargement de votre boutique'
-            }
-          />
-        ) : (
-          <ShopSummarySection
-            shop={shop}
-            activeBrand={activeBrand}
-            onBrandClick={handleBrandToggle}
-          />
-        )}
-      </div>
-
-      <div className="flex flex-col gap-4">
-        {shop === null ? null : productsLoading ? (
-          <LoadingState label="Chargement des exemples de fiches…" />
-        ) : productsError ? (
-          <ErrorState message={productsError} />
-        ) : catalogProducts !== null && catalogProducts.length === 0 ? (
-          <EmptyProducts />
-        ) : (
+    <CatalogPageLayout
+      afterHeader={
+        <GuestCatalogCTA websiteUrl={signupWebsiteUrl} guestSessionId={guestSessionId} />
+      }
+      shopLoading={shopLoading}
+      shopError={shopErrorMessage}
+      shop={shop}
+      activeBrand={activeBrand}
+      onBrandToggle={handleBrandToggle}
+      productsLoading={Boolean(productsLoading)}
+      productsError={productsError}
+      productsSection={
+        catalogProducts !== null && shop !== null ? (
           <CatalogProductsSection
             shopName={shop.name}
             isConnected={false}
             products={allProducts}
             productPayload={productPayload}
             isLoadingProducts={isLoadingProducts}
-            shopBrands={hasShopWithBrands ? shop.brands : undefined}
+            shopBrands={shop.brands}
             defaultShopSector={shop.sector}
             externalBrandFilter={activeBrand}
             onBrandFilterChange={setActiveBrand}
-            introVariant={hasShopWithBrands ? 'shop' : 'all'}
           />
-        )}
-      </div>
-    </div>
+        ) : null
+      }
+    />
   );
 }

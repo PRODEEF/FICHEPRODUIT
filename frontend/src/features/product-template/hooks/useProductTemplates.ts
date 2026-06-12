@@ -9,6 +9,7 @@ import {
 import type { ProductTemplate } from '@types-api';
 
 import { rowsToFields } from '../lib/templateFieldMappers';
+import { validateTemplateSave } from '../lib/templateSchemas';
 import type { TemplateFieldRow } from '../types';
 
 export interface UseProductTemplatesResult {
@@ -59,14 +60,25 @@ export function useProductTemplates(shopId: string | undefined): UseProductTempl
       if (!shopId) {
         throw new Error('Boutique introuvable. Analysez d’abord votre site.');
       }
+
+      const existingNames = templates.map((t) => t.name);
+      const excludeName =
+        templateId !== undefined
+          ? templates.find((t) => t.id === templateId)?.name
+          : undefined;
+
+      const validationError = validateTemplateSave(
+        { name, fieldRows: rows },
+        excludeName !== undefined
+          ? { existingNames, excludeName }
+          : { existingNames },
+      );
+      if (validationError !== null) {
+        throw new Error(validationError);
+      }
+
       const fields = rowsToFields(rows);
-      if (fields.length === 0) {
-        throw new Error('Ajoutez au moins un champ.');
-      }
       const trimmedName = name.trim();
-      if (!trimmedName) {
-        throw new Error('Indiquez un nom pour la fiche type.');
-      }
 
       if (templateId) {
         await updateTemplate(shopId, templateId, { name: trimmedName, fields });
@@ -75,7 +87,7 @@ export function useProductTemplates(shopId: string | undefined): UseProductTempl
       }
       await refetch();
     },
-    [shopId, refetch],
+    [shopId, refetch, templates],
   );
 
   const deleteTemplate = useCallback(

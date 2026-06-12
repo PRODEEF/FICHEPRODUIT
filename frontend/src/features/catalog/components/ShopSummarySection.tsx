@@ -1,16 +1,28 @@
 import type { Shop } from '@types-api';
 import { TextLink } from '@shared/ui/TextLink';
+import { formatCmsLabel } from '@shared/lib/formatCmsLabel';
+import { needsShopSetup } from '@shared/lib/needsShopSetup';
 
-import { needsShopSetup } from '../../store/lib/shop-setup-status';
 import { BrandChips } from './BrandChips';
-import { formatCmsLabel } from '../lib/productUtils';
 
 const TOP_BRANDS_CHIP_LIMIT = 10;
+
+function dedupeBrandsCaseInsensitive(brands: string[]): string[] {
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const brand of brands) {
+    const key = brand.trim().toLowerCase();
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    result.push(brand);
+  }
+  return result;
+}
 
 function getTopBrands(brands: string[], limit: number): string[] {
   // TODO: implement this function -> move to lib once implemented
   // The goal of this function is to return the top brands of the shop
-  return brands.slice(0, limit);
+  return dedupeBrandsCaseInsensitive(brands).slice(0, limit);
 }
 
 export interface ShopSummarySectionProps {
@@ -53,20 +65,29 @@ export function ShopSummarySection({ shop, activeBrand, onBrandClick }: ShopSumm
           <span className="shrink-0">{formatCmsLabel(shop.cms)}</span>
           <span className="shrink-0 text-gray-400">—</span>
           <span className="shrink-0">
-            {shop.brands.length} marque{shop.brands.length > 1 ? 's' : ''} repérée
-            {shop.brands.length > 1 ? 's' : ''}
+            {shop.brands.length} marque{shop.brands.length > 1 ? 's' : ''}
           </span>
         </p>
         {shop.sector?.trim() ? (
-          <p className="text-xs text-gray-500">
-            Votre univers&nbsp;: {shop.sector.trim()}.
-          </p>
+          <p className="text-xs text-gray-500">Votre univers&nbsp;: {shop.sector.trim()}.</p>
         ) : null}
       </div>
 
       <section>
         <h2 className="mb-2 mt-5 text-lg font-bold text-text-primary">Vos marques principales</h2>
-        <BrandChips brands={topBrands} activeBrand={activeBrand} onToggle={onBrandClick} />
+        {shop.brands.length === 0 ? (
+          <div className="text-sm text-text-secondary">
+            <p className="m-0">
+              Aucune marque n’est configurée pour votre magasin. Ajoutez des marques dans la
+              configuration pour filtrer les exemples.
+            </p>
+            <p className="mb-0 mt-2">
+              <TextLink to="/store">Configurer mon magasin</TextLink>
+            </p>
+          </div>
+        ) : (
+          <BrandChips brands={topBrands} activeBrand={activeBrand} onToggle={onBrandClick} />
+        )}
       </section>
     </>
   );

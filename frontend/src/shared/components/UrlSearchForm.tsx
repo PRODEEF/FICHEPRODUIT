@@ -1,5 +1,6 @@
 import { Loader2 } from 'lucide-react';
 
+import { InputField } from '@shared/ui/InputField';
 import { cn } from '@shared/lib/cn';
 
 export interface UrlSearchFormProps {
@@ -30,8 +31,12 @@ export function UrlSearchForm({
           handleSubmit();
         }}
       >
-        <input
-          className={cn(
+        <InputField
+          id="landing-site-url"
+          label="Adresse du site"
+          labelClassName="sr-only"
+          containerClassName="m-0"
+          inputClassName={cn(
             'w-full rounded-2xl border border-soft bg-bg-white px-6 py-[18px] font-sans text-base text-text-primary outline-none transition focus:border-purple-400 focus:shadow-[0_0_0_3px_rgba(139,92,246,0.12)] disabled:cursor-not-allowed disabled:bg-bg-main disabled:opacity-85 aria-[invalid=true]:border-red-500 aria-[invalid=true]:shadow-[0_0_0_3px_rgba(239,68,68,0.15)]',
             suggestionsLoading ? 'pr-[220px]' : 'pr-[140px]',
           )}

@@ -1,66 +1,31 @@
-import type { TemplateDraftState } from '../types';
+import type {
+  NewTemplateCsvImport,
+  NewTemplateDraftEditor,
+  NewTemplateManualModal,
+  NewTemplateUrlAnalysis,
+} from '../types';
 import { ManualTemplateModal } from './ManualTemplateModal';
 import { ProductUrlAnalyzeForm } from './ProductUrlAnalyzeForm';
 import { TemplateDraftEditor } from './TemplateDraftEditor';
 
 export interface NewTemplatePanelProps {
   shopReady: boolean;
-  csvInputRef: React.RefObject<HTMLInputElement | null>;
-  onCsvFileSelected: (file: File | null) => void;
-  onOpenCsvPicker: () => void;
-  scrapeUrl: string;
-  onScrapeUrlChange: (value: string) => void;
-  scraping: boolean;
-  urlEmptyError: boolean;
-  scrapeNotes: string | null;
-  onUrlAnalyze: () => void;
-  onOpenManualModal: () => void;
   actionError: string | null;
-  draft: TemplateDraftState | null;
-  onDraftChange: (draft: TemplateDraftState) => void;
-  refiningAi: boolean;
-  refineDisabled: boolean;
-  draftSaving: boolean;
-  onRefineDraft: () => void;
-  onSaveDraft: () => void;
-  onCancelDraft: () => void;
-  manualModalOpen: boolean;
-  manualDraft: TemplateDraftState;
-  onManualDraftChange: (draft: TemplateDraftState) => void;
-  modalSaving: boolean;
-  modalError: string | null;
-  onSaveManual: () => void;
-  onCloseManual: () => void;
+  onOpenManualModal: () => void;
+  csvImport: NewTemplateCsvImport;
+  urlAnalysis: NewTemplateUrlAnalysis;
+  draftEditor: NewTemplateDraftEditor;
+  manualModal: NewTemplateManualModal;
 }
 
 export function NewTemplatePanel({
   shopReady,
-  csvInputRef,
-  onCsvFileSelected,
-  onOpenCsvPicker,
-  scrapeUrl,
-  onScrapeUrlChange,
-  scraping,
-  urlEmptyError,
-  scrapeNotes,
-  onUrlAnalyze,
-  onOpenManualModal,
   actionError,
-  draft,
-  onDraftChange,
-  refiningAi,
-  refineDisabled,
-  draftSaving,
-  onRefineDraft,
-  onSaveDraft,
-  onCancelDraft,
-  manualModalOpen,
-  manualDraft,
-  onManualDraftChange,
-  modalSaving,
-  modalError,
-  onSaveManual,
-  onCloseManual,
+  onOpenManualModal,
+  csvImport,
+  urlAnalysis,
+  draftEditor,
+  manualModal,
 }: NewTemplatePanelProps) {
   return (
     <section
@@ -83,34 +48,36 @@ export function NewTemplatePanel({
 
       <div className="flex w-full flex-wrap items-start gap-4">
         <input
-          ref={csvInputRef}
+          ref={csvImport.inputRef}
           type="file"
           accept=".csv,text/csv"
           className="product-templates-csv-input-hidden"
           aria-hidden
           tabIndex={-1}
-          onChange={(e) => void onCsvFileSelected(e.target.files?.[0] ?? null)}
+          onChange={(e) => void csvImport.onFileSelected(e.target.files?.[0] ?? null)}
         />
         <button
           type="button"
           className="product-templates-csv-btn shrink-0"
-          onClick={onOpenCsvPicker}
+          onClick={csvImport.onOpenPicker}
           disabled={!shopReady}
         >
           Importer CSV
         </button>
 
         <ProductUrlAnalyzeForm
-          scrapeUrl={scrapeUrl}
-          onScrapeUrlChange={onScrapeUrlChange}
-          scraping={scraping}
-          urlEmptyError={urlEmptyError}
+          scrapeUrl={urlAnalysis.scrapeUrl}
+          onScrapeUrlChange={urlAnalysis.onScrapeUrlChange}
+          scraping={urlAnalysis.scraping}
+          urlEmptyError={urlAnalysis.urlEmptyError}
           disabled={!shopReady}
-          onSubmit={onUrlAnalyze}
+          onSubmit={urlAnalysis.onAnalyze}
         />
       </div>
 
-      {scrapeNotes ? <p className="product-templates-scrape-notes">{scrapeNotes}</p> : null}
+      {urlAnalysis.scrapeNotes ? (
+        <p className="product-templates-scrape-notes">{urlAnalysis.scrapeNotes}</p>
+      ) : null}
 
       <button
         type="button"
@@ -127,27 +94,29 @@ export function NewTemplatePanel({
         </p>
       ) : null}
 
-      {draft ? (
+      {draftEditor.draft ? (
         <TemplateDraftEditor
-          draft={draft}
-          onDraftChange={onDraftChange}
-          refiningAi={refiningAi}
-          refineDisabled={refineDisabled}
-          saving={draftSaving}
-          onRefine={onRefineDraft}
-          onSave={onSaveDraft}
-          onCancel={onCancelDraft}
+          draft={draftEditor.draft}
+          onDraftChange={draftEditor.onDraftChange}
+          refiningAi={draftEditor.refiningAi}
+          refineDisabled={draftEditor.refineDisabled}
+          saving={draftEditor.saving}
+          duplicateRowIds={draftEditor.duplicateRowIds}
+          onRefine={draftEditor.onRefine}
+          onSave={draftEditor.onSave}
+          onCancel={draftEditor.onCancel}
         />
       ) : null}
 
       <ManualTemplateModal
-        open={manualModalOpen}
-        draft={manualDraft}
-        onDraftChange={onManualDraftChange}
-        saving={modalSaving}
-        error={modalError}
-        onSave={onSaveManual}
-        onClose={onCloseManual}
+        open={manualModal.open}
+        draft={manualModal.draft}
+        onDraftChange={manualModal.onDraftChange}
+        saving={manualModal.saving}
+        error={manualModal.error}
+        duplicateRowIds={manualModal.duplicateRowIds}
+        onSave={manualModal.onSave}
+        onClose={manualModal.onClose}
       />
     </section>
   );

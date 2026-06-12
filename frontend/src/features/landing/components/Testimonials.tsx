@@ -1,8 +1,9 @@
-import { Button } from '@shared/ui/Button';
 import { motion } from 'motion/react';
 
 import { cardReveal, staggerContainer, titleReveal } from '@lib/motionVariants';
-import { useScrollReveal } from '../hooks/useScrollReveal';
+import { useScrollReveal } from '@shared/hooks/useScrollReveal';
+import { Button } from '@shared/ui';
+
 import { testimonials } from '../types';
 
 export function Testimonials() {

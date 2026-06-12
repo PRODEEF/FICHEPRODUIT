@@ -2,9 +2,9 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react
 
 import type { Session, User } from '@supabase/supabase-js';
 import { getSupabaseClient, isSupabaseConfigured } from '@shared/supabase';
+import { AuthContext } from '@shared/auth/auth-context';
 
 import { SupabaseConfigErrorScreen } from './components/SupabaseConfigErrorScreen';
-import { AuthContext } from './auth-context';
 import { useClaimGuestSessionOnAuth } from './hooks/useClaimGuestSessionOnAuth';
 import { applyPendingSignupFromStorage } from './lib/pendingSignupStorage';
 import { createSupabaseUserRepository } from './supabaseUserRepository';

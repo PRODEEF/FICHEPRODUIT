@@ -2,32 +2,18 @@ import { useEffect, useState, type HTMLAttributes, type ReactNode } from 'react'
 import { motion } from 'motion/react';
 
 import { cn } from '../lib/cn';
-
-type BannerVariant = 'neutral' | 'success' | 'error';
+import {
+  bannerProgressFillClasses,
+  bannerProgressTrackClasses,
+  bannerVariantClasses,
+  type BannerVariant,
+} from './bannerStyles';
 
 type BannerProps = HTMLAttributes<HTMLDivElement> & {
   variant?: BannerVariant;
   autoDismissAfterMs?: number;
   onDismiss?: () => void;
   children: ReactNode;
-};
-
-const variantClasses: Record<BannerVariant, string> = {
-  neutral: 'border-border-purple bg-purple-50 text-text-primary',
-  success: 'border-emerald-200 bg-emerald-50 text-emerald-900',
-  error: 'border-red-500/25 bg-red-50 text-red-900',
-};
-
-const progressTrackClasses: Record<BannerVariant, string> = {
-  neutral: 'bg-purple-200/60',
-  success: 'bg-emerald-200/70',
-  error: 'bg-red-200/70',
-};
-
-const progressFillClasses: Record<BannerVariant, string> = {
-  neutral: 'bg-purple-500',
-  success: 'bg-emerald-500',
-  error: 'bg-red-500',
 };
 
 function usePrefersReducedMotion(): boolean {
@@ -99,7 +85,7 @@ export function Banner({
       <div
         className={cn(
           'overflow-hidden rounded-xl border text-left',
-          variantClasses[variant],
+          bannerVariantClasses[variant],
           className,
         )}
         {...props}
@@ -107,9 +93,9 @@ export function Banner({
         <p className="m-0 px-4 py-3 text-sm leading-6">{children}</p>
 
         {hasAutoDismiss ? (
-          <div className={cn('h-1 w-full', progressTrackClasses[variant])} aria-hidden="true">
+          <div className={cn('h-1 w-full', bannerProgressTrackClasses[variant])} aria-hidden="true">
             <motion.span
-              className={cn('block h-full origin-left', progressFillClasses[variant])}
+              className={cn('block h-full origin-left', bannerProgressFillClasses[variant])}
               initial={{ scaleX: 1 }}
               animate={{ scaleX: showProgress ? 0 : 1 }}
               transition={{

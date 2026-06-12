@@ -9,6 +9,7 @@ export interface TemplateDraftEditorProps {
   refiningAi: boolean;
   refineDisabled: boolean;
   saving: boolean;
+  duplicateRowIds?: Set<string> | undefined;
   onRefine: () => void;
   onSave: () => void;
   onCancel: () => void;
@@ -20,6 +21,7 @@ export function TemplateDraftEditor({
   refiningAi,
   refineDisabled,
   saving,
+  duplicateRowIds,
   onRefine,
   onSave,
   onCancel,
@@ -56,6 +58,7 @@ export function TemplateDraftEditor({
       <TemplateFieldsEditor
         rows={draft.fieldRows}
         onChange={(fieldRows) => void onDraftChange({ ...draft, fieldRows })}
+        duplicateRowIds={duplicateRowIds}
       />
       <div className="product-templates-draft-actions">
         <button

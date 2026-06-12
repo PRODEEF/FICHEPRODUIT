@@ -3,9 +3,9 @@ import { Globe, Search, Workflow } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 import { cardReveal, staggerContainer, titleReveal } from '@lib/motionVariants';
+import { useScrollReveal } from '@shared/hooks/useScrollReveal';
 import { Card } from '@shared/ui';
 
-import { useScrollReveal } from '../../landing/hooks/useScrollReveal';
 import { ABOUT_VALUES } from '../lib/aboutContent';
 
 const valueIcons: Record<string, LucideIcon> = {

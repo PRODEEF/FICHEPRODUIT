@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import {
-  ProductTemplatesWorkspace,
-  type ProductSheetMainTab,
-} from '../components/ProductTemplatesWorkspace';
+
+import { ProductTemplatesWorkspace } from '../components/ProductTemplatesWorkspace';
+import type { ProductSheetMainTab } from '../types';
 
 export function ProductSheet() {
   const [sheetTab, setSheetTab] = useState<ProductSheetMainTab>('mes-fiches');

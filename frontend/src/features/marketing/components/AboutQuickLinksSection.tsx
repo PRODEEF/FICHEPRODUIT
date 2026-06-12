@@ -1,9 +1,9 @@
 import { motion } from 'motion/react';
 
 import { cardReveal, titleReveal } from '@lib/motionVariants';
+import { useScrollReveal } from '@shared/hooks/useScrollReveal';
 import { Button } from '@shared/ui';
 
-import { useScrollReveal } from '../../landing/hooks/useScrollReveal';
 import { ABOUT_QUICK_LINKS } from '../lib/aboutContent';
 
 export function AboutQuickLinksSection() {

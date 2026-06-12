@@ -1,11 +1,14 @@
 import { Controller } from 'react-hook-form';
 
+import { useAuth } from '@shared/hooks/useAuth';
 import { Button, TextLink } from '@shared/ui';
 
 import { PasswordField } from './PasswordField';
+import { buildAuthEmailQuery } from '../lib/authEmailQuery';
 import { useChangePassword } from '../hooks/useChangePassword';
 
 export function ChangePasswordForm() {
+  const { userEmail } = useAuth();
   const { register, control, onSubmit, errors, isSubmitting, newPasswordValue } =
     useChangePassword();
 
@@ -13,7 +16,9 @@ export function ChangePasswordForm() {
     <section className="border-t border-border pt-8">
       <h2 className="m-0 mb-1 text-xl font-bold text-text-primary">Mot de passe</h2>
       <p className="mb-4 text-sm text-text-muted">
-        <TextLink to="/forgot-password">Mot de passe oublié ?</TextLink>
+        <TextLink to={`/forgot-password${buildAuthEmailQuery(userEmail ?? '')}`}>
+          Mot de passe oublié ?
+        </TextLink>
       </p>
       <form className="flex flex-col gap-4" noValidate onSubmit={(e) => void onSubmit(e)}>
         <Controller

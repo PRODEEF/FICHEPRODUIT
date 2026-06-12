@@ -1,5 +1,3 @@
-import type { CmsType } from '@types-api';
-
 export function formatPrice(price: number | null): string {
   if (price == null || Number.isNaN(price)) return '—';
 
@@ -7,21 +5,6 @@ export function formatPrice(price: number | null): string {
     style: 'currency',
     currency: 'EUR',
   }).format(price);
-}
-
-export function formatCmsLabel(cms: CmsType | null): string {
-  if (!cms) return 'Inconnu';
-
-  const map: Record<CmsType, string> = {
-    prestashop: 'PrestaShop',
-    shopify: 'Shopify',
-    woocommerce: 'WooCommerce',
-    autre: 'Autre',
-    inconnu: 'Inconnu',
-    other: 'Autre',
-    unknown: 'Inconnu',
-  };
-  return map[cms];
 }
 
 export function uniqueSorted(values: Iterable<string>): string[] {

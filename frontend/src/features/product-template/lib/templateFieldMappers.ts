@@ -42,6 +42,31 @@ export function applyRefinedFieldsToRows(
   });
 }
 
-export function defaultNewTemplateName(existingCount: number): string {
-  return existingCount === 0 ? 'Fiche par défaut' : `Fiche ${existingCount + 1}`;
+const DEFAULT_TEMPLATE_NAME = 'Fiche par défaut';
+
+function normalizeTemplateNameForCompare(name: string): string {
+  return name.trim().toLocaleLowerCase();
+}
+
+function isTemplateNameTaken(candidate: string, existingNames: readonly string[]): boolean {
+  const normalized = normalizeTemplateNameForCompare(candidate);
+  return existingNames.some((n) => normalizeTemplateNameForCompare(n) === normalized);
+}
+
+/** Propose un nom de fiche libre parmi les noms déjà utilisés dans la boutique. */
+export function defaultNewTemplateName(existingNames: readonly string[]): string {
+  if (!isTemplateNameTaken(DEFAULT_TEMPLATE_NAME, existingNames)) {
+    return DEFAULT_TEMPLATE_NAME;
+  }
+
+  let index = 2;
+  while (index < 10_000) {
+    const candidate = `Fiche ${index}`;
+    if (!isTemplateNameTaken(candidate, existingNames)) {
+      return candidate;
+    }
+    index += 1;
+  }
+
+  return `Fiche ${Date.now()}`;
 }

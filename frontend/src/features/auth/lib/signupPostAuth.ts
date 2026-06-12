@@ -1,6 +1,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { NavigateFunction } from 'react-router';
 
+import { patchMyShop } from '@api/shop';
+import type { ShopSectorLabel } from '@shared/lib/shopSectors';
 import type { RunAnalysisOutcome } from '@shared/hooks/useSiteAnalysis';
 
 import { clearPendingAutoAnalyzeForUser } from './userProfile';
@@ -12,6 +14,7 @@ export interface SignupPostAuthInput {
   userId: string;
   accessToken: string;
   normalizedUsername: string;
+  sector: ShopSectorLabel;
   websiteUrl: string;
   guestSessionId: string | null;
   refreshProfile: () => Promise<void>;
@@ -25,6 +28,7 @@ export async function handleSignupWithActiveSession({
   userId,
   accessToken,
   normalizedUsername,
+  sector,
   websiteUrl,
   guestSessionId,
   refreshProfile,
@@ -41,6 +45,7 @@ export async function handleSignupWithActiveSession({
     website_url: websiteUrl === '' ? null : websiteUrl,
     pending_auto_analyze: guestSessionId ? false : websiteUrl !== '',
   });
+  await patchMyShop({ sector });
   await refreshProfile();
 
   if (guestSessionId) {

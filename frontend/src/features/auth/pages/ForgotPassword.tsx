@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
+import { useAuth } from '@shared/hooks/useAuth';
 import { getSupabaseClient } from '@shared/supabase';
 import { Banner, Button, Card, InputField, PageSection, TextLink } from '@shared/ui';
 
@@ -11,9 +12,11 @@ import { forgotPasswordSchema, type ForgotPasswordInput } from '../lib/authSchem
 import { getPasswordResetRedirectUrl, requestPasswordResetEmail } from '../lib/passwordAuth';
 
 export function ForgotPassword() {
+  const { userEmail } = useAuth();
   const [searchParams] = useSearchParams();
   const [done, setDone] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const isAuthenticated = Boolean(userEmail);
 
   const {
     register,
@@ -27,13 +30,13 @@ export function ForgotPassword() {
 
   const emailFromQuery = searchParams.get('email');
   useEffect(() => {
-    const parsed = parseAuthEmailFromQuery(emailFromQuery);
-    if (parsed) {
+    const email = userEmail ?? parseAuthEmailFromQuery(emailFromQuery);
+    if (email) {
       queueMicrotask(() => {
-        void setValue('email', parsed);
+        void setValue('email', email);
       });
     }
-  }, [emailFromQuery, setValue]);
+  }, [userEmail, emailFromQuery, setValue]);
 
   const onSubmit = async (data: ForgotPasswordInput) => {
     setFormError(null);
@@ -61,7 +64,9 @@ export function ForgotPassword() {
           Mot de passe oublié
         </h1>
         <p className="mb-5 text-center text-sm text-text-secondary">
-          <TextLink to="/login">Retour à la connexion</TextLink>
+          <TextLink to={isAuthenticated ? '/profile' : '/login'}>
+            {isAuthenticated ? 'Retour au profil' : 'Retour à la connexion'}
+          </TextLink>
         </p>
         {done ? (
           <Banner variant="success" role="status">
@@ -83,7 +88,8 @@ export function ForgotPassword() {
               required
               error={errors.email?.message}
               errorId="forgot-email-error"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isAuthenticated}
+              readOnly={isAuthenticated}
               {...register('email')}
             />
             {formError ? (

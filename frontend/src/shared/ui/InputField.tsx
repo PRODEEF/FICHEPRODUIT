@@ -1,4 +1,12 @@
-import type { InputHTMLAttributes } from 'react';
+import {
+  useCallback,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type ComponentPropsWithRef,
+  type Ref,
+} from 'react';
 
 import { cn } from '../lib/cn';
 
@@ -11,7 +19,23 @@ type InputFieldProps = {
   labelClassName?: string | undefined;
   inputClassName?: string | undefined;
   showCharacterCount?: boolean | undefined;
-} & Omit<InputHTMLAttributes<HTMLInputElement>, 'id'>;
+} & Omit<ComponentPropsWithRef<'input'>, 'id'>;
+
+function assignRef<T>(ref: Ref<T> | undefined, value: T | null): void {
+  if (typeof ref === 'function') {
+    ref(value);
+    return;
+  }
+  if (ref) {
+    ref.current = value;
+  }
+}
+
+function lengthFromProps(props: Pick<ComponentPropsWithRef<'input'>, 'value' | 'defaultValue'>): number {
+  if (typeof props.value === 'string') return props.value.length;
+  if (typeof props.defaultValue === 'string') return props.defaultValue.length;
+  return 0;
+}
 
 export function InputField({
   id,
@@ -24,17 +48,51 @@ export function InputField({
   showCharacterCount,
   ...inputProps
 }: InputFieldProps) {
-  const describedBy = error ? errorId : inputProps['aria-describedby'];
+  const { onChange, onBlur, ref, value, defaultValue, ...restInputProps } = inputProps;
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const [charCount, setCharCount] = useState(() => lengthFromProps({ value, defaultValue }));
+
+  const syncCharCountFromDom = useCallback(() => {
+    if (!showCharacterCount || !inputRef.current) return;
+    const next = inputRef.current.value.length;
+    setCharCount((prev) => (prev === next ? prev : next));
+  }, [showCharacterCount]);
+
+  const handleRef = useCallback(
+    (node: HTMLInputElement | null) => {
+      inputRef.current = node;
+      assignRef(ref, node);
+      if (node && showCharacterCount) {
+        setCharCount(node.value.length);
+      }
+    },
+    [ref, showCharacterCount],
+  );
+
+  const handleChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      if (showCharacterCount) {
+        setCharCount(event.target.value.length);
+      }
+      onChange?.(event);
+    },
+    [onChange, showCharacterCount],
+  );
+
+  useLayoutEffect(() => {
+    if (!showCharacterCount) return;
+    if (typeof value === 'string') {
+      setCharCount((prev) => (prev === value.length ? prev : value.length));
+      return;
+    }
+    syncCharCountFromDom();
+  });
+
+  const describedBy = error ? errorId : restInputProps['aria-describedby'];
   const maxLen =
-    typeof inputProps.maxLength === 'number' && inputProps.maxLength >= 0
-      ? inputProps.maxLength
+    typeof restInputProps.maxLength === 'number' && restInputProps.maxLength >= 0
+      ? restInputProps.maxLength
       : undefined;
-  const rawLen =
-    typeof inputProps.value === 'string'
-      ? inputProps.value.length
-      : typeof inputProps.defaultValue === 'string'
-        ? inputProps.defaultValue.length
-        : 0;
 
   return (
     <div className={cn('flex flex-col gap-1.5 text-left', containerClassName)}>
@@ -50,7 +108,7 @@ export function InputField({
         </label>
         {showCharacterCount && maxLen !== undefined ? (
           <span className="whitespace-nowrap text-xs tabular-nums text-gray-400" aria-live="polite">
-            {rawLen}/{maxLen}
+            {charCount}/{maxLen}
           </span>
         ) : null}
       </div>
@@ -63,7 +121,12 @@ export function InputField({
         )}
         aria-invalid={Boolean(error)}
         aria-describedby={describedBy}
-        {...inputProps}
+        ref={handleRef}
+        onChange={handleChange}
+        onBlur={onBlur}
+        value={value}
+        defaultValue={defaultValue}
+        {...restInputProps}
       />
       {error ? (
         <p id={errorId} className="m-0 text-sm text-red-500" role="alert">

@@ -33,9 +33,22 @@ describe('signupSchema', () => {
     const r = signupSchema.safeParse({
       email: 'user@example.com',
       username: 'Marie',
+      sector: 'Glisse',
       websiteUrl: '',
       password: validPassword,
       passwordConfirm: 'other',
+    });
+    expect(r.success).toBe(false);
+  });
+
+  it('rejette si le secteur est absent', () => {
+    const r = signupSchema.safeParse({
+      email: 'user@example.com',
+      username: 'Marie',
+      sector: '',
+      websiteUrl: '',
+      password: validPassword,
+      passwordConfirm: validPassword,
     });
     expect(r.success).toBe(false);
   });
@@ -44,6 +57,7 @@ describe('signupSchema', () => {
     const r = signupSchema.safeParse({
       email: 'user@example.com',
       username: 'Marie',
+      sector: 'Vélo',
       websiteUrl: 'https://example.com',
       password: validPassword,
       passwordConfirm: validPassword,
@@ -51,6 +65,7 @@ describe('signupSchema', () => {
     expect(r.success).toBe(true);
     if (r.success) {
       expect(r.data.websiteUrl).toBe('https://example.com');
+      expect(r.data.sector).toBe('Vélo');
     }
   });
 });

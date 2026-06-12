@@ -4,8 +4,8 @@ import type { LucideIcon } from 'lucide-react';
 
 import { cardReveal, staggerContainer, titleReveal } from '@lib/motionVariants';
 import { Card } from '@shared/ui';
+import { useScrollReveal } from '@shared/hooks/useScrollReveal';
 
-import { useScrollReveal } from '../../landing/hooks/useScrollReveal';
 import { ABOUT_DIFFERENTIATORS } from '../lib/aboutContent';
 
 const differentiatorIcons: Record<string, LucideIcon> = {

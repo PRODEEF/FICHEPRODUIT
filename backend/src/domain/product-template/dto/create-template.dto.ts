@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { createZodDto } from "nestjs-zod";
+import { assertUniqueFieldNames } from "../lib/validate-template-fields";
 import { FIELD_TYPES } from "../types/product-template.types";
 
 const fieldSchema = z.object({
@@ -8,9 +9,13 @@ const fieldSchema = z.object({
   required: z.boolean().default(false).describe("Champ obligatoire dans l’export"),
 });
 
-export const createTemplateSchema = z.object({
+export const templateBaseSchema = z.object({
   name: z.string().min(1).max(255).describe("Libellé du gabarit"),
   fields: z.array(fieldSchema).min(1).describe("Champs du gabarit (au moins un)"),
 });
+
+export const createTemplateSchema = templateBaseSchema.superRefine((data, ctx) =>
+  assertUniqueFieldNames(data.fields, ctx),
+);
 
 export class CreateTemplateDto extends createZodDto(createTemplateSchema) {}

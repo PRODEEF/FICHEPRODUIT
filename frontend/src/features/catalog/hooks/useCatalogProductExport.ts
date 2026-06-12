@@ -1,50 +1,28 @@
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
 
-import { downloadExportCsv, ExportInsufficientCreditsError } from '@api/export';
-import type { ExportBody } from '@api/types/api.types';
-
-export interface InsufficientCreditsDetails {
-  requiredCredits: number;
-  availableCredits: number;
-}
+const EXPORT_NOT_IMPLEMENTED_MESSAGE = "L'export n'est pas encore implémenté";
 
 export function useCatalogProductExport() {
-  const [insufficientCreditsOpen, setInsufficientCreditsOpen] = useState(false);
-  const [insufficientCreditsDetails, setInsufficientCreditsDetails] =
-    useState<InsufficientCreditsDetails>({ requiredCredits: 0, availableCredits: 0 });
-  const [isExporting, setIsExporting] = useState(false);
+  const [exportConfirmOpen, setExportConfirmOpen] = useState(false);
 
-  const dismissInsufficientCredits = useCallback(() => {
-    setInsufficientCreditsOpen(false);
-    setInsufficientCreditsDetails({ requiredCredits: 0, availableCredits: 0 });
+  const openExportConfirmation = useCallback(() => {
+    setExportConfirmOpen(true);
   }, []);
 
-  const exportProducts = useCallback(async (body: ExportBody, filename?: string) => {
-    setIsExporting(true);
-    try {
-      await downloadExportCsv(body, filename);
-    } catch (err) {
-      if (err instanceof ExportInsufficientCreditsError) {
-        setInsufficientCreditsDetails({
-          requiredCredits: err.requiredCredits ?? 0,
-          availableCredits: err.availableCredits ?? 0,
-        });
-        setInsufficientCreditsOpen(true);
-        return;
-      }
-      const message = err instanceof Error ? err.message : 'Export impossible pour le moment.';
-      toast.error('Export échoué', { description: message });
-    } finally {
-      setIsExporting(false);
-    }
+  const closeExportConfirmation = useCallback(() => {
+    setExportConfirmOpen(false);
+  }, []);
+
+  const confirmExport = useCallback(() => {
+    setExportConfirmOpen(false);
+    toast.info(EXPORT_NOT_IMPLEMENTED_MESSAGE);
   }, []);
 
   return {
-    exportProducts,
-    isExporting,
-    insufficientCreditsOpen,
-    insufficientCreditsDetails,
-    dismissInsufficientCredits,
+    exportConfirmOpen,
+    openExportConfirmation,
+    closeExportConfirmation,
+    confirmExport,
   };
 }

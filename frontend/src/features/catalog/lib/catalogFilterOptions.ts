@@ -18,6 +18,21 @@ function matchesBrand(product: CatalogProduct, brand: string): boolean {
   return product.brand.toLowerCase() === brand.toLowerCase();
 }
 
+/** Retrouve une option dont la valeur correspond sans tenir compte de la casse. */
+export function findOptionCaseInsensitive(
+  options: string[],
+  value: string,
+): string | undefined {
+  const needle = value.trim().toLowerCase();
+  if (!needle) return undefined;
+  return options.find((option) => option.trim().toLowerCase() === needle);
+}
+
+/** Indique si une valeur figure dans les options, sans tenir compte de la casse. */
+export function optionIncludedCaseInsensitive(options: string[], value: string): boolean {
+  return findOptionCaseInsensitive(options, value) !== undefined;
+}
+
 /**
  * Retourne les produits servant de base aux options d’un select,
  * selon les filtres parents (cascade secteur → catégorie → sous-catégorie → marque).

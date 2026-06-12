@@ -86,6 +86,7 @@ describe("AnalysisPipelineService", () => {
       expect.objectContaining({
         ownerId: null,
         sessionId: "session-1",
+        sector: null,
       }),
       "",
     );
@@ -93,6 +94,7 @@ describe("AnalysisPipelineService", () => {
       "analysis-1",
       expect.objectContaining({
         status: "done",
+        errorCode: null,
         shopId: "shop-guest-1",
       }),
       "",

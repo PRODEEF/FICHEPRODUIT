@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { parseAsFullSiteUrl } from '@lib/siteUrl';
+import { SHOP_SECTOR_LABELS } from '@shared/lib/shopSectors';
 
 import {
   getPasswordStrengthSnapshot,
@@ -73,6 +74,14 @@ export const signupSchema = z
   .object({
     email: emailField,
     username: usernameField,
+    sector: z
+      .string()
+      .min(1, "Veuillez choisir votre secteur d'activité.")
+      .pipe(
+        z.enum(SHOP_SECTOR_LABELS, {
+          message: "Veuillez choisir votre secteur d'activité.",
+        }),
+      ),
     websiteUrl: websiteUrlField,
     password: signupPasswordField,
     passwordConfirm: z.string(),

@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
+import { needsShopSetup } from '@shared/lib/needsShopSetup';
+
 import type { Shop } from '../types';
-import { needsShopSetup } from './shop-setup-status';
 
 function makeShop(overrides: Partial<Shop> = {}): Shop {
   return {
@@ -34,9 +35,9 @@ describe('needsShopSetup', () => {
     );
   });
 
-  it('retourne false si un secteur est renseigné', () => {
+  it('retourne true si seul un secteur est renseigné sans marques', () => {
     expect(
-      needsShopSetup(makeShop({ url: 'https://example.com', sector: 'Mode & accessoires' })),
-    ).toBe(false);
+      needsShopSetup(makeShop({ url: 'https://example.com', sector: 'Mode' })),
+    ).toBe(true);
   });
 });

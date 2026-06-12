@@ -1,8 +1,8 @@
 import { motion } from 'motion/react';
 
 import { cardReveal, titleReveal } from '@lib/motionVariants';
+import { useScrollReveal } from '@shared/hooks/useScrollReveal';
 
-import { useScrollReveal } from '../../landing/hooks/useScrollReveal';
 import { ABOUT_MISSION } from '../lib/aboutContent';
 
 export function AboutMissionSection() {

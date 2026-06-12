@@ -2,7 +2,6 @@ import { Button } from '@shared/ui';
 
 interface ProductResultsToolbarProps {
   isConnected: boolean;
-  isExporting?: boolean;
   totalCount: number;
   selectedCount: number;
   onDelete: () => void;
@@ -12,17 +11,21 @@ interface ProductResultsToolbarProps {
 const EXPORT_AUTH_TOOLTIP =
   'L’export est réservé aux comptes connectés. Connectez-vous pour exporter vos fiches produits.';
 
+function buildExportTooltip(isConnected: boolean, hasSelection: boolean): string | undefined {
+  if (!isConnected && hasSelection) return EXPORT_AUTH_TOOLTIP;
+  return undefined;
+}
+
 export function ProductResultsToolbar({
   isConnected,
-  isExporting = false,
   totalCount,
   selectedCount,
   onDelete,
   onExport,
 }: ProductResultsToolbarProps) {
   const hasSelection = selectedCount > 0;
-  const exportDisabled = !isConnected || !hasSelection || isExporting;
-  const showExportAuthTooltip = !isConnected && hasSelection;
+  const exportDisabled = !isConnected || !hasSelection;
+  const exportTooltip = buildExportTooltip(isConnected, hasSelection);
 
   return (
     <div className="flex items-center justify-between gap-4 py-2">
@@ -45,14 +48,13 @@ export function ProductResultsToolbar({
           size="sm"
           className="py-1.5 font-medium"
           disabled={exportDisabled}
-          aria-busy={isExporting}
-          tooltip={showExportAuthTooltip ? EXPORT_AUTH_TOOLTIP : undefined}
+          tooltip={exportTooltip}
           onClick={() => {
-            if (!isConnected || !hasSelection || isExporting) return;
+            if (!isConnected || !hasSelection) return;
             onExport?.();
           }}
         >
-          {isExporting ? 'Export…' : 'Exporter'}
+          Exporter
         </Button>
         <Button
           type="button"

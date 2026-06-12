@@ -6,7 +6,7 @@ import { PRICING_FAQ_ITEMS } from '../lib/pricingFaq';
 import { PricingFaqItem } from './PricingFaqItem';
 
 export function PricingFaq() {
-  const [openId, setOpenId] = useState<string | null>(PRICING_FAQ_ITEMS[1]?.id ?? null);
+  const [openId, setOpenId] = useState<string>("null");
 
   return (
     <section className="mx-auto mb-16 max-w-4xl px-3 sm:px-4">
@@ -21,7 +21,7 @@ export function PricingFaq() {
               item={item}
               isOpen={openId === item.id}
               isLast={index === PRICING_FAQ_ITEMS.length - 1}
-              onToggle={() => void setOpenId(openId === item.id ? null : item.id)}
+              onToggle={() => void setOpenId(openId === item.id ? "null" : item.id)}
             />
           ))}
         </ul>

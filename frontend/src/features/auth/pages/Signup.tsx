@@ -12,7 +12,8 @@ import { getSupabaseClient } from '@shared/supabase';
 import { AnalysisProgress } from '@shared/components/AnalysisProgress';
 import { useAuth } from '@shared/hooks/useAuth';
 import { useSiteAnalysis } from '@shared/hooks/useSiteAnalysis';
-import { Banner, Button, Card, InputField, PageSection, TextLink } from '@shared/ui';
+import { SHOP_SECTOR_LABELS } from '@shared/lib/shopSectors';
+import { Banner, Button, Card, InputField, PageSection, SelectField, TextLink } from '@shared/ui';
 
 import { PasswordField } from '../components/PasswordField';
 import { buildAuthEmailQuery } from '../lib/authEmailQuery';
@@ -24,7 +25,7 @@ import {
 } from '../lib/authErrorMessage';
 import { writePendingSignup } from '../lib/pendingSignupStorage';
 import { buildSignupUserMetadata, handleSignupWithActiveSession } from '../lib/signupPostAuth';
-import { signupSchema, type SignupInput } from '../lib/authSchemas';
+import { signupSchema, type SignupInput, type SignupPayload } from '../lib/authSchemas';
 
 export function Signup() {
   const navigate = useNavigate();
@@ -54,11 +55,12 @@ export function Signup() {
     setValue,
     control,
     formState: { errors, isSubmitting },
-  } = useForm<SignupInput>({
+  } = useForm<SignupInput, unknown, SignupPayload>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
       email: '',
       username: '',
+      sector: '',
       websiteUrl: '',
       password: '',
       passwordConfirm: '',
@@ -94,7 +96,7 @@ export function Signup() {
   }, [authLoading, userEmail, signupUrlAnalysisActive, analysisOpen, navigate]);
 
   const onSubmit = useCallback(
-    async (data: SignupInput) => {
+    async (data: SignupPayload) => {
       signupPostAuthRef.current = true;
       setFormError(null);
       setEmailAlreadyRegistered(false);
@@ -168,6 +170,7 @@ export function Signup() {
           userId: authData.session.user.id,
           accessToken: authData.session.access_token,
           normalizedUsername,
+          sector: data.sector,
           websiteUrl,
           guestSessionId,
           refreshProfile,
@@ -185,6 +188,7 @@ export function Signup() {
         writePendingSignup({
           email: emailTrim,
           username: normalizedUsername,
+          sector: data.sector,
           websiteUrl,
           pendingAutoAnalyze: guestSessionId !== null ? false : websiteUrl !== '',
         });
@@ -250,6 +254,30 @@ export function Signup() {
               disabled={isDisabled}
               {...register('username')}
             />
+            <div className="flex flex-col gap-1">
+              <SelectField
+                id="signup-sector"
+                label="Secteur d'activité"
+                required
+                error={errors.sector?.message}
+                errorId="signup-sector-error"
+                disabled={isDisabled}
+                {...register('sector')}
+              >
+                <option value="" disabled>
+                  — Sélectionnez votre secteur —
+                </option>
+                {SHOP_SECTOR_LABELS.map((sectorLabel) => (
+                  <option key={sectorLabel} value={sectorLabel}>
+                    {sectorLabel}
+                  </option>
+                ))}
+              </SelectField>
+              <p className="m-0 text-xs text-text-secondary">
+                Ce choix définit votre univers produit et les tarifs associés. Il ne pourra plus être
+                modifié par la suite.
+              </p>
+            </div>
             <InputField
               id="signup-website"
               label="URL de votre site web (facultatif)"

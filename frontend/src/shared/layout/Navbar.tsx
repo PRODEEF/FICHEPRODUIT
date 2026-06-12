@@ -1,10 +1,17 @@
-import { TableOfContents } from 'lucide-react';
+import { ChevronDown, TableOfContents } from 'lucide-react';
 import { NavLink } from 'react-router';
 import type { ReactNode } from 'react';
 
-import { CreditBalanceBadge } from '../../billing/components/CreditBalanceBadge';
+import { CreditBalanceBadge } from '../../features/billing/components/CreditBalanceBadge';
 import { cn } from '@shared/lib/cn';
-import { Badge, Button } from '@shared/ui';
+import {
+  Badge,
+  Button,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@shared/ui';
 
 export interface NavbarProps {
   userEmail: string | null;
@@ -85,12 +92,22 @@ export function Navbar({
               …
             </span>
           ) : authed ? (
-            <span
-              className="max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap text-sm text-text-secondary"
-              title={userEmail ?? undefined}
-            >
-              {navTitle}
-            </span>
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                className="flex max-w-[220px] items-center gap-1 rounded-lg border-0 bg-transparent px-2 py-1.5 text-sm text-text-secondary transition-colors hover:bg-purple-50 hover:text-purple-700 aria-expanded:bg-purple-50 aria-expanded:text-purple-700"
+                title={userEmail ?? undefined}
+              >
+                <span className="overflow-hidden text-ellipsis whitespace-nowrap">
+                  {navTitle}
+                </span>
+                <ChevronDown aria-hidden className="size-4 shrink-0" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => void onLogout()}>
+                  Se déconnecter
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : (
             <>
               <Button href="/login" variant="primary" size="sm">
