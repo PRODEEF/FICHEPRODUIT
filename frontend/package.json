@@ -21,7 +21,6 @@
     "@supabase/supabase-js": "^2.49.8",
     "@tailwindcss/vite": "^4.2.4",
     "clsx": "^2.1.1",
-    "crisp-sdk-web": "^1.1.2",
     "lucide-react": "^1.14.0",
     "motion": "^12.38.0",
     "openapi-fetch": "^0.16.0",

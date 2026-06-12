@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 
 import { useAuth } from '@shared/hooks/useAuth';
 import { getSupabaseClient } from '@shared/supabase';
-import { Button, Card, InputField, PageSection, TextLink } from '@ui';
+import { Button, Card, InputField, PageSection, TextLink } from '@shared/ui';
 
 import { PasswordField } from '../components/PasswordField';
 import { buildAuthEmailQuery, parseAuthEmailFromQuery } from '../lib/authEmailQuery';

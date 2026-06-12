@@ -3,16 +3,15 @@ import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { ApiHttpError } from '@api/apiAuth';
 import type { PatchMyShopBody } from '@types-api';
 import { cn } from '@shared/lib/cn';
-import { Button } from '@shared/ui/Button';
+import { Button } from '@shared/ui';
+import { formatCmsLabel } from '@shared/lib/formatCmsLabel';
 
-import { formatCmsLabel } from '../../catalog/lib/productUtils';
 import {
   SHOP_URL_INVALID_MESSAGE,
   shopSectorRequiredSchema,
   shopUrlSchema,
 } from '../lib/shopSchemas';
-import type { Shop, ShopCms } from '../types';
-import { SHOP_SECTOR_LABELS, isShopSectorLabel } from '../types';
+import { type Shop, type ShopCms, SHOP_SECTOR_LABELS, isShopSectorLabel } from '../types';
 
 const CMS_OPTIONS: ShopCms[] = ['prestashop', 'shopify', 'woocommerce', 'autre', 'inconnu'];
 
@@ -23,9 +22,7 @@ interface ShopInfoSectionProps {
   shop: Shop;
   onSavePartial: (patch: PatchMyShopBody) => Promise<void>;
   saving?: boolean;
-  /** Masque la ligne URL lorsque la zone d’analyse hero est affichée. */
   hideUrlRow?: boolean;
-  /** Affiche le bouton pour rouvrir le bandeau d’analyse. */
   showAnalyzeAction?: boolean;
   onAnalyze?: () => void;
   analyzeDisabled?: boolean;
@@ -142,8 +139,7 @@ export function ShopInfoSection({
       if (!parsed.success) {
         setFieldError({
           key: 'sector',
-          message:
-            parsed.error.issues[0]?.message ?? 'Veuillez choisir un secteur dans la liste.',
+          message: parsed.error.issues[0]?.message ?? 'Veuillez choisir un secteur dans la liste.',
         });
         return;
       }

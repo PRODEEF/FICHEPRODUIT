@@ -1,9 +1,9 @@
 import type { Shop } from '@types-api';
 import { TextLink } from '@shared/ui/TextLink';
+import { formatCmsLabel } from '@shared/lib/formatCmsLabel';
+import { needsShopSetup } from '@shared/lib/needsShopSetup';
 
-import { needsShopSetup } from '../../store/lib/shop-setup-status';
 import { BrandChips } from './BrandChips';
-import { formatCmsLabel } from '../lib/productUtils';
 
 const TOP_BRANDS_CHIP_LIMIT = 10;
 
@@ -65,14 +65,11 @@ export function ShopSummarySection({ shop, activeBrand, onBrandClick }: ShopSumm
           <span className="shrink-0">{formatCmsLabel(shop.cms)}</span>
           <span className="shrink-0 text-gray-400">—</span>
           <span className="shrink-0">
-            {shop.brands.length} marque{shop.brands.length > 1 ? 's' : ''} repérée
-            {shop.brands.length > 1 ? 's' : ''}
+            {shop.brands.length} marque{shop.brands.length > 1 ? 's' : ''}
           </span>
         </p>
         {shop.sector?.trim() ? (
-          <p className="text-xs text-gray-500">
-            Votre univers&nbsp;: {shop.sector.trim()}.
-          </p>
+          <p className="text-xs text-gray-500">Votre univers&nbsp;: {shop.sector.trim()}.</p>
         ) : null}
       </div>
 

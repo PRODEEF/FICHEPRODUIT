@@ -12,12 +12,7 @@ import { fetchBillingMe, type BillingSummary } from '@api/billing';
 import { NestHttpError } from '@api/nestHttpClient';
 import { useAuth } from '@shared/hooks/useAuth';
 
-export interface BillingContextValue {
-  summary: BillingSummary | null;
-  loading: boolean;
-  error: string | null;
-  refresh: () => Promise<void>;
-}
+import type { BillingContextValue } from '../types';
 
 const BillingContext = createContext<BillingContextValue | null>(null);
 

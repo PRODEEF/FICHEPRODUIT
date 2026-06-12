@@ -2,7 +2,7 @@ import { ChevronDown, TableOfContents } from 'lucide-react';
 import { NavLink } from 'react-router';
 import type { ReactNode } from 'react';
 
-import { CreditBalanceBadge } from '../../billing/components/CreditBalanceBadge';
+import { CreditBalanceBadge } from '../../features/billing/components/CreditBalanceBadge';
 import { cn } from '@shared/lib/cn';
 import {
   Badge,

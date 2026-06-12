@@ -12,105 +12,11 @@ import {
   SortableContext,
   arrayMove,
   sortableKeyboardCoordinates,
-  useSortable,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import { PRODUCT_TEMPLATE_FIELD_TYPE_OPTIONS } from '../lib/productTemplates';
+
 import type { TemplateFieldRow } from '../types';
-import type { ProductTemplateFieldType } from '@api/types/api.types';
-
-function SortableFieldRow({
-  row,
-  isDuplicate,
-  onPatch,
-  onRemove,
-}: {
-  row: TemplateFieldRow;
-  isDuplicate: boolean;
-  onPatch: (id: string, patch: Partial<TemplateFieldRow>) => void;
-  onRemove: (id: string) => void;
-}) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: row.id,
-  });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.85 : 1,
-  };
-
-  return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className={`flex flex-wrap items-end gap-2 rounded-xl border bg-bg-main px-3 py-2 ${
-        isDuplicate ? 'border-red-400 bg-red-50/40' : 'border-soft'
-      }`}
-      data-dragging={isDragging ? 'true' : undefined}
-    >
-      <button
-        type="button"
-        className="h-9 w-8 cursor-grab rounded-lg border border-dashed border-soft bg-bg-white p-0 text-xs leading-none text-text-muted"
-        aria-label="Réordonner"
-        {...attributes}
-        {...listeners}
-      >
-        ::
-      </button>
-      <label className="flex min-w-40 flex-1 flex-col gap-1.5">
-        <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">
-          Nom du champ
-        </span>
-        <input
-          type="text"
-          className={`rounded-xl border bg-bg-white px-3 py-2 text-sm text-text-primary outline-none transition focus:shadow-[0_0_0_3px_rgba(168,85,247,0.2)] ${
-            isDuplicate
-              ? 'border-red-400 focus:border-red-500'
-              : 'border-soft focus:border-purple-400'
-          }`}
-          value={row.name}
-          aria-invalid={isDuplicate}
-          onChange={(e) => void onPatch(row.id, { name: e.target.value })}
-        />
-      </label>
-      <label className="flex min-w-28 flex-col gap-1.5">
-        <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">Type</span>
-        <select
-          className="rounded-xl border border-soft bg-bg-white px-3 py-2 text-sm text-text-primary outline-none transition focus:border-purple-400 focus:shadow-[0_0_0_3px_rgba(168,85,247,0.2)]"
-          value={row.type}
-          onChange={(e) =>
-            void onPatch(row.id, {
-              type: e.target.value as ProductTemplateFieldType,
-            })
-          }
-        >
-          {PRODUCT_TEMPLATE_FIELD_TYPE_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label className="mb-1 flex items-center gap-1.5 text-sm text-text-secondary">
-        <input
-          type="checkbox"
-          checked={row.required}
-          onChange={(e) => void onPatch(row.id, { required: e.target.checked })}
-        />
-        <span>Requis</span>
-      </label>
-      <button
-        type="button"
-        className="rounded-lg border border-soft bg-bg-white px-2.5 py-1.5 text-xs text-text-secondary hover:border-red-500 hover:text-red-500"
-        onClick={() => void onRemove(row.id)}
-      >
-        Retirer
-      </button>
-    </div>
-  );
-}
+import { SortableFieldRow } from './SortableFieldRow';
 
 export interface TemplateFieldsEditorProps {
   rows: TemplateFieldRow[];

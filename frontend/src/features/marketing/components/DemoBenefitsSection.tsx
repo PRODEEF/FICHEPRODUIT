@@ -2,9 +2,8 @@ import { motion } from 'motion/react';
 import { Calendar, Download, Sparkles } from 'lucide-react';
 
 import { cardReveal, staggerContainer, titleReveal } from '@lib/motionVariants';
+import { useScrollReveal } from '@shared/hooks/useScrollReveal';
 import { Card } from '@shared/ui';
-
-import { useScrollReveal } from '../../landing/hooks/useScrollReveal';
 
 const benefits = [
   {
@@ -54,7 +53,8 @@ export function DemoBenefitsSection() {
         animate={titleInView ? 'visible' : 'hidden'}
         className="mb-12 text-center text-text-secondary"
       >
-        Environ 15 minutes pour découvrir comment gagner des centaines d’heures sur vos fiches produits.
+        Environ 15 minutes pour découvrir comment gagner des centaines d’heures sur vos fiches
+        produits.
       </motion.p>
       <motion.div
         ref={ref}
@@ -68,7 +68,9 @@ export function DemoBenefitsSection() {
             <Card className="flex h-full flex-col gap-4 p-6">
               <benefit.icon className="h-7 w-7 text-purple-600" strokeWidth={2} aria-hidden />
               <h3 className="text-lg font-bold text-text-primary">{benefit.title}</h3>
-              <p className="m-0 text-sm leading-relaxed text-text-secondary">{benefit.description}</p>
+              <p className="m-0 text-sm leading-relaxed text-text-secondary">
+                {benefit.description}
+              </p>
             </Card>
           </motion.div>
         ))}

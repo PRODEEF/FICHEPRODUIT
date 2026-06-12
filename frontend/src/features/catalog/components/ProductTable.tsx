@@ -4,23 +4,9 @@ import type { CatalogProduct } from '@types-api';
 import { cn } from '@shared/lib/cn';
 import { Button } from '@shared/ui';
 
+import { CATALOG_TABLE_COLUMNS, CATALOG_TABLE_HEAD_CLASS } from '../lib/catalogTableColumns';
 import { formatPrice } from '../lib/productUtils';
 import { ProductPreview } from './ProductPreview';
-
-const CATALOG_TABLE_HEAD_CLASS =
-  'align-middle bg-bg-main px-3 py-2 font-bold text-text-secondary border-b border-soft';
-
-const CATALOG_TABLE_COLUMNS = [
-  { label: 'Visuel', className: 'w-14' },
-  { label: 'Titre', className: 'w-56' },
-  { label: 'Année', className: 'w-16' },
-  { label: 'Marque', className: 'w-28' },
-  { label: 'Catégorie', className: 'w-28' },
-  { label: 'Sous-cat.', className: 'w-28' },
-  { label: 'Description', className: 'w-64' },
-  { label: 'Prix', className: 'w-24 text-right' },
-  { label: 'Aperçu', className: 'w-24' },
-] as const;
 
 interface ProductTableProps {
   shopName: string;

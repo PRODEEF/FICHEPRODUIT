@@ -1,9 +1,8 @@
 import { motion } from 'motion/react';
+
 import { cardReveal, staggerContainer, titleReveal } from '@lib/motionVariants';
-
+import { useScrollReveal } from '@shared/hooks/useScrollReveal';
 import { universes } from '@shared/lib/universes';
-
-import { useScrollReveal } from '../hooks/useScrollReveal';
 
 export function ExpertiseGrid() {
   const { ref: titleRef, inView: titleInView } = useScrollReveal<HTMLHeadingElement>(0.5);

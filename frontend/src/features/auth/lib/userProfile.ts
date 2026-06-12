@@ -1,6 +1,6 @@
 import type { User } from '@supabase/supabase-js';
 
-import { getSupabaseClient } from '../../../shared/supabase';
+import { getSupabaseClient } from '@shared/supabase';
 
 import type { ProfilePayload } from './authSchemas';
 import { createSupabaseUserRepository } from '../supabaseUserRepository';
@@ -8,11 +8,6 @@ import type { UserRepository } from '../userRepository';
 
 export type SaveProfileResult = { ok: true } | { ok: false; message: string };
 
-/**
- * Enregistre le pseudo dans `public.users` puis synchronise les métadonnées Supabase Auth
- * (`display_name` / `full_name`) pour que le libellé côté Auth et le JWT suivent le changement.
- * `form` doit déjà correspondre à `profileSchema` (validé dans l’UI).
- */
 export async function saveUserProfile(
   repo: UserRepository,
   user: User,
@@ -53,7 +48,9 @@ export async function saveUserProfile(
 
 export async function clearPendingAutoAnalyzeForUser(userId: string): Promise<void> {
   const client = getSupabaseClient();
+
   if (!client) return;
+
   const repo = createSupabaseUserRepository(client);
   try {
     await repo.updateProfile(userId, { pending_auto_analyze: false });

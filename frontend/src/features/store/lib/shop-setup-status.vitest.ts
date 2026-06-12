@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
+import { needsShopSetup } from '@shared/lib/needsShopSetup';
+
 import type { Shop } from '../types';
-import { needsShopSetup } from './shop-setup-status';
 
 function makeShop(overrides: Partial<Shop> = {}): Shop {
   return {

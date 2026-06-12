@@ -1,19 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 
-import { patchMyShop } from '@api/shop';
-import type { PatchMyShopBody } from '@types-api';
+import { needsShopSetup } from '@shared/lib/needsShopSetup';
 
 import type { Shop } from '../types';
 import { ShopInfoSection } from '../components/ShopInfoSection';
 import { StoreUrlAnalysisBanner } from '../components/StoreUrlAnalysisBanner';
 import { TagListEditor } from '../components/TagListEditor';
-import {
-  findTagCaseInsensitive,
-  shopTagDuplicateMessage,
-} from '../lib/shopSchemas';
-import { needsShopSetup } from '../lib/shop-setup-status';
+import { findTagCaseInsensitive, shopTagDuplicateMessage } from '../lib/shopSchemas';
 import { useShop } from '../hooks/useShop';
+import { useShopPatch } from '../hooks/useShopPatch';
 
 function LoadingState() {
   return (
@@ -46,23 +42,7 @@ function StoreLoaded({
   onAnalyze,
   analyzeDisabled,
 }: StoreLoadedProps) {
-  const [patching, setPatching] = useState(false);
-
-  const patchShop = useCallback(
-    async (partial: PatchMyShopBody) => {
-      setPatching(true);
-      try {
-        const updated = await patchMyShop(partial);
-        updateShop(updated);
-        if (partial.url !== undefined) {
-          onUrlSaved(updated.url);
-        }
-      } finally {
-        setPatching(false);
-      }
-    },
-    [onUrlSaved, updateShop],
-  );
+  const { patchShop, patching } = useShopPatch({ updateShop, onUrlSaved });
 
   const validateBrandBeforeAdd = useCallback(
     (tag: string) => {
