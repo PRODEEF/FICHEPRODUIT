@@ -3,7 +3,7 @@ import { ConfigService } from "@nestjs/config";
 
 import { AiContentService } from "./ai-content.service";
 import type { CatalogProduct } from "../../../domain/catalog/types/catalog.types";
-import type { ProductTemplateField } from "../../../domain/product-template/types/product-template.types";
+import type { ExportField } from "../types/export-field.types";
 
 const product = (): CatalogProduct => ({
   id: "550e8400-e29b-41d4-a716-446655440001",
@@ -21,7 +21,7 @@ const product = (): CatalogProduct => ({
   attributes: {},
 });
 
-const field = (name: string): ProductTemplateField => ({
+const field = (name: string): ExportField => ({
   name,
   type: "text",
   required: true,

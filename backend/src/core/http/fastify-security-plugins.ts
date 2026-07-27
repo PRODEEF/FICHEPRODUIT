@@ -45,12 +45,6 @@ export async function registerHttpSecurityPlugins(fastify: FastifyInstance): Pro
         return hasBearerAuth(req) ? 25 : 5;
       }
       if (req.method === "POST" && path.startsWith("/api/export")) return 15;
-      if (
-        req.method === "POST" &&
-        (path.endsWith("/scrape-fields") || path.endsWith("/refine-fields"))
-      ) {
-        return 20;
-      }
       return 300;
     },
     timeWindow: "1 minute",

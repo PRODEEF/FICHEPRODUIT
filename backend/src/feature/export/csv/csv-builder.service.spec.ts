@@ -1,11 +1,8 @@
 import { CsvBuilderService } from "./csv-builder.service";
 import type { MappedProduct } from "../types/export.types";
-import type { ProductTemplateField } from "../../../domain/product-template/types/product-template.types";
+import type { ExportField } from "../types/export-field.types";
 
-const field = (
-  name: string,
-  overrides: Partial<ProductTemplateField> = {},
-): ProductTemplateField => ({
+const field = (name: string, overrides: Partial<ExportField> = {}): ExportField => ({
   name,
   type: "text",
   required: false,
@@ -21,7 +18,7 @@ describe("CsvBuilderService", () => {
   });
 
   it("construit une ligne d’en-tête et une ligne par produit", () => {
-    const templateFields = [field("Nom"), field("Prix")];
+    const exportFields = [field("Nom"), field("Prix")];
     const products: MappedProduct[] = [
       {
         productId: "p1",
@@ -31,33 +28,33 @@ describe("CsvBuilderService", () => {
         ],
       },
     ];
-    expect(service.build(products, templateFields)).toBe("Nom,Prix\nChaise,49");
+    expect(service.build(products, exportFields)).toBe("Nom,Prix\nChaise,49");
   });
 
   it("échappe les guillemets et entoure les champs avec métacharactères CSV", () => {
-    const templateFields = [field("A")];
+    const exportFields = [field("A")];
     const products: MappedProduct[] = [
       {
         productId: "p1",
         fields: [{ templateFieldName: "A", value: 'dites "oui"', source: "direct" }],
       },
     ];
-    expect(service.build(products, templateFields)).toBe('A\n"dites ""oui"""');
+    expect(service.build(products, exportFields)).toBe('A\n"dites ""oui"""');
   });
 
   it("quotes les cellules contenant une virgule ou un saut de ligne", () => {
-    const templateFields = [field("Col")];
+    const exportFields = [field("Col")];
     const products: MappedProduct[] = [
       { productId: "p1", fields: [{ templateFieldName: "Col", value: "a,b", source: "direct" }] },
     ];
-    expect(service.build(products, templateFields)).toBe('Col\n"a,b"');
+    expect(service.build(products, exportFields)).toBe('Col\n"a,b"');
   });
 
   it("utilise une chaîne vide pour une colonne sans valeur mappée", () => {
-    const templateFields = [field("X"), field("Y")];
+    const exportFields = [field("X"), field("Y")];
     const products: MappedProduct[] = [
       { productId: "p1", fields: [{ templateFieldName: "X", value: "un", source: "direct" }] },
     ];
-    expect(service.build(products, templateFields)).toBe("X,Y\nun,");
+    expect(service.build(products, exportFields)).toBe("X,Y\nun,");
   });
 });

@@ -1,6 +1,6 @@
 import { FieldMapperService } from "./field-mapper.service";
 import type { CatalogProduct } from "../../../domain/catalog/types/catalog.types";
-import type { ProductTemplateField } from "../../../domain/product-template/types/product-template.types";
+import type { ExportField } from "../types/export-field.types";
 
 const sampleProduct = (): CatalogProduct => ({
   id: "550e8400-e29b-41d4-a716-446655440001",
@@ -18,7 +18,7 @@ const sampleProduct = (): CatalogProduct => ({
   attributes: { Couleur: "Rouge", " poids ": "1kg" },
 });
 
-const tplField = (name: string): ProductTemplateField => ({
+const exportField = (name: string): ExportField => ({
   name,
   type: "text",
   required: false,
@@ -34,21 +34,21 @@ describe("FieldMapperService", () => {
 
   it("mappe les synonymes canoniques (ex. prix → price)", () => {
     const product = sampleProduct();
-    const { mapped, unresolved } = service.mapDirectFields(product, [tplField("prix")]);
+    const { mapped, unresolved } = service.mapDirectFields(product, [exportField("prix")]);
     expect(mapped).toEqual([{ templateFieldName: "prix", value: "129.9", source: "direct" }]);
     expect(unresolved).toEqual([]);
   });
 
   it("résout une colonne depuis attributes avec clé insensible à la casse / espaces", () => {
     const product = sampleProduct();
-    const { mapped, unresolved } = service.mapDirectFields(product, [tplField("Poids")]);
+    const { mapped, unresolved } = service.mapDirectFields(product, [exportField("Poids")]);
     expect(mapped).toEqual([{ templateFieldName: "Poids", value: "1kg", source: "direct" }]);
     expect(unresolved).toEqual([]);
   });
 
   it('laisse en "unresolved" les champs sans correspondance directe', () => {
     const product = sampleProduct();
-    const f = tplField("Meta inconnu");
+    const f = exportField("Meta inconnu");
     const { mapped, unresolved } = service.mapDirectFields(product, [f]);
     expect(mapped).toEqual([]);
     expect(unresolved).toEqual([f]);

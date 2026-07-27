@@ -3,12 +3,11 @@
  */
 export type ExportRequest = {
   productIds: string[];
-  templateId: string;
   shopId: string;
 };
 
 /**
- * Valeur résolue pour une colonne du template, avec traçabilité de la source (mappage direct vs IA).
+ * Valeur résolue pour une colonne d’export, avec traçabilité de la source (mappage direct vs IA).
  */
 export type MappedField = {
   templateFieldName: string;
@@ -17,7 +16,7 @@ export type MappedField = {
 };
 
 /**
- * Ligne logique d’export : un produit et l’ensemble des champs mappés pour ce template.
+ * Ligne logique d’export : un produit et l’ensemble des champs mappés.
  */
 export type MappedProduct = {
   productId: string;

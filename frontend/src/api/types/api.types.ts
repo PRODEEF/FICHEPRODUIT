@@ -113,95 +113,14 @@ export interface CatalogProduct {
 }
 
 // ---------------------------------------------------------------------------
-// ProductTemplate
-// ---------------------------------------------------------------------------
-
-export type ProductTemplateFieldType =
-  | 'text'
-  | 'long_text'
-  | 'rich_text'
-  | 'number'
-  | 'price'
-  | 'percentage'
-  | 'boolean'
-  | 'date'
-  | 'datetime'
-  | 'url'
-  | 'email'
-  | 'phone'
-  | 'enum'
-  | 'multi_enum'
-  | 'reference'
-  | 'image'
-  | 'file'
-  | 'color'
-  | 'size'
-  | 'weight'
-  | 'dimension'
-  | 'country'
-  | 'currency'
-  | 'json';
-
-export interface ProductTemplateField {
-  name: string;
-  type: ProductTemplateFieldType;
-  required: boolean;
-  order: number;
-}
-
-export interface ProductTemplate {
-  id: string;
-  name: string;
-  shopId: string;
-  fields: ProductTemplateField[];
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CreateProductTemplateBody {
-  name: string;
-  fields?: ProductTemplateField[];
-}
-
-export type UpdateProductTemplateBody = Partial<CreateProductTemplateBody>;
-
-// ---------------------------------------------------------------------------
-// Scrape / Refine fields (product templates)
-// ---------------------------------------------------------------------------
-
-export interface ScrapeFieldsBody {
-  url: string;
-}
-
-export interface ScrapeFieldsResponse {
-  fields: ProductTemplateField[];
-  sampleValues: Record<string, string>;
-  warnings: { code: string; message: string }[];
-}
-
-export type RefineFieldsSource = 'csv_import' | 'product_page' | 'manual';
-
-export interface RefineFieldsBody {
-  source: RefineFieldsSource;
-  fields: ProductTemplateField[];
-  sampleValues?: Record<string, string>;
-}
-
-export interface RefineFieldsResponse {
-  fields: ProductTemplateField[];
-  refinedWithAi: boolean;
-  message?: string;
-}
-
-// ---------------------------------------------------------------------------
 // Export
 // ---------------------------------------------------------------------------
 
 export interface ExportBody {
   /** IDs des produits catalogue à exporter. */
   productIds: string[];
-  /** ID du template de fiche produit à appliquer. */
-  templateId: string;
+  /** UUID de la boutique (contrôle d’accès / métadonnées). */
+  shopId: string;
   /** Format cible. */
   format: 'prestashop' | 'shopify';
 }

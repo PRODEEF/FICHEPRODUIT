@@ -208,51 +208,6 @@ export type Database = {
         };
         Relationships: [];
       };
-      product_templates: {
-        Row: {
-          created_at: string;
-          fields: Json;
-          id: string;
-          name: string;
-          shop_id: string;
-          updated_at: string;
-          user_id: string;
-        };
-        Insert: {
-          created_at?: string;
-          fields?: Json;
-          id?: string;
-          name: string;
-          shop_id: string;
-          updated_at?: string;
-          user_id: string;
-        };
-        Update: {
-          created_at?: string;
-          fields?: Json;
-          id?: string;
-          name?: string;
-          shop_id?: string;
-          updated_at?: string;
-          user_id?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "product_templates_user_id_fkey";
-            columns: ["user_id"];
-            isOneToOne: false;
-            referencedRelation: "users";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "product_templates_shop_id_fkey";
-            columns: ["shop_id"];
-            isOneToOne: false;
-            referencedRelation: "shops";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
       shops: {
         Row: {
           brands: string[];
@@ -421,31 +376,6 @@ export type Database = {
         | "INTERNAL_ERROR";
       analysis_status: "pending" | "running" | "done" | "failed";
       shop_cms: "prestashop" | "shopify" | "woocommerce" | "autre" | "inconnu";
-      template_field_type:
-        | "text"
-        | "long_text"
-        | "rich_text"
-        | "number"
-        | "price"
-        | "percentage"
-        | "boolean"
-        | "date"
-        | "datetime"
-        | "url"
-        | "email"
-        | "phone"
-        | "enum"
-        | "multi_enum"
-        | "reference"
-        | "image"
-        | "file"
-        | "color"
-        | "size"
-        | "weight"
-        | "dimension"
-        | "country"
-        | "currency"
-        | "json";
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -577,32 +507,6 @@ export const Constants = {
       analysis_error_code: ["SITE_UNREACHABLE", "UNANALYZABLE", "UNKNOWN_SECTOR", "INTERNAL_ERROR"],
       analysis_status: ["pending", "running", "done", "failed"],
       shop_cms: ["prestashop", "shopify", "woocommerce", "autre", "inconnu"],
-      template_field_type: [
-        "text",
-        "long_text",
-        "rich_text",
-        "number",
-        "price",
-        "percentage",
-        "boolean",
-        "date",
-        "datetime",
-        "url",
-        "email",
-        "phone",
-        "enum",
-        "multi_enum",
-        "reference",
-        "image",
-        "file",
-        "color",
-        "size",
-        "weight",
-        "dimension",
-        "country",
-        "currency",
-        "json",
-      ],
     },
   },
 } as const;

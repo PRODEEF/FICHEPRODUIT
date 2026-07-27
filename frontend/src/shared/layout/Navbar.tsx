@@ -136,14 +136,6 @@ export function Navbar({
                 Mon catalogue
               </NavLink>
               <NavLink
-                to="/product-sheet"
-                className={({ isActive }) =>
-                  cn(drawerItemClass, isActive && 'bg-purple-50 text-black')
-                }
-              >
-                Ma fiche produit
-              </NavLink>
-              <NavLink
                 to="/store"
                 className={({ isActive }) =>
                   cn(drawerItemClass, isActive && 'bg-purple-50 text-black')

@@ -2,11 +2,11 @@ import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 
 import type { CatalogProduct } from "../../../domain/catalog/types/catalog.types";
-import type { ProductTemplateField } from "../../../domain/product-template/types/product-template.types";
+import type { ExportField } from "../types/export-field.types";
 import type { MappedField } from "../types/export.types";
 
 /**
- * Complète les champs template non mappables localement via l’API OpenAI (chat completions).
+ * Complète les champs d’export non mappables localement via l’API OpenAI (chat completions).
  * En cas d’échec réseau ou de parse JSON, renvoie des valeurs vides avec `source: 'ai'`.
  */
 @Injectable()
@@ -20,7 +20,7 @@ export class AiContentService {
    */
   async generateFields(
     product: CatalogProduct,
-    unresolvedFields: ProductTemplateField[],
+    unresolvedFields: ExportField[],
   ): Promise<MappedField[]> {
     if (unresolvedFields.length === 0) return [];
 
@@ -39,7 +39,7 @@ export class AiContentService {
     }
   }
 
-  private buildPrompt(product: CatalogProduct, fields: ProductTemplateField[]): string {
+  private buildPrompt(product: CatalogProduct, fields: ExportField[]): string {
     const fieldList = fields
       .map((f) => `- "${f.name}" (type: ${f.type}${f.required ? ", requis" : ""})`)
       .join("\n");
@@ -90,7 +90,7 @@ Règles :
     return data.choices[0]?.message?.content ?? "";
   }
 
-  private parseAiResponse(raw: string, fields: ProductTemplateField[]): MappedField[] {
+  private parseAiResponse(raw: string, fields: ExportField[]): MappedField[] {
     try {
       const clean = raw
         .trim()
