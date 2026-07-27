@@ -48,7 +48,9 @@ export class ExportController {
     description: "Corps JSON invalide (UUIDs, tableau productIds non vide)",
   })
   @ApiUnauthorizedResponse({ description: "JWT manquant ou invalide" })
-  @ApiNotFoundResponse({ description: "Boutique inaccessible ou aucun produit pour les IDs donnés" })
+  @ApiNotFoundResponse({
+    description: "Boutique inaccessible ou aucun produit pour les IDs donnés",
+  })
   @ApiResponse({
     status: 402,
     description: `Crédits insuffisants — code métier \`${INSUFFICIENT_CREDITS_ERROR}\``,
