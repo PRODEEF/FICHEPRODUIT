@@ -41,15 +41,13 @@ describe("isAllowedCorsOrigin", () => {
   });
 
   it("refuse une origine preview en mode strict", () => {
-    expect(
-      isAllowedCorsOrigin("https://front-abc.vercel.app", allowed, true),
-    ).toBe(false);
+    expect(isAllowedCorsOrigin("https://front-abc.vercel.app", allowed, true)).toBe(false);
   });
 
   it("autorise *.vercel.app hors mode strict", () => {
-    expect(
-      isAllowedCorsOrigin("https://ficheproduit-pzekwi22e.vercel.app", allowed, false),
-    ).toBe(true);
+    expect(isAllowedCorsOrigin("https://ficheproduit-pzekwi22e.vercel.app", allowed, false)).toBe(
+      true,
+    );
   });
 
   it("autorise localhost hors mode strict", () => {

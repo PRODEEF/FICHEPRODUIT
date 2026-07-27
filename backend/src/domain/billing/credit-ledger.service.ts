@@ -1,9 +1,6 @@
 import { randomUUID } from "node:crypto";
 
-import {
-  Inject,
-  Injectable,
-} from "@nestjs/common";
+import { Inject, Injectable } from "@nestjs/common";
 
 import { InsufficientCreditsDebitError } from "./exceptions/insufficient-credits-debit.error";
 import { InsufficientCreditsException } from "./exceptions/insufficient-credits.exception";

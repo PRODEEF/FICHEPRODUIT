@@ -116,8 +116,7 @@ const UNIVERSE_META: Record<ShopSectorLabel, Pick<Universe, 'icon' | 'color' | '
   },
 };
 
-export const universes: Universe[] = SHOP_SECTOR_LABELS.flatMap((label) => {
-  const meta = UNIVERSE_META[label];
-  if (!meta) return [];
-  return [{ label, ...meta }];
-});
+export const universes: Universe[] = SHOP_SECTOR_LABELS.map((label) => ({
+  label,
+  ...UNIVERSE_META[label],
+}));

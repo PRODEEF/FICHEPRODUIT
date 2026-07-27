@@ -3,7 +3,7 @@ import { ConfigService } from "@nestjs/config";
 
 import { AiContentService } from "./ai-content.service";
 import type { CatalogProduct } from "../../../domain/catalog/types/catalog.types";
-import type { ProductTemplateField } from "../../../domain/product-template/types/product-template.types";
+import type { ExportField } from "../types/export-field.types";
 
 const product = (): CatalogProduct => ({
   id: "550e8400-e29b-41d4-a716-446655440001",
@@ -21,7 +21,7 @@ const product = (): CatalogProduct => ({
   attributes: {},
 });
 
-const field = (name: string): ProductTemplateField => ({
+const field = (name: string): ExportField => ({
   name,
   type: "text",
   required: true,
@@ -69,15 +69,15 @@ describe("AiContentService", () => {
     } as Response);
 
     const result = await service.generateFields(product(), [field("Accroche")]);
-    expect(result).toEqual([{ templateFieldName: "Accroche", value: "Hello", source: "ai" }]);
+    expect(result).toEqual([{ fieldName: "Accroche", value: "Hello", source: "ai" }]);
   });
 
   it("retourne des valeurs vides si l’API échoue", async () => {
     fetchSpy.mockResolvedValue({ ok: false, status: 500 } as Response);
     const result = await service.generateFields(product(), [field("A"), field("B")]);
     expect(result).toEqual([
-      { templateFieldName: "A", value: "", source: "ai" },
-      { templateFieldName: "B", value: "", source: "ai" },
+      { fieldName: "A", value: "", source: "ai" },
+      { fieldName: "B", value: "", source: "ai" },
     ]);
   });
 });

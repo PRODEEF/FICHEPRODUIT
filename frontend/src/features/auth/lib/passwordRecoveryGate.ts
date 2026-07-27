@@ -7,11 +7,11 @@ const DEFAULT_TIMEOUT_MS = 6_000;
 const POLL_INTERVAL_MS = 300;
 
 function getBrowserSessionStorage(): Storage | null {
-  if (typeof window === 'undefined') return null;
+  if (typeof globalThis.window === 'undefined') return null;
   try {
-    const { sessionStorage } = window;
-    if (sessionStorage === undefined || sessionStorage === null) return null;
-    return sessionStorage;
+    const storage: Storage | null | undefined = globalThis.window.sessionStorage;
+    // Vitest (node) : `window` peut exister sans `sessionStorage`
+    return storage;
   } catch {
     return null;
   }
@@ -42,14 +42,14 @@ export function isPasswordRecoveryUrl(): boolean {
 /** Mémorise l’intention recovery avant que Supabase ne consomme le hash (import tôt dans main/App). */
 export function capturePasswordRecoveryIntent(): void {
   const storage = getBrowserSessionStorage();
-  if (storage === null) return;
+  if (!storage) return;
   if (!isPasswordRecoveryUrl()) return;
   storage.setItem(RECOVERY_INTENT_KEY, String(Date.now()));
 }
 
 export function hasPasswordRecoveryIntent(): boolean {
   const storage = getBrowserSessionStorage();
-  if (storage === null) return false;
+  if (!storage) return false;
   const raw = storage.getItem(RECOVERY_INTENT_KEY);
   if (raw === null) return false;
   const ts = Number(raw);
@@ -59,13 +59,13 @@ export function hasPasswordRecoveryIntent(): boolean {
 
 export function clearPasswordRecoveryIntent(): void {
   const storage = getBrowserSessionStorage();
-  if (storage === null) return;
+  if (!storage) return;
   storage.removeItem(RECOVERY_INTENT_KEY);
 }
 
 function markPasswordRecoveryIntent(): void {
   const storage = getBrowserSessionStorage();
-  if (storage === null) return;
+  if (!storage) return;
   storage.setItem(RECOVERY_INTENT_KEY, String(Date.now()));
 }
 
@@ -153,7 +153,9 @@ export async function establishPasswordRecoverySession(
     if (error) return null;
   }
 
-  const { data: { session } } = await supabase.auth.getSession();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
   return session;
 }
 

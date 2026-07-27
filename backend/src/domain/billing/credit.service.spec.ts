@@ -187,9 +187,8 @@ describe("CreditService", () => {
   });
 
   it("lève InsufficientCreditsException sans appeler le RPC si le solde est clairement insuffisant", async () => {
-    const { InsufficientCreditsException } = await import(
-      "./exceptions/insufficient-credits.exception"
-    );
+    const { InsufficientCreditsException } =
+      await import("./exceptions/insufficient-credits.exception");
 
     creditLotRepoMock.findActiveLotsByUser.mockResolvedValue([
       { ...signupLot, amountRemaining: 1 },
@@ -213,10 +212,7 @@ describe("CreditService", () => {
   it("rembourse une réservation export", async () => {
     await service.refundExportReservation("user-1", "attempt-abc");
 
-    expect(creditLotRepoMock.refundExportDebitAdmin).toHaveBeenCalledWith(
-      "user-1",
-      "attempt-abc",
-    );
+    expect(creditLotRepoMock.refundExportDebitAdmin).toHaveBeenCalledWith("user-1", "attempt-abc");
   });
 
   it("grantPackPurchase est idempotent via stripe_checkout_session_id", async () => {

@@ -35,9 +35,9 @@ describe("CreditLotRepository", () => {
       error: { code: "P0001", message: "INSUFFICIENT_CREDITS", details: "1" },
     });
 
-    await expect(
-      repository.debitCreditsFifoAdmin("user-1", 2, {}),
-    ).rejects.toBeInstanceOf(InsufficientCreditsDebitError);
+    await expect(repository.debitCreditsFifoAdmin("user-1", 2, {})).rejects.toBeInstanceOf(
+      InsufficientCreditsDebitError,
+    );
   });
 
   it("propage les autres erreurs RPC en InternalServerErrorException", async () => {

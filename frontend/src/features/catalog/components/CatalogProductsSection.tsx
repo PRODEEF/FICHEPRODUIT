@@ -112,13 +112,6 @@ export function CatalogProductsSection({
         open={section.exportConfirmOpen}
         onClose={section.closeExportConfirmation}
         selectedCount={section.selectedInViewCount}
-        requiredCredits={section.exportCreditsEstimate.requiredCredits}
-        availableCredits={section.exportCreditsEstimate.availableCredits}
-        hasEnoughCredits={section.exportCreditsEstimate.hasEnoughCredits}
-        hasUnlimitedExports={section.billingSummary?.hasUnlimitedExports ?? false}
-        hasFreeLowPriceExports={section.hasFreeLowPriceExports}
-        freeExportCount={section.freeExportCount}
-        freeLowPriceExportsExpiresAt={section.freeLowPriceExportsExpiresAt}
         onConfirm={section.confirmExport}
       />
     </section>

@@ -20,7 +20,7 @@ vi.mock('@shared/hooks/useAuth', () => ({
 }));
 
 vi.mock('../../billing/lib/checkout', () => ({
-  startPlanCheckout: (...args: unknown[]) => startPlanCheckoutMock(...args),
+  startPlanCheckout: (...args: unknown[]) => startPlanCheckoutMock(...args) as unknown,
 }));
 
 describe('usePlanCheckout', () => {

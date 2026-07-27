@@ -31,10 +31,6 @@ const Catalog = lazy(async () => {
   const m = await import('../features/catalog/pages/Catalog');
   return { default: m.Catalog };
 });
-const ProductSheet = lazy(async () => {
-  const m = await import('../features/product-template/pages/ProductSheet');
-  return { default: m.ProductSheet };
-});
 const Profile = lazy(async () => {
   const m = await import('../features/auth/pages/Profile');
   return { default: m.Profile };
@@ -43,10 +39,11 @@ const MyStore = lazy(async () => {
   const m = await import('../features/store/pages/Store');
   return { default: m.MyStore };
 });
-const Pricing = lazy(async () => {
-  const m = await import('../features/marketing/pages/Pricing');
-  return { default: m.Pricing };
-});
+// Pricing temporairement désactivé
+// const Pricing = lazy(async () => {
+//   const m = await import('../features/marketing/pages/Pricing');
+//   return { default: m.Pricing };
+// });
 const DemoRequest = lazy(async () => {
   const m = await import('../features/marketing/pages/DemoRequest');
   return { default: m.DemoRequest };
@@ -73,7 +70,8 @@ export const appRouteElements = (
     <Route path="/signup" element={<Signup />} />
     <Route path="/forgot-password" element={<ForgotPassword />} />
     <Route path="/auth/reset-password" element={<ResetPassword />} />
-    <Route path="/pricing" element={<Pricing />} />
+    {/* Pricing temporairement désactivé */}
+    {/* <Route path="/pricing" element={<Pricing />} /> */}
     <Route path="/billing/success" element={<BillingSuccess />} />
     <Route path="/billing/cancel" element={<BillingCancel />} />
     <Route path="/demo" element={<DemoRequest />} />
@@ -81,7 +79,6 @@ export const appRouteElements = (
 
     <Route element={<RequireAuthRoute />}>
       <Route path="/catalog" element={<Catalog />} />
-      <Route path="/product-sheet" element={<ProductSheet />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="/store" element={<MyStore />} />
     </Route>

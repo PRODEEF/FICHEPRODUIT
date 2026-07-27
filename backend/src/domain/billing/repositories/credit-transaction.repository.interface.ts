@@ -9,7 +9,11 @@ export type CreateCreditTransaction = {
 };
 
 export interface ICreditTransactionRepository {
-  findRecentByUser(userId: string, accessToken: string, limit?: number): Promise<CreditTransaction[]>;
+  findRecentByUser(
+    userId: string,
+    accessToken: string,
+    limit?: number,
+  ): Promise<CreditTransaction[]>;
   createTransaction(data: CreateCreditTransaction): Promise<CreditTransaction>;
 }
 

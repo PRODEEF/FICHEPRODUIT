@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { mockCreateCheckoutSession } = vi.hoisted(() => ({
@@ -25,10 +26,13 @@ import { NestHttpError } from '@api/nestHttpClient';
 import { startPlanCheckout } from './checkout';
 
 describe('startPlanCheckout', () => {
+  let assignMock: ReturnType<typeof vi.fn>;
+
   beforeEach(() => {
     vi.clearAllMocks();
+    assignMock = vi.fn();
     Object.defineProperty(window, 'location', {
-      value: { assign: vi.fn() },
+      value: { assign: assignMock },
       writable: true,
     });
   });
@@ -39,7 +43,7 @@ describe('startPlanCheckout', () => {
     const result = await startPlanCheckout('starter', 'Glisse');
 
     expect(result).toEqual({ ok: true });
-    expect(window.location.assign).toHaveBeenCalledWith('https://checkout.stripe.test');
+    expect(assignMock).toHaveBeenCalledWith('https://checkout.stripe.test');
   });
 
   it('retourne needsAuth sur HTTP 401', async () => {

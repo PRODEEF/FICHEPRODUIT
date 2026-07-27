@@ -134,9 +134,9 @@ describe("ShopService", () => {
     const shopWithSector = { ...sampleShop, sector: "Glisse" };
     repo.findAllByOwner.mockResolvedValue([shopWithSector]);
 
-    await expect(
-      service.updateMyShop("user-1", { sector: "Vélo" }, "tok"),
-    ).rejects.toBeInstanceOf(BadRequestException);
+    await expect(service.updateMyShop("user-1", { sector: "Vélo" }, "tok")).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
     expect(repo.update).not.toHaveBeenCalled();
   });
 
@@ -144,9 +144,9 @@ describe("ShopService", () => {
     const shopWithSector = { ...sampleShop, sector: "Glisse" };
     repo.findAllByOwner.mockResolvedValue([shopWithSector]);
 
-    await expect(
-      service.updateMyShop("user-1", { sector: null }, "tok"),
-    ).rejects.toBeInstanceOf(BadRequestException);
+    await expect(service.updateMyShop("user-1", { sector: null }, "tok")).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
     expect(repo.update).not.toHaveBeenCalled();
   });
 });

@@ -84,10 +84,7 @@ export class UserEntitlementRepository implements IUserEntitlementRepository {
       .select("id");
 
     if (error) {
-      this.logger.error(
-        `revokeActiveEntitlementIfExpiresAt(${userId}, ${type}) failed`,
-        error,
-      );
+      this.logger.error(`revokeActiveEntitlementIfExpiresAt(${userId}, ${type}) failed`, error);
       throw new InternalServerErrorException("Échec de la révocation de l'avantage");
     }
 

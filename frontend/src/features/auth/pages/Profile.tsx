@@ -1,7 +1,8 @@
 import { useAuth } from '@shared/hooks/useAuth';
 import { Card, InputField } from '@shared/ui';
 
-import { BillingAccountSection } from '../../billing/components/BillingAccountSection';
+// Crédits / facturation temporairement désactivés
+// import { BillingAccountSection } from '../../billing/components/BillingAccountSection';
 import { ChangePasswordForm } from '../components/ChangePasswordForm';
 import { ProfileForm } from '../components/ProfileForm';
 
@@ -34,7 +35,8 @@ export function Profile() {
           <ChangePasswordForm />
         </Card>
 
-        <BillingAccountSection />
+        {/* Crédits / facturation temporairement désactivés */}
+        {/* <BillingAccountSection /> */}
       </div>
     </div>
   );

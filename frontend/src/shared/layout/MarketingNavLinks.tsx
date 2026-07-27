@@ -3,9 +3,10 @@ import { Button } from '@shared/ui';
 export function MarketingNavLinks() {
   return (
     <nav className="flex items-center gap-3" aria-label="Pages marketing">
-      <Button href="/pricing" variant="neutral-outline" size="sm">
+      {/* Pricing temporairement désactivé */}
+      {/* <Button href="/pricing" variant="neutral-outline" size="sm">
         Tarifs
-      </Button>
+      </Button> */}
       <Button href="/demo" variant="neutral-outline" size="sm">
         Demander une démo
       </Button>

@@ -21,7 +21,8 @@ export function AboutQuickLinksSection() {
         Envie d&apos;aller plus loin ?
       </motion.h2>
       <motion.p variants={titleReveal} className="mb-8 text-text-secondary">
-        Découvrez ficheproduct en action ou commencez avec 3 crédits offerts.
+        Découvrez ficheproduct en action ou commencez gratuitement.
+        {/* Découvrez ficheproduct en action ou commencez avec 3 crédits offerts. */}
       </motion.p>
       <motion.div
         variants={titleReveal}

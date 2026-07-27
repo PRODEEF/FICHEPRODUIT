@@ -46,13 +46,15 @@ export class CreditService {
   async getBillingSummary(user: AuthenticatedUser): Promise<BillingSummary> {
     await this.grantService.grantSignupCredits(user.id);
 
-    const [balance, billing, entitlements, recentPurchases, recentTransactions] = await Promise.all([
-      this.ledgerService.getBalance(user.id, user.accessToken),
-      this.userBillingRepo.findByUserId(user.id, user.accessToken),
-      this.entitlementRepo.findActiveByUser(user.id, user.accessToken),
-      this.ledgerService.getRecentLots(user.id, user.accessToken),
-      this.creditTransactionRepo.findRecentByUser(user.id, user.accessToken),
-    ]);
+    const [balance, billing, entitlements, recentPurchases, recentTransactions] = await Promise.all(
+      [
+        this.ledgerService.getBalance(user.id, user.accessToken),
+        this.userBillingRepo.findByUserId(user.id, user.accessToken),
+        this.entitlementRepo.findActiveByUser(user.id, user.accessToken),
+        this.ledgerService.getRecentLots(user.id, user.accessToken),
+        this.creditTransactionRepo.findRecentByUser(user.id, user.accessToken),
+      ],
+    );
 
     const hasActiveSubscription = billing?.subscriptionStatus === "active";
 
@@ -98,10 +100,7 @@ export class CreditService {
     return this.grantService.grantFreeLowPriceEntitlementIfApplicable(userId, planId, expiresAt);
   }
 
-  async revokeFreeLowPriceEntitlementIfExpiresAt(
-    userId: string,
-    expiresAt: string,
-  ): Promise<void> {
+  async revokeFreeLowPriceEntitlementIfExpiresAt(userId: string, expiresAt: string): Promise<void> {
     return this.grantService.revokeFreeLowPriceEntitlementIfExpiresAt(userId, expiresAt);
   }
 
@@ -113,11 +112,7 @@ export class CreditService {
     return this.grantService.grantSignupCredits(userId);
   }
 
-  async computeExportDebit(
-    userId: string,
-    accessToken: string,
-    products: ExportDebitProduct[],
-  ) {
+  async computeExportDebit(userId: string, accessToken: string, products: ExportDebitProduct[]) {
     return this.ledgerService.computeExportDebit(userId, accessToken, products);
   }
 

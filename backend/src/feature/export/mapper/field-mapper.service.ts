@@ -1,10 +1,10 @@
 import { Injectable } from "@nestjs/common";
 
 import type { CatalogProduct } from "../../../domain/catalog/types/catalog.types";
-import type { ProductTemplateField } from "../../../domain/product-template/types/product-template.types";
+import type { ExportField } from "../types/export-field.types";
 import type { MappedField } from "../types/export.types";
 
-/** Correspondance insensible à la casse entre libellés template et champs catalogue connus. */
+/** Correspondance insensible à la casse entre libellés d’export et champs catalogue connus. */
 const DIRECT_MAPPINGS: Record<string, (p: CatalogProduct) => string> = {
   name: (p) => p.name,
   nom: (p) => p.name,
@@ -29,7 +29,7 @@ const DIRECT_MAPPINGS: Record<string, (p: CatalogProduct) => string> = {
 };
 
 /**
- * Remplit les colonnes du template sans appeler l’IA lorsque la donnée est déjà présente
+ * Remplit les colonnes d’export sans appeler l’IA lorsque la donnée est déjà présente
  * sur le produit catalogue ou dans `attributes`.
  */
 @Injectable()
@@ -39,23 +39,23 @@ export class FieldMapperService {
    */
   mapDirectFields(
     product: CatalogProduct,
-    templateFields: ProductTemplateField[],
-  ): { mapped: MappedField[]; unresolved: ProductTemplateField[] } {
+    exportFields: ExportField[],
+  ): { mapped: MappedField[]; unresolved: ExportField[] } {
     const mapped: MappedField[] = [];
-    const unresolved: ProductTemplateField[] = [];
+    const unresolved: ExportField[] = [];
 
-    for (const field of templateFields) {
+    for (const field of exportFields) {
       const key = field.name.toLowerCase().trim();
 
       const directFn = DIRECT_MAPPINGS[key];
       if (directFn) {
-        mapped.push({ templateFieldName: field.name, value: directFn(product), source: "direct" });
+        mapped.push({ fieldName: field.name, value: directFn(product), source: "direct" });
         continue;
       }
 
       const attrValue = this.findInAttributes(product, key);
       if (attrValue !== null) {
-        mapped.push({ templateFieldName: field.name, value: attrValue, source: "direct" });
+        mapped.push({ fieldName: field.name, value: attrValue, source: "direct" });
         continue;
       }
 

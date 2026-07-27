@@ -16,15 +16,12 @@ export function AboutMissionSection() {
       initial="hidden"
       animate={inView ? 'visible' : 'hidden'}
     >
-      <motion.h2
-        variants={titleReveal}
-        className="mb-8 text-3xl font-extrabold text-text-primary"
-      >
+      <motion.h2 variants={titleReveal} className="mb-8 text-3xl font-extrabold text-text-primary">
         {ABOUT_MISSION.title}
       </motion.h2>
       <div className="space-y-5 text-base leading-relaxed text-text-secondary">
-        {ABOUT_MISSION.paragraphs.map((paragraph, index) => (
-          <motion.p key={index} variants={titleReveal} className="m-0">
+        {ABOUT_MISSION.paragraphs.map((paragraph) => (
+          <motion.p key={paragraph} variants={titleReveal} className="m-0">
             {paragraph}
           </motion.p>
         ))}

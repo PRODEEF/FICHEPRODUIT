@@ -10,24 +10,21 @@ export function mergePlansFromApi(
   apiPlans: PublicPricingPlan[],
   sector: ShopSectorLabel,
 ): ComputedPlan[] {
-  return apiPlans.flatMap((plan) => {
+  return apiPlans.map((plan) => {
     const ui = PRICING_PLAN_UI[plan.id];
-    if (!ui) return [];
-    return [
-      {
-        id: plan.id,
-        name: plan.name,
-        priceEur: plan.priceEur,
-        pricePerSheetEur: plan.pricePerSheetEur,
-        priceSuffix: plan.priceSuffix,
-        creditsLabel: plan.creditsLabel,
-        features: ui.features,
-        recommended: ui.recommended,
-        ctaLabel: ui.ctaLabel,
-        ctaPrimary: ui.ctaPrimary,
-        ctaMailto:
-          plan.id === 'business_custom' ? buildBusinessCustomContactMailto(sector) : null,
-      },
-    ];
+    return {
+      id: plan.id,
+      name: plan.name,
+      priceEur: plan.priceEur,
+      pricePerSheetEur: plan.pricePerSheetEur,
+      priceSuffix: plan.priceSuffix,
+      creditsLabel: plan.creditsLabel,
+      features: ui.features,
+      recommended: ui.recommended,
+      ctaLabel: ui.ctaLabel,
+      ctaPrimary: ui.ctaPrimary,
+      ctaMailto:
+        plan.id === 'business_custom' ? buildBusinessCustomContactMailto(sector) : null,
+    };
   });
 }

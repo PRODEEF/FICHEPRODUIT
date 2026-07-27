@@ -2,7 +2,8 @@ import { ChevronDown, TableOfContents } from 'lucide-react';
 import { NavLink } from 'react-router';
 import type { ReactNode } from 'react';
 
-import { CreditBalanceBadge } from '../../features/billing/components/CreditBalanceBadge';
+// Crédits temporairement désactivés
+// import { CreditBalanceBadge } from '../../features/billing/components/CreditBalanceBadge';
 import { cn } from '@shared/lib/cn';
 import {
   Badge,
@@ -83,7 +84,8 @@ export function Navbar({
           </div>
         ) : null}
         <div className="flex shrink-0 items-center gap-4" style={{ flexShrink: 0 }}>
-          {authed ? <CreditBalanceBadge /> : null}
+          {/* Crédits temporairement désactivés */}
+          {/* {authed ? <CreditBalanceBadge /> : null} */}
           {loading ? (
             <span
               className="max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap text-sm text-text-secondary"
@@ -97,15 +99,11 @@ export function Navbar({
                 className="flex max-w-[220px] items-center gap-1 rounded-lg border-0 bg-transparent px-2 py-1.5 text-sm text-text-secondary transition-colors hover:bg-purple-50 hover:text-purple-700 aria-expanded:bg-purple-50 aria-expanded:text-purple-700"
                 title={userEmail ?? undefined}
               >
-                <span className="overflow-hidden text-ellipsis whitespace-nowrap">
-                  {navTitle}
-                </span>
+                <span className="overflow-hidden text-ellipsis whitespace-nowrap">{navTitle}</span>
                 <ChevronDown aria-hidden className="size-4 shrink-0" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => void onLogout()}>
-                  Se déconnecter
-                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => void onLogout()}>Se déconnecter</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
@@ -136,14 +134,6 @@ export function Navbar({
                 }
               >
                 Mon catalogue
-              </NavLink>
-              <NavLink
-                to="/product-sheet"
-                className={({ isActive }) =>
-                  cn(drawerItemClass, isActive && 'bg-purple-50 text-black')
-                }
-              >
-                Ma fiche produit
               </NavLink>
               <NavLink
                 to="/store"

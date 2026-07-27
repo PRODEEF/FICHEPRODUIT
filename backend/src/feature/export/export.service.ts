@@ -2,23 +2,23 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 
 import { CatalogService } from "../../domain/catalog/catalog.service";
 import { CreditService } from "../../domain/billing/credit.service";
-import { ProductTemplateService } from "../../domain/product-template/product-template.service";
+import { ShopService } from "../../domain/shop/shop.service";
 import { FieldMapperService } from "./mapper/field-mapper.service";
 import { AiContentService } from "./mapper/ai-content.service";
 import { CsvBuilderService } from "./csv/csv-builder.service";
 import type { ExportRequest, ExportResult, MappedProduct } from "./types/export.types";
 import type { AuthenticatedUser } from "../../core/auth/types/jwt-payload.types";
 import type { CatalogProduct } from "../../domain/catalog/types/catalog.types";
-import type { ProductTemplateField } from "../../domain/product-template/types/product-template.types";
+import { DEFAULT_EXPORT_FIELDS, type ExportField } from "./types/export-field.types";
 
 /**
- * Orchestre chargement template + produits, mappage direct / IA et rendu CSV.
+ * Orchestre chargement produits, mappage direct / IA et rendu CSV.
  */
 @Injectable()
 export class ExportService {
   constructor(
     private readonly catalogService: CatalogService,
-    private readonly templateService: ProductTemplateService,
+    private readonly shopService: ShopService,
     private readonly creditService: CreditService,
     private readonly fieldMapper: FieldMapperService,
     private readonly aiContent: AiContentService,
@@ -26,18 +26,15 @@ export class ExportService {
   ) {}
 
   /**
-   * Génère un export CSV pour les produits demandés selon le template du shop.
+   * Génère un export CSV pour les produits demandés avec les colonnes catalogue standards.
    *
-   * @throws NotFoundException Si le template est introuvable ou non accessible, ou si aucun produit
-   *   ne correspond aux IDs (pas de CSV partiel dans ces cas).
+   * @throws NotFoundException Si la boutique n’est pas accessible, ou si aucun produit
+   *   ne correspond aux IDs.
    */
   async export(req: ExportRequest, user: AuthenticatedUser): Promise<ExportResult> {
-    const template = await this.templateService.getTemplateForShop(
-      req.templateId,
-      req.shopId,
-      user,
-    );
-    if (!template) throw new NotFoundException("Gabarit introuvable");
+    await this.shopService.getForUser(req.shopId, user);
+
+    const fields = DEFAULT_EXPORT_FIELDS;
 
     const products = await this.catalogService.findByIds(req.productIds);
     if (products.length === 0) throw new NotFoundException("Aucun produit trouvé");
@@ -58,7 +55,7 @@ export class ExportService {
     let mappedProducts: MappedProduct[];
     try {
       mappedProducts = await Promise.all(
-        products.map((product) => this.mapProduct(product, template.fields)),
+        products.map((product) => this.mapProduct(product, fields)),
       );
     } catch (err) {
       if (exportAttemptId) {
@@ -67,7 +64,7 @@ export class ExportService {
       throw err;
     }
 
-    const csv = this.csvBuilder.build(mappedProducts, template.fields);
+    const csv = this.csvBuilder.build(mappedProducts, fields);
     const date = new Date().toISOString().split("T")[0];
     const sector = products[0]?.sector ?? "export";
 
@@ -78,10 +75,7 @@ export class ExportService {
     };
   }
 
-  private async mapProduct(
-    product: CatalogProduct,
-    fields: ProductTemplateField[],
-  ): Promise<MappedProduct> {
+  private async mapProduct(product: CatalogProduct, fields: ExportField[]): Promise<MappedProduct> {
     const { mapped, unresolved } = this.fieldMapper.mapDirectFields(product, fields);
     const aiFields = await this.aiContent.generateFields(product, unresolved);
     return {
