@@ -9,10 +9,8 @@ const POLL_INTERVAL_MS = 300;
 function getBrowserSessionStorage(): Storage | null {
   if (typeof window === 'undefined') return null;
   try {
-    const storage = window.sessionStorage;
     // Vitest (node) peut exposer `window` sans `sessionStorage`
-    if (storage == null) return null;
-    return storage;
+    return window.sessionStorage;
   } catch {
     return null;
   }
@@ -154,7 +152,9 @@ export async function establishPasswordRecoverySession(
     if (error) return null;
   }
 
-  const { data: { session } } = await supabase.auth.getSession();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
   return session;
 }
 
