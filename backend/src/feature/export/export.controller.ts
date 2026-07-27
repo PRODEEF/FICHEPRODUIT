@@ -20,7 +20,7 @@ import { ExportService } from "./export.service";
 import { ExportProductsDto } from "./dto/export-products.dto";
 
 /**
- * Export catalogue → CSV (colonnes alignées sur un template boutique).
+ * Export catalogue → CSV (colonnes catalogue standards).
  */
 @ApiTags("Export")
 @ApiBearerAuth("bearerAuth")
@@ -34,7 +34,7 @@ export class ExportController {
   @ApiOperation({
     summary: "Exporter des produits en CSV",
     description:
-      "Charge le template pour le shop indiqué (JWT), mappe les champs connus du catalogue, " +
+      "Vérifie l’accès à la boutique (`shopId`), mappe les champs catalogue standards, " +
       "complète le reste via l’IA si nécessaire, puis renvoie un fichier CSV en pièce jointe.",
   })
   @ApiBody({ type: ExportProductsDto })
@@ -48,7 +48,9 @@ export class ExportController {
     description: "Corps JSON invalide (UUIDs, tableau productIds non vide)",
   })
   @ApiUnauthorizedResponse({ description: "JWT manquant ou invalide" })
-  @ApiNotFoundResponse({ description: "Template introuvable ou aucun produit pour les IDs donnés" })
+  @ApiNotFoundResponse({
+    description: "Boutique inaccessible ou aucun produit pour les IDs donnés",
+  })
   @ApiResponse({
     status: 402,
     description: `Crédits insuffisants — code métier \`${INSUFFICIENT_CREDITS_ERROR}\``,

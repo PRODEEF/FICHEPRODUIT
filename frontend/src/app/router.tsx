@@ -31,10 +31,6 @@ const Catalog = lazy(async () => {
   const m = await import('../features/catalog/pages/Catalog');
   return { default: m.Catalog };
 });
-const ProductSheet = lazy(async () => {
-  const m = await import('../features/product-template/pages/ProductSheet');
-  return { default: m.ProductSheet };
-});
 const Profile = lazy(async () => {
   const m = await import('../features/auth/pages/Profile');
   return { default: m.Profile };
@@ -83,7 +79,6 @@ export const appRouteElements = (
 
     <Route element={<RequireAuthRoute />}>
       <Route path="/catalog" element={<Catalog />} />
-      <Route path="/product-sheet" element={<ProductSheet />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="/store" element={<MyStore />} />
     </Route>
