@@ -111,7 +111,7 @@ function buildInsufficientCreditsDetails(
 /**
  * Envoie une requête d'export et déclenche le téléchargement du CSV dans le navigateur.
  *
- * @param body  - Paramètres de l'export (productIds, shopId, format).
+ * @param body  - Paramètres de l'export (productIds, shopId).
  * @param filename - Nom de fichier suggéré (sans extension). Défaut : "export".
  *
  * @throws {ExportInsufficientCreditsError} HTTP 402 — crédits insuffisants.

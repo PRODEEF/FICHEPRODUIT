@@ -23,8 +23,8 @@ describe("CsvBuilderService", () => {
       {
         productId: "p1",
         fields: [
-          { templateFieldName: "Nom", value: "Chaise", source: "direct" },
-          { templateFieldName: "Prix", value: "49", source: "direct" },
+          { fieldName: "Nom", value: "Chaise", source: "direct" },
+          { fieldName: "Prix", value: "49", source: "direct" },
         ],
       },
     ];
@@ -36,7 +36,7 @@ describe("CsvBuilderService", () => {
     const products: MappedProduct[] = [
       {
         productId: "p1",
-        fields: [{ templateFieldName: "A", value: 'dites "oui"', source: "direct" }],
+        fields: [{ fieldName: "A", value: 'dites "oui"', source: "direct" }],
       },
     ];
     expect(service.build(products, exportFields)).toBe('A\n"dites ""oui"""');
@@ -45,7 +45,7 @@ describe("CsvBuilderService", () => {
   it("quotes les cellules contenant une virgule ou un saut de ligne", () => {
     const exportFields = [field("Col")];
     const products: MappedProduct[] = [
-      { productId: "p1", fields: [{ templateFieldName: "Col", value: "a,b", source: "direct" }] },
+      { productId: "p1", fields: [{ fieldName: "Col", value: "a,b", source: "direct" }] },
     ];
     expect(service.build(products, exportFields)).toBe('Col\n"a,b"');
   });
@@ -53,7 +53,7 @@ describe("CsvBuilderService", () => {
   it("utilise une chaîne vide pour une colonne sans valeur mappée", () => {
     const exportFields = [field("X"), field("Y")];
     const products: MappedProduct[] = [
-      { productId: "p1", fields: [{ templateFieldName: "X", value: "un", source: "direct" }] },
+      { productId: "p1", fields: [{ fieldName: "X", value: "un", source: "direct" }] },
     ];
     expect(service.build(products, exportFields)).toBe("X,Y\nun,");
   });

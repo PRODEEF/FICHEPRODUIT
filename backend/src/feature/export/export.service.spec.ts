@@ -4,6 +4,7 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { ExportService } from "./export.service";
 import { CatalogService } from "../../domain/catalog/catalog.service";
 import { CreditService } from "../../domain/billing/credit.service";
+import { ShopService } from "../../domain/shop/shop.service";
 import { InsufficientCreditsException } from "../../domain/billing/exceptions/insufficient-credits.exception";
 import { FieldMapperService } from "./mapper/field-mapper.service";
 import { AiContentService } from "./mapper/ai-content.service";
@@ -39,6 +40,7 @@ const catalogProduct = (): CatalogProduct => ({
 describe("ExportService", () => {
   let service: ExportService;
   const mockCatalog = { findByIds: jest.fn() };
+  const mockShop = { getForUser: jest.fn() };
   const mockAi = { generateFields: jest.fn() };
   const mockCredit = {
     reserveCreditsForExport: jest.fn(),
@@ -47,12 +49,14 @@ describe("ExportService", () => {
 
   beforeEach(async () => {
     jest.clearAllMocks();
+    mockShop.getForUser.mockResolvedValue({ id: shopId });
     const moduleRef: TestingModule = await Test.createTestingModule({
       providers: [
         ExportService,
         FieldMapperService,
         CsvBuilderService,
         { provide: CatalogService, useValue: mockCatalog },
+        { provide: ShopService, useValue: mockShop },
         { provide: CreditService, useValue: mockCredit },
         { provide: AiContentService, useValue: mockAi },
       ],
@@ -61,11 +65,20 @@ describe("ExportService", () => {
     service = moduleRef.get(ExportService);
   });
 
+  it("lance NotFoundException si la boutique n’est pas accessible", async () => {
+    mockShop.getForUser.mockRejectedValue(new NotFoundException("Boutique introuvable"));
+    await expect(
+      service.export({ productIds: [catalogProduct().id], shopId }, user),
+    ).rejects.toThrow(NotFoundException);
+    expect(mockCatalog.findByIds).not.toHaveBeenCalled();
+  });
+
   it("lance NotFoundException si aucun produit n’est retourné", async () => {
     mockCatalog.findByIds.mockResolvedValue([]);
     await expect(
       service.export({ productIds: [catalogProduct().id], shopId }, user),
     ).rejects.toThrow(NotFoundException);
+    expect(mockShop.getForUser).toHaveBeenCalledWith(shopId, user);
   });
 
   it("produit un CSV avec les colonnes par défaut, un nom de fichier sector+date et compte les lignes", async () => {
@@ -82,6 +95,7 @@ describe("ExportService", () => {
     expect(result.csv).toContain("59");
     expect(result.rowCount).toBe(1);
     expect(result.filename).toMatch(/^export-maison-\d{4}-\d{2}-\d{2}\.csv$/);
+    expect(mockShop.getForUser).toHaveBeenCalledWith(shopId, user);
     expect(mockCatalog.findByIds).toHaveBeenCalledWith([catalogProduct().id]);
     expect(mockCredit.reserveCreditsForExport).toHaveBeenCalled();
   });

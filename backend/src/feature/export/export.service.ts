@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 
 import { CatalogService } from "../../domain/catalog/catalog.service";
 import { CreditService } from "../../domain/billing/credit.service";
+import { ShopService } from "../../domain/shop/shop.service";
 import { FieldMapperService } from "./mapper/field-mapper.service";
 import { AiContentService } from "./mapper/ai-content.service";
 import { CsvBuilderService } from "./csv/csv-builder.service";
@@ -17,6 +18,7 @@ import { DEFAULT_EXPORT_FIELDS, type ExportField } from "./types/export-field.ty
 export class ExportService {
   constructor(
     private readonly catalogService: CatalogService,
+    private readonly shopService: ShopService,
     private readonly creditService: CreditService,
     private readonly fieldMapper: FieldMapperService,
     private readonly aiContent: AiContentService,
@@ -26,9 +28,12 @@ export class ExportService {
   /**
    * Génère un export CSV pour les produits demandés avec les colonnes catalogue standards.
    *
-   * @throws NotFoundException Si aucun produit ne correspond aux IDs.
+   * @throws NotFoundException Si la boutique n’est pas accessible, ou si aucun produit
+   *   ne correspond aux IDs.
    */
   async export(req: ExportRequest, user: AuthenticatedUser): Promise<ExportResult> {
+    await this.shopService.getForUser(req.shopId, user);
+
     const fields = DEFAULT_EXPORT_FIELDS;
 
     const products = await this.catalogService.findByIds(req.productIds);

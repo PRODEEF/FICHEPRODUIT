@@ -32,7 +32,7 @@ export class AiContentService {
     } catch (err) {
       this.logger.warn(`AI generation failed for product ${product.id}`, err);
       return unresolvedFields.map((f) => ({
-        templateFieldName: f.name,
+        fieldName: f.name,
         value: "",
         source: "ai" as const,
       }));
@@ -98,13 +98,13 @@ Règles :
         .trim();
       const parsed = JSON.parse(clean) as Record<string, string>;
       return fields.map((f) => ({
-        templateFieldName: f.name,
+        fieldName: f.name,
         value: String(parsed[f.name] ?? ""),
         source: "ai" as const,
       }));
     } catch {
       return fields.map((f) => ({
-        templateFieldName: f.name,
+        fieldName: f.name,
         value: "",
         source: "ai" as const,
       }));

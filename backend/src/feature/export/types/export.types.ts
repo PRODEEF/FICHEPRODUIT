@@ -10,7 +10,7 @@ export type ExportRequest = {
  * Valeur résolue pour une colonne d’export, avec traçabilité de la source (mappage direct vs IA).
  */
 export type MappedField = {
-  templateFieldName: string;
+  fieldName: string;
   value: string;
   source: "direct" | "ai";
 };

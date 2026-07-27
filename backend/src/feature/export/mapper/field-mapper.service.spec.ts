@@ -35,14 +35,14 @@ describe("FieldMapperService", () => {
   it("mappe les synonymes canoniques (ex. prix → price)", () => {
     const product = sampleProduct();
     const { mapped, unresolved } = service.mapDirectFields(product, [exportField("prix")]);
-    expect(mapped).toEqual([{ templateFieldName: "prix", value: "129.9", source: "direct" }]);
+    expect(mapped).toEqual([{ fieldName: "prix", value: "129.9", source: "direct" }]);
     expect(unresolved).toEqual([]);
   });
 
   it("résout une colonne depuis attributes avec clé insensible à la casse / espaces", () => {
     const product = sampleProduct();
     const { mapped, unresolved } = service.mapDirectFields(product, [exportField("Poids")]);
-    expect(mapped).toEqual([{ templateFieldName: "Poids", value: "1kg", source: "direct" }]);
+    expect(mapped).toEqual([{ fieldName: "Poids", value: "1kg", source: "direct" }]);
     expect(unresolved).toEqual([]);
   });
 

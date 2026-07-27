@@ -22,7 +22,7 @@ export class CsvBuilderService {
 
   private buildRow(product: MappedProduct, headers: string[]): string[] {
     return headers.map((header) => {
-      const field = product.fields.find((f) => f.templateFieldName === header);
+      const field = product.fields.find((f) => f.fieldName === header);
       return field?.value ?? "";
     });
   }

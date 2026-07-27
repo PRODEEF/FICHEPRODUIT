@@ -119,10 +119,8 @@ export interface CatalogProduct {
 export interface ExportBody {
   /** IDs des produits catalogue à exporter. */
   productIds: string[];
-  /** UUID de la boutique (contrôle d’accès / métadonnées). */
+  /** UUID de la boutique (contrôle d’accès). */
   shopId: string;
-  /** Format cible. */
-  format: 'prestashop' | 'shopify';
 }
 
 // ---------------------------------------------------------------------------

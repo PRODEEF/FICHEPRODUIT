@@ -8,12 +8,13 @@ import { AiContentService } from "./mapper/ai-content.service";
 import { CsvBuilderService } from "./csv/csv-builder.service";
 import { BillingModule } from "../../domain/billing/billing.module";
 import { CatalogModule } from "../../domain/catalog/catalog.module";
+import { ShopModule } from "../../domain/shop/shop.module";
 
 /**
  * Feature export catalogue → CSV (colonnes standards + mapping direct / OpenAI).
  */
 @Module({
-  imports: [AuthModule, BillingModule, CatalogModule],
+  imports: [AuthModule, BillingModule, CatalogModule, ShopModule],
   controllers: [ExportController],
   providers: [ExportService, FieldMapperService, AiContentService, CsvBuilderService],
 })

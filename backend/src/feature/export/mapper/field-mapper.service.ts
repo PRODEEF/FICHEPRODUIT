@@ -49,13 +49,13 @@ export class FieldMapperService {
 
       const directFn = DIRECT_MAPPINGS[key];
       if (directFn) {
-        mapped.push({ templateFieldName: field.name, value: directFn(product), source: "direct" });
+        mapped.push({ fieldName: field.name, value: directFn(product), source: "direct" });
         continue;
       }
 
       const attrValue = this.findInAttributes(product, key);
       if (attrValue !== null) {
-        mapped.push({ templateFieldName: field.name, value: attrValue, source: "direct" });
+        mapped.push({ fieldName: field.name, value: attrValue, source: "direct" });
         continue;
       }
 

@@ -69,15 +69,15 @@ describe("AiContentService", () => {
     } as Response);
 
     const result = await service.generateFields(product(), [field("Accroche")]);
-    expect(result).toEqual([{ templateFieldName: "Accroche", value: "Hello", source: "ai" }]);
+    expect(result).toEqual([{ fieldName: "Accroche", value: "Hello", source: "ai" }]);
   });
 
   it("retourne des valeurs vides si l’API échoue", async () => {
     fetchSpy.mockResolvedValue({ ok: false, status: 500 } as Response);
     const result = await service.generateFields(product(), [field("A"), field("B")]);
     expect(result).toEqual([
-      { templateFieldName: "A", value: "", source: "ai" },
-      { templateFieldName: "B", value: "", source: "ai" },
+      { fieldName: "A", value: "", source: "ai" },
+      { fieldName: "B", value: "", source: "ai" },
     ]);
   });
 });

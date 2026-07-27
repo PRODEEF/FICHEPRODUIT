@@ -6,7 +6,7 @@ export const exportProductsSchema = z.object({
     .array(z.uuid())
     .min(1, "Sélectionne au moins un produit")
     .describe("Liste des UUID produits catalogue à inclure dans le CSV"),
-  shopId: z.uuid().describe("UUID de la boutique (contrôle d’accès / métadonnées)"),
+  shopId: z.uuid().describe("UUID de la boutique (contrôle d’accès propriétaire)"),
 });
 
 export class ExportProductsDto extends createZodDto(exportProductsSchema) {}

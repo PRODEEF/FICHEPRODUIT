@@ -34,7 +34,7 @@ export class ExportController {
   @ApiOperation({
     summary: "Exporter des produits en CSV",
     description:
-      "Mappe les champs catalogue standards pour le shop indiqué (JWT), " +
+      "Vérifie l’accès à la boutique (`shopId`), mappe les champs catalogue standards, " +
       "complète le reste via l’IA si nécessaire, puis renvoie un fichier CSV en pièce jointe.",
   })
   @ApiBody({ type: ExportProductsDto })
@@ -48,7 +48,7 @@ export class ExportController {
     description: "Corps JSON invalide (UUIDs, tableau productIds non vide)",
   })
   @ApiUnauthorizedResponse({ description: "JWT manquant ou invalide" })
-  @ApiNotFoundResponse({ description: "Aucun produit pour les IDs donnés" })
+  @ApiNotFoundResponse({ description: "Boutique inaccessible ou aucun produit pour les IDs donnés" })
   @ApiResponse({
     status: 402,
     description: `Crédits insuffisants — code métier \`${INSUFFICIENT_CREDITS_ERROR}\``,
