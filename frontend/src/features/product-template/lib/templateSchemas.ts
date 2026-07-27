@@ -69,7 +69,7 @@ export function buildTemplateSaveSchema(options: BuildTemplateSaveSchemaOptions)
       const taken = isNameTaken(data.name, existingNames, excludeName);
       if (taken !== undefined) {
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: 'custom',
           path: ['name'],
           message: templateNameDuplicateMessage(taken),
         });
@@ -88,13 +88,13 @@ export function buildTemplateSaveSchema(options: BuildTemplateSaveSchemaOptions)
 
         const displayName = row.name.trim();
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: 'custom',
           path: ['fieldRows', index, 'name'],
           message: templateFieldDuplicateMessage(displayName),
         });
         const firstName = data.fieldRows[firstIndex]?.name.trim() ?? displayName;
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: 'custom',
           path: ['fieldRows', firstIndex, 'name'],
           message: templateFieldDuplicateMessage(firstName),
         });

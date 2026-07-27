@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  InternalServerErrorException,
-  Logger,
-} from "@nestjs/common";
+import { Injectable, InternalServerErrorException, Logger } from "@nestjs/common";
 import { SupabaseService } from "../../../core/supabase/supabase.service";
 import type { Database } from "../../../core/supabase/database.types";
 import { InsufficientCreditsDebitError } from "../exceptions/insufficient-credits-debit.error";
@@ -191,10 +187,7 @@ export class CreditLotRepository implements ICreditLotRepository {
     });
 
     if (error) {
-      this.logger.error(
-        `refundExportDebitAdmin(${userId}, ${exportAttemptId}) failed`,
-        error,
-      );
+      this.logger.error(`refundExportDebitAdmin(${userId}, ${exportAttemptId}) failed`, error);
       throw new InternalServerErrorException("Échec du remboursement des crédits");
     }
   }

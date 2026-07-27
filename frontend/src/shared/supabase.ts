@@ -21,15 +21,13 @@ export function getSupabaseClient(): SupabaseClient | null {
   ) {
     return null;
   }
-  if (client === null) {
-    client = createClient(url, anonKey, {
-      auth: {
-        detectSessionInUrl: true,
-        persistSession: true,
-        flowType: 'pkce',
-      },
-    });
-  }
+  client ??= createClient(url, anonKey, {
+    auth: {
+      detectSessionInUrl: true,
+      persistSession: true,
+      flowType: 'pkce',
+    },
+  });
 
   return client;
 }

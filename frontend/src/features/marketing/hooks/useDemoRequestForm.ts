@@ -12,9 +12,9 @@ import {
 
 type DemoRequestFieldErrors = Partial<Record<keyof DemoRequestInput, string>>;
 
-type UseDemoRequestFormOptions = {
+interface UseDemoRequestFormOptions {
   initialEmail?: string;
-};
+}
 
 const EMPTY_FORM: DemoRequestInput = {
   fullName: '',
@@ -31,7 +31,10 @@ export function useDemoRequestForm({ initialEmail = '' }: UseDemoRequestFormOpti
 
   useEffect(() => {
     if (!initialEmail) return;
-    setForm((current) => (current.email === '' ? { ...current, email: initialEmail } : current));
+    // Différé pour éviter un setState synchrone dans le corps de l'effet
+    queueMicrotask(() => {
+      setForm((current) => (current.email === '' ? { ...current, email: initialEmail } : current));
+    });
   }, [initialEmail]);
 
   const updateField = useCallback(
@@ -39,8 +42,8 @@ export function useDemoRequestForm({ initialEmail = '' }: UseDemoRequestFormOpti
       setForm((current) => ({ ...current, [field]: value }));
       setFieldErrors((current) => {
         if (!current[field]) return current;
-        const next = { ...current };
-        delete next[field];
+        const next: DemoRequestFieldErrors = { ...current };
+        Reflect.deleteProperty(next, field);
         return next;
       });
       setSubmitSuccess(false);
@@ -67,7 +70,7 @@ export function useDemoRequestForm({ initialEmail = '' }: UseDemoRequestFormOpti
     submitSuccess,
     updateField,
     submit,
-    setSector: (sector: ShopSectorLabel) => updateField('sector', sector),
+    setSector: (sector: ShopSectorLabel) => void updateField('sector', sector),
   };
 }
 

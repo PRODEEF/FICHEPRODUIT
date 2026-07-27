@@ -11,10 +11,7 @@ import type {
   ScrapeFieldsResult,
 } from "../types/product-template.types";
 import { dedupeFieldsByNormalizedLabel } from "../lib/dedupe-fields-by-label";
-import {
-  JSON_LD_FIELD_LABELS,
-  jsonLdPriceFieldLabel,
-} from "../lib/json-ld-field-labels-fr";
+import { JSON_LD_FIELD_LABELS, jsonLdPriceFieldLabel } from "../lib/json-ld-field-labels-fr";
 import {
   formatFieldDisplayLabel,
   inferVariantFieldType,
@@ -241,9 +238,10 @@ export class ScrapeFieldsService {
   /**
    * Schema.org: hasVariant, additionalProperty (PropertyValue), color/size on variants.
    */
-  private extractJsonLdVariantsAndProperties(
-    productNodes: Record<string, unknown>[],
-  ): { fields: FieldDraft[]; samples: SampleValues } {
+  private extractJsonLdVariantsAndProperties(productNodes: Record<string, unknown>[]): {
+    fields: FieldDraft[];
+    samples: SampleValues;
+  } {
     const out: FieldDraft[] = [];
     const samples: SampleValues = {};
     const seen = new Set<string>();
@@ -313,9 +311,10 @@ export class ScrapeFieldsService {
   /**
    * PrestaShop Classic: .product-variants, group[n] selects, color/radio lists.
    */
-  private extractPrestaShopVariantFields(
-    $: cheerio.CheerioAPI,
-  ): { fields: FieldDraft[]; samples: SampleValues } {
+  private extractPrestaShopVariantFields($: cheerio.CheerioAPI): {
+    fields: FieldDraft[];
+    samples: SampleValues;
+  } {
     type VariantEntry = { name: string; type: ProductTemplateFieldType; sample?: string };
     const entries: VariantEntry[] = [];
     const seen = new Set<string>();
@@ -360,7 +359,11 @@ export class ScrapeFieldsService {
         if (aria) return aria;
         const title = checked.attr("title")?.trim();
         if (title) return title;
-        const sibling = checked.closest("li, label, .input-container").text().replace(/\s+/g, " ").trim();
+        const sibling = checked
+          .closest("li, label, .input-container")
+          .text()
+          .replace(/\s+/g, " ")
+          .trim();
         if (sibling && sibling.length < 80) return sibling;
       }
       const select = $el.find('select[name^="group["], select[name^="group_"]').first();
@@ -466,14 +469,19 @@ export class ScrapeFieldsService {
   /**
    * Long description, tabs, accordions — "détails" beyond the short JSON-LD blurb.
    */
-  private extractProductDetailFields(
-    $: cheerio.CheerioAPI,
-  ): { fields: FieldDraft[]; samples: SampleValues } {
+  private extractProductDetailFields($: cheerio.CheerioAPI): {
+    fields: FieldDraft[];
+    samples: SampleValues;
+  } {
     const fields: FieldDraft[] = [];
     const samples: SampleValues = {};
     const seen = new Set<string>();
 
-    const add = (name: string, type: ProductTemplateFieldType, $content?: cheerio.Cheerio<AnyNode>) => {
+    const add = (
+      name: string,
+      type: ProductTemplateFieldType,
+      $content?: cheerio.Cheerio<AnyNode>,
+    ) => {
       const displayName = formatFieldDisplayLabel(name);
       const k = displayName.toLowerCase();
       if (seen.has(k)) return;
@@ -526,7 +534,9 @@ export class ScrapeFieldsService {
       if (/description|détail|caract|composition|livr|entretien|guide|taille|couleur/i.test(t)) {
         const target = $(btn).attr("data-bs-target") ?? $(btn).attr("data-target") ?? "";
         const paneId = target.replace(/^#/, "");
-        const $pane = paneId ? $(paneId).first() : $(btn).next(".collapse, .accordion-collapse").first();
+        const $pane = paneId
+          ? $(paneId).first()
+          : $(btn).next(".collapse, .accordion-collapse").first();
         add(`Section : ${t}`, "rich_text", $pane.length ? $pane : undefined);
       }
     });
@@ -674,12 +684,20 @@ export class ScrapeFieldsService {
 
   private mergeFieldsWithTrace(rows: TracedFieldDraft[]): {
     fields: FieldDraft[];
-    traceRows: Array<TracedFieldDraft & { mergeStatus: "kept" | "dropped_duplicate"; keptBy?: ScrapeFieldExtractorId }>;
+    traceRows: Array<
+      TracedFieldDraft & {
+        mergeStatus: "kept" | "dropped_duplicate";
+        keptBy?: ScrapeFieldExtractorId;
+      }
+    >;
   } {
     const seen = new Set<string>();
     const out: FieldDraft[] = [];
     const traceRows: Array<
-      TracedFieldDraft & { mergeStatus: "kept" | "dropped_duplicate"; keptBy?: ScrapeFieldExtractorId }
+      TracedFieldDraft & {
+        mergeStatus: "kept" | "dropped_duplicate";
+        keptBy?: ScrapeFieldExtractorId;
+      }
     > = [];
     const winners = new Map<string, ScrapeFieldExtractorId>();
 
@@ -709,7 +727,10 @@ export class ScrapeFieldsService {
 
   private buildMappings(
     traceRows: Array<
-      TracedFieldDraft & { mergeStatus: "kept" | "dropped_duplicate"; keptBy?: ScrapeFieldExtractorId }
+      TracedFieldDraft & {
+        mergeStatus: "kept" | "dropped_duplicate";
+        keptBy?: ScrapeFieldExtractorId;
+      }
     >,
     sampleValues: SampleValues,
   ): ScrapeFieldMapping[] {
@@ -727,7 +748,12 @@ export class ScrapeFieldsService {
   }
 
   private countByExtractor(
-    traceRows: Array<TracedFieldDraft & { mergeStatus: "kept" | "dropped_duplicate"; keptBy?: ScrapeFieldExtractorId }>,
+    traceRows: Array<
+      TracedFieldDraft & {
+        mergeStatus: "kept" | "dropped_duplicate";
+        keptBy?: ScrapeFieldExtractorId;
+      }
+    >,
   ): Record<ScrapeFieldExtractorId, number> {
     const counts: Record<ScrapeFieldExtractorId, number> = {
       json_ld: 0,

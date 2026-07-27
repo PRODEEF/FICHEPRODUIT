@@ -15,7 +15,7 @@ export function TemplateFieldsHeader({ onAddField, onRefine }: TemplateFieldsHea
             type="button"
             className="product-sheet-analyze-btn"
             onClick={onRefine.onClick}
-            disabled={onRefine.disabled || onRefine.loading}
+            disabled={(onRefine.disabled ?? false) || (onRefine.loading ?? false)}
           >
             {onRefine.loading ? 'Affinage…' : 'Affiner par IA'}
           </button>

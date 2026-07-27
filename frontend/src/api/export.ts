@@ -15,10 +15,10 @@ import { authHeaders, extractErrorMessage } from './apiAuth';
 
 const INSUFFICIENT_CREDITS_CODE = 'INSUFFICIENT_CREDITS' as const;
 
-export type ExportInsufficientCreditsDetails = {
+export interface ExportInsufficientCreditsDetails {
   required?: number;
   available?: number;
-};
+}
 
 /** Levée lorsque l'export est refusé faute de crédits (HTTP 402). */
 export class ExportInsufficientCreditsError extends Error {

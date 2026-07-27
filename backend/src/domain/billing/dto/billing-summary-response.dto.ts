@@ -33,9 +33,7 @@ const billingTransactionSchema = z.object({
 
 export const billingSummaryResponseSchema = z.object({
   balance: z.number().int().nonnegative().describe("Solde crédits disponibles"),
-  hasUnlimitedExports: z
-    .boolean()
-    .describe("Abonnement Platinium actif — exports sans débit"),
+  hasUnlimitedExports: z.boolean().describe("Abonnement Platinium actif — exports sans débit"),
   subscription: billingSubscriptionSchema.nullable(),
   entitlements: z.array(billingEntitlementSchema),
   recentPurchases: z.array(billingCreditLotSchema).describe("Lots crédits (achats et offres)"),

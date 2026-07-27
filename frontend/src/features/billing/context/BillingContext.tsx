@@ -1,7 +1,7 @@
 import {
   createContext,
+  use,
   useCallback,
-  useContext,
   useEffect,
   useMemo,
   useState,
@@ -49,7 +49,10 @@ export function BillingProvider({ children }: { children: ReactNode }) {
   }, [userEmail]);
 
   useEffect(() => {
-    void refresh();
+    // Différé pour éviter un setState synchrone (setLoading, setError) dans le corps de l'effet
+    queueMicrotask(() => {
+      void refresh();
+    });
   }, [refresh]);
 
   const value = useMemo(
@@ -57,11 +60,11 @@ export function BillingProvider({ children }: { children: ReactNode }) {
     [summary, loading, error, refresh],
   );
 
-  return <BillingContext.Provider value={value}>{children}</BillingContext.Provider>;
+  return <BillingContext value={value}>{children}</BillingContext>;
 }
 
 export function useBillingContext(): BillingContextValue {
-  const ctx = useContext(BillingContext);
+  const ctx = use(BillingContext);
   if (!ctx) {
     throw new Error('useBillingContext doit être utilisé dans un BillingProvider');
   }

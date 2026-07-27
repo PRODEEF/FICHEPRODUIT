@@ -25,7 +25,9 @@ export class UserBillingRepository implements IUserBillingRepository {
 
     if (error) {
       this.logger.error(`findByUserId(${userId}) failed`, error);
-      throw new InternalServerErrorException("Échec de la récupération des informations de facturation");
+      throw new InternalServerErrorException(
+        "Échec de la récupération des informations de facturation",
+      );
     }
 
     return data ? this.toEntity(data as UserBillingRow) : null;

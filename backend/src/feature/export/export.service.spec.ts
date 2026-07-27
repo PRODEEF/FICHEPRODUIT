@@ -142,9 +142,7 @@ describe("ExportService", () => {
     };
     mockTemplate.getTemplateForShop.mockResolvedValue(tpl);
     mockCatalog.findByIds.mockResolvedValue([catalogProduct()]);
-    mockCredit.reserveCreditsForExport.mockRejectedValue(
-      new InsufficientCreditsException(2, 1),
-    );
+    mockCredit.reserveCreditsForExport.mockRejectedValue(new InsufficientCreditsException(2, 1));
 
     await expect(
       service.export(

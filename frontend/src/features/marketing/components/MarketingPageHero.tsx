@@ -3,12 +3,12 @@ import { useEffect, useState, type ReactNode } from 'react';
 
 import { badgeBounce, titleReveal } from '@lib/motionVariants';
 
-type MarketingPageHeroProps = {
+interface MarketingPageHeroProps {
   badge: string;
   title: ReactNode;
   titleHighlight?: ReactNode;
   subtitle: string;
-};
+}
 
 export function MarketingPageHero({ badge, title, titleHighlight, subtitle }: MarketingPageHeroProps) {
   const [prefersReduced, setPrefersReduced] = useState(false);

@@ -35,7 +35,7 @@ describe('billing API', () => {
     expect(mockRequestNestJson).toHaveBeenCalledWith({
       method: 'GET',
       path: '/billing/me',
-      authHeaders: expect.any(Function),
+      authHeaders: expect.any(Function) as unknown,
     });
   });
 
@@ -64,7 +64,7 @@ describe('billing API', () => {
       method: 'POST',
       path: '/billing/checkout',
       body: { planId: 'starter', sector: 'Glisse' },
-      authHeaders: expect.any(Function),
+      authHeaders: expect.any(Function) as unknown,
     });
   });
 });

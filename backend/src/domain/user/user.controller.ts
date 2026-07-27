@@ -77,8 +77,7 @@ export class UserController {
   @ApiCreatedResponse({ type: UserMeResponseDto })
   @ApiUnauthorizedResponse({ description: "JWT manquant ou invalide" })
   @ApiBadRequestResponse({
-    description:
-      "Session invité introuvable ou sessionId body ne correspond pas au cookie",
+    description: "Session invité introuvable ou sessionId body ne correspond pas au cookie",
   })
   async claimGuestSession(
     @CurrentUser() user: AuthenticatedUser,

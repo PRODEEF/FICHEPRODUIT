@@ -1,8 +1,4 @@
-import {
-  Inject,
-  Injectable,
-  Logger,
-} from "@nestjs/common";
+import { Inject, Injectable, Logger } from "@nestjs/common";
 
 import { billingPlanIdSchema, type BillingPlanId } from "./billing-plan.schema";
 import { BillingPricingService } from "./pricing/billing-pricing.service";
@@ -61,10 +57,7 @@ export class CreditGrantService {
   }
 
   /** Révoque l'entitlement free_low_price_exports à l'expiration d'un abonnement. */
-  async revokeFreeLowPriceEntitlementIfExpiresAt(
-    userId: string,
-    expiresAt: string,
-  ): Promise<void> {
+  async revokeFreeLowPriceEntitlementIfExpiresAt(userId: string, expiresAt: string): Promise<void> {
     await this.entitlementRepo.revokeActiveEntitlementIfExpiresAt(
       userId,
       "free_low_price_exports",

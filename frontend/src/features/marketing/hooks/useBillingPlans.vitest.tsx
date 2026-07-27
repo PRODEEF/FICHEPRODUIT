@@ -46,7 +46,7 @@ describe('useBillingPlans', () => {
     expect(result.current.proPricePerSheet).toBe(10);
   });
 
-  it('reste en chargement tant que defer est actif', async () => {
+  it('reste en chargement tant que defer est actif', () => {
     const { result } = renderHook(() => useBillingPlans('Glisse', { defer: true }));
 
     expect(result.current.plansLoading).toBe(true);

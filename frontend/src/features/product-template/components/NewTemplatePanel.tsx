@@ -47,15 +47,6 @@ export function NewTemplatePanel({
       ) : null}
 
       <div className="flex w-full flex-wrap items-start gap-4">
-        <input
-          ref={csvImport.inputRef}
-          type="file"
-          accept=".csv,text/csv"
-          className="product-templates-csv-input-hidden"
-          aria-hidden
-          tabIndex={-1}
-          onChange={(e) => void csvImport.onFileSelected(e.target.files?.[0] ?? null)}
-        />
         <button
           type="button"
           className="product-templates-csv-btn shrink-0"

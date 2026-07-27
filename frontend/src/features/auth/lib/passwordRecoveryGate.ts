@@ -9,9 +9,7 @@ const POLL_INTERVAL_MS = 300;
 function getBrowserSessionStorage(): Storage | null {
   if (typeof window === 'undefined') return null;
   try {
-    const { sessionStorage } = window;
-    if (sessionStorage === undefined || sessionStorage === null) return null;
-    return sessionStorage;
+    return window.sessionStorage;
   } catch {
     return null;
   }

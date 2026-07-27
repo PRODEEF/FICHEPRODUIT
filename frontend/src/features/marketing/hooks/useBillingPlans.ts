@@ -20,14 +20,22 @@ export function useBillingPlans(sector: ShopSectorLabel, options: UseBillingPlan
 
   useEffect(() => {
     if (defer) {
-      setPlansLoading(true);
-      setPlansError(null);
+      // Différé pour éviter des setState synchrones dans le corps de l'effet
+      queueMicrotask(() => {
+        setPlansLoading(true);
+        setPlansError(null);
+      });
       return;
     }
 
     let cancelled = false;
-    setPlansLoading(true);
-    setPlansError(null);
+    // Différé pour éviter des setState synchrones dans le corps de l'effet
+    queueMicrotask(() => {
+      if (!cancelled) {
+        setPlansLoading(true);
+        setPlansError(null);
+      }
+    });
 
     void fetchBillingPlans(sector)
       .then((response) => {

@@ -2,7 +2,10 @@ import { Injectable } from "@nestjs/common";
 
 import type { ShopSector } from "../../shop/dto/shop-sector.schema";
 import { PUBLIC_PRICING_PLAN_IDS, type BillingPlanId } from "../billing-plan.schema";
-import type { PublicPricingPlan, PublicPricingPlansResponse } from "../dto/billing-plans-response.dto";
+import type {
+  PublicPricingPlan,
+  PublicPricingPlansResponse,
+} from "../dto/billing-plans-response.dto";
 import {
   formatCreditsLabel,
   PACK_PLANS_WITH_FREE_LOW_PRICE,

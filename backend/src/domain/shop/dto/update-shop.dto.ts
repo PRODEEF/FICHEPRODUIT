@@ -6,11 +6,7 @@ import { shopSectorSchema } from "./shop-sector.schema";
 
 const SHOP_TAG_MAX_LENGTH = 64;
 
-const shopTagItemSchema = z
-  .string()
-  .trim()
-  .min(1)
-  .max(SHOP_TAG_MAX_LENGTH);
+const shopTagItemSchema = z.string().trim().min(1).max(SHOP_TAG_MAX_LENGTH);
 
 export const updateShopSchema = z.object({
   name: z.string().min(1).max(255).optional().describe("Nom affiché"),

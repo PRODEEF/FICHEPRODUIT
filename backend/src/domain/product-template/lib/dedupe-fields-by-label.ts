@@ -95,8 +95,7 @@ export function dedupeFieldsByNormalizedLabel(
       merges.push({ keptName: winner.name, droppedName });
     }
 
-    const winnerSample =
-      samples[winner.name] ?? samples[field.name] ?? samples[entry.field.name];
+    const winnerSample = samples[winner.name] ?? samples[field.name] ?? samples[entry.field.name];
     if (winnerSample) {
       samples[winner.name] = winnerSample;
       for (const sampleKey of [field.name, entry.field.name]) {

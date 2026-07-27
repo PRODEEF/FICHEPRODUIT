@@ -94,7 +94,7 @@ export function PublicCatalog() {
       shop={shop}
       activeBrand={activeBrand}
       onBrandToggle={handleBrandToggle}
-      productsLoading={Boolean(productsLoading)}
+      productsLoading={productsLoading}
       productsError={productsError}
       productsSection={
         catalogProducts !== null && shop !== null ? (
