@@ -28,7 +28,9 @@ export function usePricingPage(options: UsePricingPageOptions = {}) {
 
   useEffect(() => {
     if (options.initialSector) {
-      setSector(options.initialSector);
+      // Différé pour éviter un setState synchrone dans le corps de l'effet
+      const sector = options.initialSector;
+      queueMicrotask(() => { setSector(sector); });
     }
   }, [options.initialSector]);
 

@@ -2,7 +2,10 @@ import type { ShopSector } from "../../shop/dto/shop-sector.schema";
 import type { BillingPlanId } from "../billing-plan.schema";
 
 /** Crédits inclus par pack (hors abonnement Platinium). */
-export const PLAN_CREDIT_AMOUNTS: Record<Exclude<BillingPlanId, "business_custom" | "platinum">, number> = {
+export const PLAN_CREDIT_AMOUNTS: Record<
+  Exclude<BillingPlanId, "business_custom" | "platinum">,
+  number
+> = {
   starter: 1,
   pro: 10,
   business_silver: 100,

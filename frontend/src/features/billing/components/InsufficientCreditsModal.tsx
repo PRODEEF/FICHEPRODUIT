@@ -22,9 +22,10 @@ export function InsufficientCreditsModal({
         <Button type="button" variant="neutral-outline" size="sm" onClick={onClose}>
           Fermer
         </Button>
-        <Button href="/pricing" variant="primary" size="sm" glow onClick={onClose}>
+        {/* Pricing temporairement désactivé */}
+        {/* <Button href="/pricing" variant="primary" size="sm" glow onClick={onClose}>
           Acheter des crédits
-        </Button>
+        </Button> */}
       </div>
     </Modal>
   );

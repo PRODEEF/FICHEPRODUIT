@@ -9,7 +9,11 @@ export function normalizeFieldLabelForDedup(name: string): string {
 
 /** Libellé affiché : sans espaces parasites ni « : » / « * » en fin. */
 export function sanitizeFieldDisplayLabel(name: string): string {
-  return name.replace(/\s+/g, " ").trim().replace(/[*:]+$/g, "").trim();
+  return name
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/[*:]+$/g, "")
+    .trim();
 }
 
 /** Première lettre de chaque mot en majuscule (libellés issus du DOM). */
@@ -30,8 +34,7 @@ export function formatFieldDisplayLabel(name: string): string {
   return capitalizeWordsFr(name);
 }
 
-const NUMERIC_WITH_UNIT =
-  /^[\d.,]+\s*(m²|m2|m\b|cm|mm|kg|g|l|ml|cl|%|€|eur|euro|surfs?|voile)?$/i;
+const NUMERIC_WITH_UNIT = /^[\d.,]+\s*(m²|m2|m\b|cm|mm|kg|g|l|ml|cl|%|€|eur|euro|surfs?|voile)?$/i;
 const SHORT_VARIANT_CODE = /^[A-Z]\d{1,3}$/i;
 const GROUP_INPUT_NAME = /^group[\s_[]/i;
 

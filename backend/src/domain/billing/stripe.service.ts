@@ -66,8 +66,7 @@ export class StripeService {
       user_id: params.userId,
       plan_id: params.planId,
       sector: params.sector,
-      credits_amount:
-        params.creditsAmount !== null ? String(params.creditsAmount) : "unlimited",
+      credits_amount: params.creditsAmount !== null ? String(params.creditsAmount) : "unlimited",
     };
 
     const isSubscription = params.planId === "platinum";

@@ -13,6 +13,7 @@ import {
 describe('getPasswordResetRedirectUrl', () => {
   afterEach(() => {
     vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
   });
 
   it('utilise VITE_SITE_URL sans slash final', () => {

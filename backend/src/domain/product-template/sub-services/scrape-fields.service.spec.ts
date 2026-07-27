@@ -166,9 +166,7 @@ describe("ScrapeFieldsService", () => {
 
     const noJsonLd = result.warnings.find((w) => w.code === "NO_JSONLD");
     expect(noJsonLd?.message).toMatch(/ld\+json/i);
-    expect(result.fields.map((f) => f.name)).toEqual(
-      expect.arrayContaining(["Poids", "Couleur"]),
-    );
+    expect(result.fields.map((f) => f.name)).toEqual(expect.arrayContaining(["Poids", "Couleur"]));
     expect(result.sampleValues["Poids"]).toBe("12 kg");
     expect(result.sampleValues["Couleur"]).toBe("Noir");
   });

@@ -1,5 +1,7 @@
 import { motion } from 'motion/react';
-import { Calendar, Download, Sparkles } from 'lucide-react';
+// Calendar : icône du bénéfice « Accompagnement tarifs » (temporairement désactivé)
+// import { Calendar, Download, Sparkles } from 'lucide-react';
+import { Download, Sparkles } from 'lucide-react';
 
 import { cardReveal, staggerContainer, titleReveal } from '@lib/motionVariants';
 import { useScrollReveal } from '@shared/hooks/useScrollReveal';
@@ -18,12 +20,13 @@ const benefits = [
     description:
       'De l’analyse de votre catalogue au CSV prêt à importer : zéro copier-coller, zéro friction.',
   },
-  {
-    icon: Calendar,
-    title: 'Accompagnement tarifs',
-    description:
-      'Nous répondons à vos questions sur les forfaits, les crédits et le retour sur investissement pour votre volume.',
-  },
+  // Pricing temporairement désactivé
+  // {
+  //   icon: Calendar,
+  //   title: 'Accompagnement tarifs',
+  //   description:
+  //     'Nous répondons à vos questions sur les forfaits, les crédits et le retour sur investissement pour votre volume.',
+  // },
 ];
 
 export function DemoBenefitsSection() {
@@ -61,7 +64,7 @@ export function DemoBenefitsSection() {
         variants={staggerContainer}
         initial="hidden"
         animate={inView ? 'visible' : 'hidden'}
-        className="grid grid-cols-1 gap-6 md:grid-cols-3"
+        className="grid grid-cols-1 gap-6 md:grid-cols-2"
       >
         {benefits.map((benefit) => (
           <motion.div key={benefit.title} variants={cardReveal}>

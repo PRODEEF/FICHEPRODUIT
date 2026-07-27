@@ -4,7 +4,7 @@ import type { ProductTemplate } from '@types-api';
 import { useAuth } from '@shared/hooks/useAuth';
 
 import { useShop } from '../../store/hooks/useShop';
-import { useCsvTemplateImport } from './useCsvTemplateImport';
+import type { CsvImportResult } from './useCsvTemplateImport';
 import { useProductPageAnalysis } from './useProductPageAnalysis';
 import { useProductTemplates } from './useProductTemplates';
 import { useRefineTemplateFields } from './useRefineTemplateFields';
@@ -25,11 +25,14 @@ import type {
 interface UseProductTemplatesWorkspaceOptions {
   onSheetTabChange: (tab: ProductSheetMainTab) => void;
   onEditModeChange?: ((editing: boolean) => void) | undefined;
+  /** Fonction d'import CSV fournie depuis l'extérieur pour éviter d'exposer une ref dans le workspace */
+  importFromCsvFile: (file: File, existingNames: readonly string[]) => Promise<CsvImportResult | { error: string }>;
 }
 
 export function useProductTemplatesWorkspace({
   onSheetTabChange,
   onEditModeChange,
+  importFromCsvFile,
 }: UseProductTemplatesWorkspaceOptions) {
   const { profile, profileLoading } = useAuth();
   const { shop, loading: shopLoading, error: shopError } = useShop();
@@ -46,7 +49,6 @@ export function useProductTemplatesWorkspace({
 
   const urlAnalysis = useProductPageAnalysis(shopId, profile?.website_url);
   const { refiningAi, clearAiRefineHint, refineRows } = useRefineTemplateFields(shopId);
-  const csvImport = useCsvTemplateImport();
 
   const [view, setView] = useState<ProductTemplatesView>({ kind: 'list' });
   const [actionError, setActionError] = useState<string | null>(null);
@@ -118,7 +120,7 @@ export function useProductTemplatesWorkspace({
     if (!file) return;
     setActionError(null);
     clearAiRefineHint();
-    const result = await csvImport.importFromFile(file, existingTemplateNames);
+    const result = await importFromCsvFile(file, existingTemplateNames);
     if ('error' in result) {
       setActionError(result.error);
       return;
@@ -276,7 +278,6 @@ export function useProductTemplatesWorkspace({
     setManualDraft,
     modalSaving,
     modalError,
-    csvImport,
     urlAnalysis,
     handleDeleteTemplate,
     openEdit,

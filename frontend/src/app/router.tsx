@@ -43,10 +43,11 @@ const MyStore = lazy(async () => {
   const m = await import('../features/store/pages/Store');
   return { default: m.MyStore };
 });
-const Pricing = lazy(async () => {
-  const m = await import('../features/marketing/pages/Pricing');
-  return { default: m.Pricing };
-});
+// Pricing temporairement désactivé
+// const Pricing = lazy(async () => {
+//   const m = await import('../features/marketing/pages/Pricing');
+//   return { default: m.Pricing };
+// });
 const DemoRequest = lazy(async () => {
   const m = await import('../features/marketing/pages/DemoRequest');
   return { default: m.DemoRequest };
@@ -73,7 +74,8 @@ export const appRouteElements = (
     <Route path="/signup" element={<Signup />} />
     <Route path="/forgot-password" element={<ForgotPassword />} />
     <Route path="/auth/reset-password" element={<ResetPassword />} />
-    <Route path="/pricing" element={<Pricing />} />
+    {/* Pricing temporairement désactivé */}
+    {/* <Route path="/pricing" element={<Pricing />} /> */}
     <Route path="/billing/success" element={<BillingSuccess />} />
     <Route path="/billing/cancel" element={<BillingCancel />} />
     <Route path="/demo" element={<DemoRequest />} />

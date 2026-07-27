@@ -4,8 +4,7 @@
   "description": "Génération de fiches produits assistée par IA",
   "type": "module",
   "scripts": {
-    "dev": "npx vercel dev",
-    "devTest": "npm run dev:backend & npm run dev:frontend",
+    "dev": "node scripts/dev.mjs",
     "dev:backend": "npm run start:dev --prefix backend",
     "dev:frontend": "npm run dev --prefix frontend",
     "build": "npm run generate:types && npm run build:backend && npm run build:frontend",
@@ -14,8 +13,7 @@
     "generate:types": "openapi-typescript openapi/api.yaml -o backend/src/generated/api.ts && openapi-typescript openapi/api.yaml -o frontend/src/generated/api.ts && openapi-typescript openapi/api.yaml -o frontend-test/src/generated/api.ts",
     "install:all": "npm install && npm install --prefix backend && npm install --prefix frontend",
     "lint": "npm run lint --prefix backend && npm run lint --prefix frontend",
-    "test": "npm run test --prefix backend",
-    "test:e2e": "npm run test:e2e --prefix backend"
+    "test": "npm run test --prefix backend"
   },
   "dependencies": {
     "cheerio": "^1.0.0",

@@ -4,9 +4,9 @@ import { Banner, Button, Card, InputField, SelectField } from '@shared/ui';
 
 import { useDemoRequestForm } from '../hooks/useDemoRequestForm';
 
-type DemoRequestPanelProps = {
+interface DemoRequestPanelProps {
   initialEmail?: string;
-};
+}
 
 export function DemoRequestPanel({ initialEmail }: DemoRequestPanelProps) {
   const { form, fieldErrors, submitSuccess, updateField, submit, setSector } = useDemoRequestForm(
@@ -43,7 +43,7 @@ export function DemoRequestPanel({ initialEmail }: DemoRequestPanelProps) {
             name="fullName"
             autoComplete="name"
             value={form.fullName}
-            onChange={(event) => updateField('fullName', event.target.value)}
+            onChange={(event) => void updateField('fullName', event.target.value)}
             error={fieldErrors.fullName}
             errorId="demo-full-name-error"
           />
@@ -55,7 +55,7 @@ export function DemoRequestPanel({ initialEmail }: DemoRequestPanelProps) {
             type="email"
             autoComplete="email"
             value={form.email}
-            onChange={(event) => updateField('email', event.target.value)}
+            onChange={(event) => void updateField('email', event.target.value)}
             error={fieldErrors.email}
             errorId="demo-email-error"
           />
@@ -65,8 +65,8 @@ export function DemoRequestPanel({ initialEmail }: DemoRequestPanelProps) {
             label="Entreprise (optionnel)"
             name="company"
             autoComplete="organization"
-            value={form.company ?? ''}
-            onChange={(event) => updateField('company', event.target.value)}
+            value={form.company}
+            onChange={(event) => void updateField('company', event.target.value)}
             error={fieldErrors.company}
             errorId="demo-company-error"
           />
@@ -76,7 +76,7 @@ export function DemoRequestPanel({ initialEmail }: DemoRequestPanelProps) {
             label="Secteur"
             name="sector"
             value={form.sector}
-            onChange={(event) => setSector(event.target.value as typeof form.sector)}
+            onChange={(event) => void setSector(event.target.value as typeof form.sector)}
             error={fieldErrors.sector}
             errorId="demo-sector-error"
           >
@@ -98,8 +98,8 @@ export function DemoRequestPanel({ initialEmail }: DemoRequestPanelProps) {
               id="demo-message"
               name="message"
               rows={4}
-              value={form.message ?? ''}
-              onChange={(event) => updateField('message', event.target.value)}
+              value={form.message}
+              onChange={(event) => void updateField('message', event.target.value)}
               className={cn(
                 'w-full resize-y rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 outline-none transition focus:border-purple-400 focus:ring-2 focus:ring-purple-100',
                 fieldErrors.message &&

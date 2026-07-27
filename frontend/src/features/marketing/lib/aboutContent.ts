@@ -75,7 +75,8 @@ export const ABOUT_DIFFERENTIATORS: AboutDifferentiatorItem[] = [
     id: 'direct-export',
     badge: 'Workflow',
     title: 'Export direct PrestaShop & Shopify',
-    description: 'CSV prêt à importer, zéro copier-coller, zéro friction entre la génération et votre boutique.',
+    description:
+      'CSV prêt à importer, zéro copier-coller, zéro friction entre la génération et votre boutique.',
   },
 ];
 
@@ -86,12 +87,13 @@ export const ABOUT_QUICK_LINKS: AboutQuickLinkItem[] = [
     href: '/demo',
     variant: 'neutral-outline',
   },
-  {
-    id: 'pricing',
-    label: 'Voir les tarifs',
-    href: '/pricing',
-    variant: 'neutral-outline',
-  },
+  // Pricing temporairement désactivé
+  // {
+  //   id: 'pricing',
+  //   label: 'Voir les tarifs',
+  //   href: '/pricing',
+  //   variant: 'neutral-outline',
+  // },
   {
     id: 'signup',
     label: 'Essayer gratuitement',

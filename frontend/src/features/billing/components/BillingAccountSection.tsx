@@ -40,9 +40,10 @@ export function BillingAccountSection() {
     <Card className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="m-0 text-xl font-bold text-text-primary">Crédits & facturation</h2>
-        <Button href="/pricing" variant="primary" size="sm">
+        {/* Pricing temporairement désactivé */}
+        {/* <Button href="/pricing" variant="primary" size="sm">
           Acheter des crédits
-        </Button>
+        </Button> */}
       </div>
 
       <div className="rounded-xl border border-soft bg-bg-main px-5 py-4">

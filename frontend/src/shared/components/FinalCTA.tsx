@@ -29,7 +29,8 @@ export function FinalCTA() {
         animate={titleInView ? 'visible' : 'hidden'}
         className="text-purple-200 mb-10 text-lg"
       >
-        Commencez avec 3 crédits offerts. Aucune carte bancaire requise.
+        {/* Commencez avec 3 crédits offerts. Aucune carte bancaire requise. */}
+        Commencez gratuitement. Aucune carte bancaire requise.
       </motion.p>
       <motion.div
         variants={titleReveal}

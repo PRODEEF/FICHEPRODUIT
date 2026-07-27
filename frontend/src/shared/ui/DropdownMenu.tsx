@@ -1,7 +1,7 @@
 import {
   createContext,
   useCallback,
-  useContext,
+  use,
   useEffect,
   useId,
   useRef,
@@ -14,26 +14,26 @@ import {
 
 import { cn } from '../lib/cn';
 
-type DropdownMenuContextValue = {
+interface DropdownMenuContextValue {
   open: boolean;
   setOpen: (open: boolean) => void;
   menuId: string;
   triggerRef: RefObject<HTMLButtonElement | null>;
-};
+}
 
 const DropdownMenuContext = createContext<DropdownMenuContextValue | null>(null);
 
 function useDropdownMenuContext(): DropdownMenuContextValue {
-  const context = useContext(DropdownMenuContext);
+  const context = use(DropdownMenuContext);
   if (!context) {
     throw new Error('DropdownMenu components must be used within DropdownMenu');
   }
   return context;
 }
 
-type DropdownMenuProps = {
+interface DropdownMenuProps {
   children: ReactNode;
-};
+}
 
 export function DropdownMenu({ children }: DropdownMenuProps) {
   const [open, setOpen] = useState(false);

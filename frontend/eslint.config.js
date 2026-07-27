@@ -53,4 +53,21 @@ export default defineConfig([
       '@typescript-eslint/no-meaningless-void-operator': 'off',
     },
   },
+  // Fichier de définition de routes (lazy + JSX) — pas un module de composants UI
+  {
+    files: ['**/app/router.tsx'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
+  },
+  // BillingContext exporte le Provider + le hook — pattern courant pour les contextes
+  {
+    files: ['**/BillingContext.tsx'],
+    rules: {
+      'react-refresh/only-export-components': [
+        'error',
+        { allowConstantExport: true, allowExportNames: ['useBillingContext'] },
+      ],
+    },
+  },
 ]);

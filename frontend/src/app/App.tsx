@@ -35,7 +35,7 @@ function AppHeader({ drawerOpen, onDrawerToggle }: AppHeaderProps) {
     if (drawerOpen) {
       onDrawerToggle();
     }
-    navigate('/', { replace: true });
+    void navigate('/', { replace: true });
     try {
       await signOut();
     } catch {
@@ -63,7 +63,8 @@ function AppShellLayout({ userEmail }: { userEmail: string | null }) {
 
   useEffect(() => {
     if (userEmail) {
-      setDrawerOpen(true);
+      // Différé pour éviter un setState synchrone dans le corps de l'effet
+      queueMicrotask(() => { setDrawerOpen(true); });
     }
   }, [userEmail]);
 

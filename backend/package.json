@@ -7,8 +7,8 @@
   "scripts": {
     "build": "node node_modules/@nestjs/cli/bin/nest.js build",
     "build:clean": "node -e \"const fs=require('fs');try{fs.rmSync('dist',{recursive:true,force:true})}catch(e){};try{fs.unlinkSync('tsconfig.build.tsbuildinfo')}catch(e){}\" && node node_modules/@nestjs/cli/bin/nest.js build",
-    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\"",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\"",
     "start": "nest start",
     "prestart:dev": "node scripts/ensure-dist-built.mjs",
     "start:dev": "node scripts/nest-dev.mjs start --watch",

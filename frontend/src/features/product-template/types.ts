@@ -1,5 +1,3 @@
-import type { RefObject } from 'react';
-
 import type { RefineFieldsSource, ProductTemplateFieldType } from '@types-api';
 
 export interface TemplateFieldRow {
@@ -31,7 +29,6 @@ export type ProductTemplatesView =
   | { kind: 'edit'; templateId: string };
 
 export interface NewTemplateCsvImport {
-  inputRef: RefObject<HTMLInputElement | null>;
   onFileSelected: (file: File | null) => void;
   onOpenPicker: () => void;
 }

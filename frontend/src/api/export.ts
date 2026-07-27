@@ -15,17 +15,18 @@ import { authHeaders, extractErrorMessage } from './apiAuth';
 
 const INSUFFICIENT_CREDITS_CODE = 'INSUFFICIENT_CREDITS' as const;
 
-export type ExportInsufficientCreditsDetails = {
+export interface ExportInsufficientCreditsDetails {
   required?: number;
   available?: number;
-};
+}
 
 /** Levée lorsque l'export est refusé faute de crédits (HTTP 402). */
 export class ExportInsufficientCreditsError extends Error {
   readonly status = 402;
   readonly code = INSUFFICIENT_CREDITS_CODE;
-  readonly requiredCredits?: number;
-  readonly availableCredits?: number;
+  /** Présent uniquement si fourni — `declare` évite d'initialiser à `undefined` (exactOptionalPropertyTypes). */
+  declare readonly requiredCredits?: number;
+  declare readonly availableCredits?: number;
 
   constructor(message: string, details?: ExportInsufficientCreditsDetails) {
     super(message);

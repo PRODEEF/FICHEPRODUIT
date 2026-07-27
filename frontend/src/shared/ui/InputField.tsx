@@ -1,6 +1,5 @@
 import {
   useCallback,
-  useLayoutEffect,
   useRef,
   useState,
   type ChangeEvent,
@@ -31,7 +30,9 @@ function assignRef<T>(ref: Ref<T> | undefined, value: T | null): void {
   }
 }
 
-function lengthFromProps(props: Pick<ComponentPropsWithRef<'input'>, 'value' | 'defaultValue'>): number {
+function lengthFromProps(
+  props: Pick<ComponentPropsWithRef<'input'>, 'value' | 'defaultValue'>,
+): number {
   if (typeof props.value === 'string') return props.value.length;
   if (typeof props.defaultValue === 'string') return props.defaultValue.length;
   return 0;
@@ -50,43 +51,32 @@ export function InputField({
 }: InputFieldProps) {
   const { onChange, onBlur, ref, value, defaultValue, ...restInputProps } = inputProps;
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const [charCount, setCharCount] = useState(() => lengthFromProps({ value, defaultValue }));
-
-  const syncCharCountFromDom = useCallback(() => {
-    if (!showCharacterCount || !inputRef.current) return;
-    const next = inputRef.current.value.length;
-    setCharCount((prev) => (prev === next ? prev : next));
-  }, [showCharacterCount]);
+  const [localCharCount, setLocalCharCount] = useState(() =>
+    lengthFromProps({ value, defaultValue }),
+  );
+  // Contrôlé : dérivé du value. Non contrôlé : mis à jour via ref / onChange.
+  const charCount = typeof value === 'string' ? value.length : localCharCount;
 
   const handleRef = useCallback(
     (node: HTMLInputElement | null) => {
       inputRef.current = node;
       assignRef(ref, node);
-      if (node && showCharacterCount) {
-        setCharCount(node.value.length);
+      if (node && showCharacterCount && typeof value !== 'string') {
+        setLocalCharCount(node.value.length);
       }
     },
-    [ref, showCharacterCount],
+    [ref, showCharacterCount, value],
   );
 
   const handleChange = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => {
-      if (showCharacterCount) {
-        setCharCount(event.target.value.length);
+      if (showCharacterCount && typeof value !== 'string') {
+        setLocalCharCount(event.target.value.length);
       }
       onChange?.(event);
     },
-    [onChange, showCharacterCount],
+    [onChange, showCharacterCount, value],
   );
-
-  useLayoutEffect(() => {
-    if (!showCharacterCount) return;
-    if (typeof value === 'string') {
-      setCharCount((prev) => (prev === value.length ? prev : value.length));
-      return;
-    }
-    syncCharCountFromDom();
-  });
 
   const describedBy = error ? errorId : restInputProps['aria-describedby'];
   const maxLen =

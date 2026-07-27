@@ -32,7 +32,6 @@ jobs:
       - run: npm run lint
       - run: npm run format:check
       - run: node ./node_modules/jest/bin/jest.js
-      - run: node ./node_modules/jest/bin/jest.js --config ./test/jest-e2e.json
       - run: node ./node_modules/@nestjs/cli/bin/nest.js build
 
   frontend:

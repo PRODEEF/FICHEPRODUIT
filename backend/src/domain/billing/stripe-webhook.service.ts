@@ -1,9 +1,4 @@
-import {
-  BadRequestException,
-  Inject,
-  Injectable,
-  Logger,
-} from "@nestjs/common";
+import { BadRequestException, Inject, Injectable, Logger } from "@nestjs/common";
 import Stripe from "stripe";
 import { billingPlanIdSchema } from "./billing-plan.schema";
 import { CreditService } from "./credit.service";
@@ -110,9 +105,7 @@ export class StripeWebhookService {
 
     if (session.mode === "subscription" && session.subscription) {
       const subscriptionId =
-        typeof session.subscription === "string"
-          ? session.subscription
-          : session.subscription.id;
+        typeof session.subscription === "string" ? session.subscription : session.subscription.id;
 
       const subscription = await this.stripeService.retrieveSubscription(subscriptionId);
       await this.syncSubscriptionForUser(userId, subscription);
@@ -150,9 +143,7 @@ export class StripeWebhookService {
 
   private async handleSubscriptionUpdated(subscription: Stripe.Subscription): Promise<void> {
     const customerId =
-      typeof subscription.customer === "string"
-        ? subscription.customer
-        : subscription.customer.id;
+      typeof subscription.customer === "string" ? subscription.customer : subscription.customer.id;
 
     const billing = await this.userBillingRepo.findByStripeCustomerId(customerId);
     if (!billing) {
@@ -165,17 +156,14 @@ export class StripeWebhookService {
 
   private async handleSubscriptionDeleted(subscription: Stripe.Subscription): Promise<void> {
     const customerId =
-      typeof subscription.customer === "string"
-        ? subscription.customer
-        : subscription.customer.id;
+      typeof subscription.customer === "string" ? subscription.customer : subscription.customer.id;
 
     const billing = await this.userBillingRepo.findByStripeCustomerId(customerId);
     if (!billing) {
       return;
     }
 
-    const periodEnd =
-      this.timestampToIso(subscription.ended_at) ?? billing.subscriptionPeriodEnd;
+    const periodEnd = this.timestampToIso(subscription.ended_at) ?? billing.subscriptionPeriodEnd;
 
     await this.userBillingRepo.updateSubscription({
       userId: billing.userId,
@@ -185,10 +173,7 @@ export class StripeWebhookService {
     });
 
     if (periodEnd) {
-      await this.creditService.revokeFreeLowPriceEntitlementIfExpiresAt(
-        billing.userId,
-        periodEnd,
-      );
+      await this.creditService.revokeFreeLowPriceEntitlementIfExpiresAt(billing.userId, periodEnd);
     }
   }
 
@@ -243,7 +228,11 @@ export class StripeWebhookService {
       return subscription;
     }
 
-    if (typeof subscription === "object" && "id" in subscription && typeof subscription.id === "string") {
+    if (
+      typeof subscription === "object" &&
+      "id" in subscription &&
+      typeof subscription.id === "string"
+    ) {
       return subscription.id;
     }
 

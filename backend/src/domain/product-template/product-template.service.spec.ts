@@ -105,7 +105,7 @@ describe("ProductTemplateService", () => {
       {
         shopId,
         name: "Ma fiche",
-        fields: [{ name: "Nom", type: "text", required: false, order: 0 }],
+        fields: [{ name: "Nom", type: "text", required: false }],
       },
       user,
     );
@@ -127,7 +127,7 @@ describe("ProductTemplateService", () => {
         {
           shopId,
           name: "Ma fiche",
-          fields: [{ name: "Nom", type: "text", required: false, order: 0 }],
+          fields: [{ name: "Nom", type: "text", required: false }],
         },
         user,
       ),

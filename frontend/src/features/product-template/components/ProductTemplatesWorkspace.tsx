@@ -1,4 +1,5 @@
 import type { ProductSheetMainTab } from '../types';
+import { useCsvTemplateImport } from '../hooks/useCsvTemplateImport';
 import { useProductTemplatesWorkspace } from '../hooks/useProductTemplatesWorkspace';
 import { EditTemplateView } from './EditTemplateView';
 import { NewTemplatePanel } from './NewTemplatePanel';
@@ -17,7 +18,13 @@ export function ProductTemplatesWorkspace({
   onSheetTabChange,
   onEditModeChange,
 }: ProductTemplatesWorkspaceProps) {
-  const workspace = useProductTemplatesWorkspace({ onSheetTabChange, onEditModeChange });
+  // Séparé du workspace pour éviter de contaminer workspace avec une ref (react-hooks/refs)
+  const { csvInputRef, openFilePicker, importFromFile } = useCsvTemplateImport();
+  const workspace = useProductTemplatesWorkspace({
+    onSheetTabChange,
+    onEditModeChange,
+    importFromCsvFile: importFromFile,
+  });
 
   if (workspace.loading) {
     return (
@@ -95,14 +102,23 @@ export function ProductTemplatesWorkspace({
         hidden={sheetTab !== 'nouvelle'}
         className="product-sheet-tab-panel"
       >
+        {/* L'input fichier vit ici pour que la ref reste dans le composant qui la crée */}
+        <input
+          ref={csvInputRef}
+          type="file"
+          accept=".csv,text/csv"
+          className="product-templates-csv-input-hidden"
+          aria-hidden
+          tabIndex={-1}
+          onChange={(e) => void workspace.handleCsvFile(e.target.files?.[0] ?? null)}
+        />
         <NewTemplatePanel
           shopReady={workspace.shopReady}
           actionError={workspace.actionError}
           onOpenManualModal={workspace.openManualModal}
           csvImport={{
-            inputRef: workspace.csvImport.csvInputRef,
             onFileSelected: (file) => void workspace.handleCsvFile(file),
-            onOpenPicker: workspace.csvImport.openFilePicker,
+            onOpenPicker: openFilePicker,
           }}
           urlAnalysis={{
             scrapeUrl: workspace.urlAnalysis.scrapeUrl,

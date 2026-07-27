@@ -77,5 +77,5 @@ export const billingSummarySchema = z.object({
 });
 
 export const checkoutResponseSchema = z.object({
-  url: z.string().url(),
+  url: z.url(),
 });
