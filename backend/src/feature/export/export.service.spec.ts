@@ -73,10 +73,7 @@ describe("ExportService", () => {
     mockAi.generateFields.mockResolvedValue([]);
     mockCredit.reserveCreditsForExport.mockResolvedValue("attempt-1");
 
-    const result = await service.export(
-      { productIds: [catalogProduct().id], shopId },
-      user,
-    );
+    const result = await service.export({ productIds: [catalogProduct().id], shopId }, user);
 
     const expectedHeader = DEFAULT_EXPORT_FIELDS.map((f) => f.name).join(",");
     expect(result.csv.startsWith(expectedHeader + "\n")).toBe(true);

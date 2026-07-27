@@ -70,10 +70,7 @@ export class ExportService {
     };
   }
 
-  private async mapProduct(
-    product: CatalogProduct,
-    fields: ExportField[],
-  ): Promise<MappedProduct> {
+  private async mapProduct(product: CatalogProduct, fields: ExportField[]): Promise<MappedProduct> {
     const { mapped, unresolved } = this.fieldMapper.mapDirectFields(product, fields);
     const aiFields = await this.aiContent.generateFields(product, unresolved);
     return {
