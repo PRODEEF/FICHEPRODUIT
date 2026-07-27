@@ -11,7 +11,6 @@ function getBrowserSessionStorage(): Storage | null {
   try {
     const storage: Storage | null | undefined = globalThis.window.sessionStorage;
     // Vitest (node) : `window` peut exister sans `sessionStorage`
-    if (storage == null) return null;
     return storage;
   } catch {
     return null;
