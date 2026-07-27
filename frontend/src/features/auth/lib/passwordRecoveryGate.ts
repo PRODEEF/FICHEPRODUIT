@@ -9,7 +9,10 @@ const POLL_INTERVAL_MS = 300;
 function getBrowserSessionStorage(): Storage | null {
   if (typeof window === 'undefined') return null;
   try {
-    return window.sessionStorage;
+    const storage = window.sessionStorage;
+    // Vitest (node) peut exposer `window` sans `sessionStorage`
+    if (storage == null) return null;
+    return storage;
   } catch {
     return null;
   }

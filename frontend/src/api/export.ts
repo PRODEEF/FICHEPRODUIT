@@ -24,8 +24,9 @@ export interface ExportInsufficientCreditsDetails {
 export class ExportInsufficientCreditsError extends Error {
   readonly status = 402;
   readonly code = INSUFFICIENT_CREDITS_CODE;
-  readonly requiredCredits?: number;
-  readonly availableCredits?: number;
+  /** Présent uniquement si fourni — `declare` évite d'initialiser à `undefined` (exactOptionalPropertyTypes). */
+  declare readonly requiredCredits?: number;
+  declare readonly availableCredits?: number;
 
   constructor(message: string, details?: ExportInsufficientCreditsDetails) {
     super(message);
