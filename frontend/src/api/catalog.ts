@@ -90,15 +90,14 @@ export async function fetchCatalogProductsByShopBrands(
   return parseCatalogProductArray(parsed);
 }
 
-export async function searchCatalogProducts(criteria: CatalogSearchCriteria): Promise<CatalogProduct[]> {
-  const { parsed } = await apiFetch(
-    `${getApiBaseUrl()}/api/catalog/products/search`,
-    {
-      method: 'POST',
-      headers: await guestOrAuthHeaders(),
-      body: JSON.stringify(criteria),
-    },
-  );
+export async function searchCatalogProducts(
+  criteria: CatalogSearchCriteria,
+): Promise<CatalogProduct[]> {
+  const { parsed } = await apiFetch(`${getApiBaseUrl()}/api/catalog/products/search`, {
+    method: 'POST',
+    headers: await guestOrAuthHeaders(),
+    body: JSON.stringify(criteria),
+  });
 
   return parseCatalogProductArray(parsed);
 }

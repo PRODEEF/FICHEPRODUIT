@@ -114,10 +114,7 @@ export function ProductFilters({
           aria-label="Réinitialiser les filtres"
         >
           <RefreshCcw
-            className={cn(
-              'h-5 w-5',
-              isResetAnimating && 'animate-spin motion-reduce:animate-none',
-            )}
+            className={cn('h-5 w-5', isResetAnimating && 'animate-spin motion-reduce:animate-none')}
             aria-hidden
           />
         </Button>

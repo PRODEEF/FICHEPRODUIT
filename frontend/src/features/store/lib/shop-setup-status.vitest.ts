@@ -30,14 +30,10 @@ describe('needsShopSetup', () => {
   });
 
   it('retourne false si des marques ont été détectées', () => {
-    expect(needsShopSetup(makeShop({ url: 'https://example.com', brands: ['Nike'] }))).toBe(
-      false,
-    );
+    expect(needsShopSetup(makeShop({ url: 'https://example.com', brands: ['Nike'] }))).toBe(false);
   });
 
   it('retourne true si seul un secteur est renseigné sans marques', () => {
-    expect(
-      needsShopSetup(makeShop({ url: 'https://example.com', sector: 'Mode' })),
-    ).toBe(true);
+    expect(needsShopSetup(makeShop({ url: 'https://example.com', sector: 'Mode' }))).toBe(true);
   });
 });

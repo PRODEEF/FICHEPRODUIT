@@ -2,7 +2,9 @@ import type { CatalogProduct } from '@types-api';
 
 import type { CatalogProductPayloadMetadata } from '../types';
 
-export function buildCatalogProductMetadata(products: CatalogProduct[]): CatalogProductPayloadMetadata {
+export function buildCatalogProductMetadata(
+  products: CatalogProduct[],
+): CatalogProductPayloadMetadata {
   const brands = new Set<string>();
   const categories = new Set<string>();
   const subCategories = new Set<string>();

@@ -3,9 +3,7 @@ import { NestHttpError } from '@api/nestHttpClient';
 import type { BillingPlanId } from '@api/types/api.types';
 import type { ShopSectorLabel } from '@shared/lib/shopSectors';
 
-export type CheckoutResult =
-  | { ok: true }
-  | { ok: false; message: string; needsAuth?: boolean };
+export type CheckoutResult = { ok: true } | { ok: false; message: string; needsAuth?: boolean };
 
 /**
  * Lance le paiement Stripe pour un forfait et un secteur donnés.

@@ -30,7 +30,9 @@ export function usePricingPage(options: UsePricingPageOptions = {}) {
     if (options.initialSector) {
       // Différé pour éviter un setState synchrone dans le corps de l'effet
       const sector = options.initialSector;
-      queueMicrotask(() => { setSector(sector); });
+      queueMicrotask(() => {
+        setSector(sector);
+      });
     }
   }, [options.initialSector]);
 

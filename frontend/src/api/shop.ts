@@ -4,7 +4,12 @@
 
 import type { Shop, PatchMyShopBody, CmsType } from './types/api.types';
 import { getApiBaseUrl } from './apiBase';
-import { apiFetch, authHeaders, guestOrAuthHeadersNoBodyWithGuestSession, extractErrorMessage } from './apiAuth';
+import {
+  apiFetch,
+  authHeaders,
+  guestOrAuthHeadersNoBodyWithGuestSession,
+  extractErrorMessage,
+} from './apiAuth';
 
 function normalizeCms(raw: unknown): CmsType {
   if (raw === 'prestashop' || raw === 'shopify' || raw === 'woocommerce') {
@@ -79,7 +84,10 @@ export function normalizeShop(raw: unknown): Shop | null {
  * @throws {Error} 401, 500 ou réseau.
  * @param guestSessionId - Optionnel : même session que l’analyse invitée si le cookie n’est pas envoyé.
  */
-export async function getMyShop(shopIdForGuest?: string, guestSessionId?: string | null): Promise<Shop | null> {
+export async function getMyShop(
+  shopIdForGuest?: string,
+  guestSessionId?: string | null,
+): Promise<Shop | null> {
   const base = getApiBaseUrl();
   const qs =
     shopIdForGuest && shopIdForGuest.trim().length > 0

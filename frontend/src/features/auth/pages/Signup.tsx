@@ -274,8 +274,8 @@ export function Signup() {
                 ))}
               </SelectField>
               <p className="m-0 text-xs text-text-secondary">
-                Ce choix définit votre univers produit et les tarifs associés. Il ne pourra plus être
-                modifié par la suite.
+                Ce choix définit votre univers produit et les tarifs associés. Il ne pourra plus
+                être modifié par la suite.
               </p>
             </div>
             <InputField
@@ -320,7 +320,9 @@ export function Signup() {
               {emailAlreadyRegistered ? (
                 <p className="m-0 pb-1 text-center text-sm text-text-secondary">
                   Ce mail existe déjà,{' '}
-                  <TextLink to={`/login${buildAuthEmailQuery(emailValue)}`}>se connecter ?</TextLink>
+                  <TextLink to={`/login${buildAuthEmailQuery(emailValue)}`}>
+                    se connecter ?
+                  </TextLink>
                 </p>
               ) : null}
               <Button type="submit" variant="gradient" disabled={isDisabled}>

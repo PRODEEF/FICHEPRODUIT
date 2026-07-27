@@ -1,9 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  ExportInsufficientCreditsError,
-  parseInsufficientCreditsBody,
-} from './export';
+import { ExportInsufficientCreditsError, parseInsufficientCreditsBody } from './export';
 
 describe('parseInsufficientCreditsBody', () => {
   it('détecte le code erreur NestJS (filtre global)', () => {

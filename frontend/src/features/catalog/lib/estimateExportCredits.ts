@@ -9,10 +9,7 @@ export interface ExportCreditsEstimate {
   hasEnoughCredits: boolean;
 }
 
-function isProductFreeForExport(
-  product: CatalogProduct,
-  hasFreeLowPriceExports: boolean,
-): boolean {
+function isProductFreeForExport(product: CatalogProduct, hasFreeLowPriceExports: boolean): boolean {
   return hasFreeLowPriceExports && product.price < EXPORT_FREE_PRICE_THRESHOLD_EUR;
 }
 
@@ -36,9 +33,7 @@ export function countFreeExportProducts(
   hasFreeLowPriceExports: boolean,
 ): number {
   if (!hasFreeLowPriceExports) return 0;
-  return selectedProducts.filter((product) =>
-    isProductFreeForExport(product, true),
-  ).length;
+  return selectedProducts.filter((product) => isProductFreeForExport(product, true)).length;
 }
 
 /**

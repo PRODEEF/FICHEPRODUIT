@@ -8,9 +8,12 @@ import {
   SIGNUP_EMAIL_ALREADY_MESSAGE,
 } from './authErrorMessage';
 
-function mockAuthError(
-  partial: { message: string; status?: number; code?: string; name?: string },
-): AuthError {
+function mockAuthError(partial: {
+  message: string;
+  status?: number;
+  code?: string;
+  name?: string;
+}): AuthError {
   const name = partial.name ?? 'AuthApiError';
   const status = partial.status ?? 400;
   return {
@@ -45,9 +48,7 @@ describe('isSignupEmailAlreadyRegisteredError', () => {
 
   it('détecte le message anglais sans code', () => {
     expect(
-      isSignupEmailAlreadyRegisteredError(
-        mockAuthError({ message: 'User already registered' }),
-      ),
+      isSignupEmailAlreadyRegisteredError(mockAuthError({ message: 'User already registered' })),
     ).toBe(true);
   });
 
@@ -62,9 +63,9 @@ describe('isSignupEmailAlreadyRegisteredError', () => {
 
 describe('authErrorMessage', () => {
   it('traduit User already registered', () => {
-    expect(
-      authErrorMessage(mockAuthError({ message: 'User already registered' })),
-    ).toBe(SIGNUP_EMAIL_ALREADY_MESSAGE);
+    expect(authErrorMessage(mockAuthError({ message: 'User already registered' }))).toBe(
+      SIGNUP_EMAIL_ALREADY_MESSAGE,
+    );
   });
 });
 

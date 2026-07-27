@@ -25,16 +25,12 @@ export type { ClaimGuestSessionOptions };
  */
 export async function claimGuestSession(options?: ClaimGuestSessionOptions): Promise<void> {
   const guestSessionId = resolveGuestSessionIdForClaim(options?.sessionId);
-  const body: ClaimGuestSessionBody =
-    guestSessionId !== null ? { sessionId: guestSessionId } : {};
+  const body: ClaimGuestSessionBody = guestSessionId !== null ? { sessionId: guestSessionId } : {};
 
   try {
     await apiFetch(`${getApiBaseUrl()}/api/users/me/claim-guest-session`, {
       method: 'POST',
-      headers: await guestOrAuthHeadersWithGuestSession(
-        guestSessionId,
-        options?.accessToken,
-      ),
+      headers: await guestOrAuthHeadersWithGuestSession(guestSessionId, options?.accessToken),
       body: JSON.stringify(body),
     });
   } catch (err) {

@@ -101,9 +101,7 @@ describe('hasActiveFreeLowPriceExports', () => {
     expect(
       hasActiveFreeLowPriceExports(
         billingSummary({
-          entitlements: [
-            { type: 'free_low_price_exports', expiresAt: '2020-01-01T00:00:00.000Z' },
-          ],
+          entitlements: [{ type: 'free_low_price_exports', expiresAt: '2020-01-01T00:00:00.000Z' }],
         }),
       ),
     ).toBe(false);
@@ -113,9 +111,7 @@ describe('hasActiveFreeLowPriceExports', () => {
     expect(
       hasActiveFreeLowPriceExports(
         billingSummary({
-          entitlements: [
-            { type: 'free_low_price_exports', expiresAt: '2030-01-01T00:00:00.000Z' },
-          ],
+          entitlements: [{ type: 'free_low_price_exports', expiresAt: '2030-01-01T00:00:00.000Z' }],
         }),
       ),
     ).toBe(true);
@@ -127,9 +123,7 @@ describe('getFreeLowPriceExportsExpiresAt', () => {
     expect(
       getFreeLowPriceExportsExpiresAt(
         billingSummary({
-          entitlements: [
-            { type: 'free_low_price_exports', expiresAt: '2030-06-15T00:00:00.000Z' },
-          ],
+          entitlements: [{ type: 'free_low_price_exports', expiresAt: '2030-06-15T00:00:00.000Z' }],
         }),
       ),
     ).toBe('2030-06-15T00:00:00.000Z');

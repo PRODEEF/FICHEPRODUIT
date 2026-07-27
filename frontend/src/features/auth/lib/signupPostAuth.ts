@@ -34,7 +34,9 @@ export async function handleSignupWithActiveSession({
   refreshProfile,
   runAnalysis,
   navigate,
-}: SignupPostAuthInput): Promise<'guest_catalog' | 'analysis_started' | 'analysis_error' | 'store'> {
+}: SignupPostAuthInput): Promise<
+  'guest_catalog' | 'analysis_started' | 'analysis_error' | 'store'
+> {
   if (guestSessionId) {
     await claimGuestSessionIfPresent(accessToken, guestSessionId);
   }

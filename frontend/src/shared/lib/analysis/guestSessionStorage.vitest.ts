@@ -39,9 +39,8 @@ describe('guestSessionStorage', () => {
   });
 
   it('resolveGuestSessionIdForClaim préfère l’argument explicite', async () => {
-    const { setGuestSessionId, resolveGuestSessionIdForClaim } = await import(
-      './guestSessionStorage'
-    );
+    const { setGuestSessionId, resolveGuestSessionIdForClaim } =
+      await import('./guestSessionStorage');
     setGuestSessionId(GUEST_SESSION_ID);
     expect(resolveGuestSessionIdForClaim(OTHER_SESSION_ID)).toBe(OTHER_SESSION_ID);
     expect(resolveGuestSessionIdForClaim(null)).toBe(GUEST_SESSION_ID);

@@ -42,6 +42,21 @@ npm run test:e2e
 npm run test:cov
 ```
 
+## Export CSV PrestaShop 8
+
+Endpoint : `GET /api/export/prestashop?type=products|combinations&shopId=…&productIds=uuid1,uuid2,…` (JWT requis).
+
+Génère `products.csv` ou `combinations.csv` (séparateur `;`, UTF-8 avec BOM), importables via **Paramètres avancés → Importer**.
+
+### Prérequis côté boutique PrestaShop
+
+- Les **catégories** listées dans le CSV doivent déjà exister (noms plats, pas de hiérarchie `>`).
+- Les **groupes d’attributs** (`Couleur`, `Taille`, …) doivent préexister : l’import de déclinaisons ne les crée pas de façon fiable pour ce flux — crée-les avant dans le BO.
+- Importer **d’abord** les produits, **ensuite** les déclinaisons (deux imports séparés et séquentiels).
+- À l’import produits, activer l’option « utiliser la référence du produit comme clé » : la colonne `ID produit*` du fichier déclinaisons contient la référence parent, pas un ID PrestaShop.
+
+Les déclinaisons sont dérivées des attributs catalogue `couleur`/`color` et `taille`/`size` (valeurs séparées par `,`).
+
 ## Architecture
 
 Voir [ARCHITECTURE.md](./ARCHITECTURE.md) à la racine du dossier `backend` et [../CONTRIBUTING.md](../CONTRIBUTING.md) pour les conventions d'équipe.

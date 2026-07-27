@@ -10,7 +10,12 @@
 import type { Analysis, CreateAnalysisBody } from '@types-api';
 
 import { getApiBaseUrl } from './apiBase';
-import { apiFetch, authHeadersNoBody, guestOrAuthHeaders, guestOrAuthHeadersNoBodyWithGuestSession } from './apiAuth';
+import {
+  apiFetch,
+  authHeadersNoBody,
+  guestOrAuthHeaders,
+  guestOrAuthHeadersNoBodyWithGuestSession,
+} from './apiAuth';
 
 // ---------------------------------------------------------------------------
 // Normalisation JSON → Analysis

@@ -24,7 +24,7 @@ export function messageFromNestErrorBody(parsed: unknown, fallback: string): str
   if (!parsed || typeof parsed !== 'object' || !('message' in parsed)) {
     return fallback;
   }
-  const m = (parsed).message;
+  const m = parsed.message;
   if (typeof m === 'string' && m.trim()) return m.trim();
   if (Array.isArray(m) && m[0] && typeof m[0] === 'string') return m[0];
   return fallback;

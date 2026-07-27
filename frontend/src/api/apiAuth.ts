@@ -124,7 +124,8 @@ export async function apiFetch(
     try {
       parsed = JSON.parse(text);
     } catch {
-      if (!res.ok) throw new ApiHttpError(`Réponse non-JSON du serveur (${res.status}).`, res.status);
+      if (!res.ok)
+        throw new ApiHttpError(`Réponse non-JSON du serveur (${res.status}).`, res.status);
     }
   }
 

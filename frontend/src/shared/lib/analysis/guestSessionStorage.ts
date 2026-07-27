@@ -56,9 +56,7 @@ export function resolveGuestSessionId(
 /**
  * Résout la session pour le claim : argument explicite → sessionStorage.
  */
-export function resolveGuestSessionIdForClaim(
-  explicitSessionId?: string | null,
-): string | null {
+export function resolveGuestSessionIdForClaim(explicitSessionId?: string | null): string | null {
   return firstValidSessionId(explicitSessionId) ?? getGuestSessionId();
 }
 

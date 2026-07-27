@@ -70,7 +70,12 @@ export function HowItWorks() {
           </motion.article>
         ))}
       </motion.div>
-      <motion.div className="text-center mt-12" variants={titleReveal} initial="hidden" animate={inView ? 'visible' : 'hidden'}>
+      <motion.div
+        className="text-center mt-12"
+        variants={titleReveal}
+        initial="hidden"
+        animate={inView ? 'visible' : 'hidden'}
+      >
         <Button href="/signup" variant="primary" size="lg" glow>
           Essayer maintenant — c&apos;est gratuit
         </Button>

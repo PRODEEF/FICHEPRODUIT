@@ -127,12 +127,7 @@ export interface ExportBody {
 // Billing
 // ---------------------------------------------------------------------------
 
-export type BillingPlanId =
-  | 'starter'
-  | 'pro'
-  | 'business_silver'
-  | 'business_custom'
-  | 'platinum';
+export type BillingPlanId = 'starter' | 'pro' | 'business_silver' | 'business_custom' | 'platinum';
 
 export type BillingEntitlementType = 'free_low_price_exports';
 

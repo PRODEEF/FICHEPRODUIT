@@ -54,8 +54,10 @@ export function useAnalysisDetail(
   const [loading, setLoading] = useState(() => Boolean(analysisId));
   const [analysis, setAnalysis] = useState<Analysis | null>(() => {
     if (!analysisId) return null;
-    return getAnalysisDetailCache<Analysis, CatalogProductPayloadMetadata, Shop>(cacheUserId, analysisId)
-      ?.analysis ?? null;
+    return (
+      getAnalysisDetailCache<Analysis, CatalogProductPayloadMetadata, Shop>(cacheUserId, analysisId)
+        ?.analysis ?? null
+    );
   });
   const [shop, setShop] = useState<Shop | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -105,7 +107,7 @@ export function useAnalysisDetail(
       try {
         const a = await getAnalysis(analysisId, guestSessionFromQuery);
         if (isStale()) return;
-        const guestHdr = !userId ? (guestSessionFromQuery ?? a.sessionId) ?? undefined : undefined;
+        const guestHdr = !userId ? (guestSessionFromQuery ?? a.sessionId ?? undefined) : undefined;
 
         let nextShop: Shop | null = null;
         if (a.status === 'done' && a.shopId) {

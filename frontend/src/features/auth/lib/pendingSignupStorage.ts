@@ -71,8 +71,7 @@ export async function applyPendingSignupFromStorage(
   const needsUsername =
     !existing?.username || existing.username === 'Pseudo' || existing.username.trim() === '';
   const needsWebsite = pending.websiteUrl && !existing?.website_url;
-  const needsPendingFlag =
-    pending.pendingAutoAnalyze && existing && !existing.pending_auto_analyze;
+  const needsPendingFlag = pending.pendingAutoAnalyze && existing && !existing.pending_auto_analyze;
   if (!needsUsername && !needsWebsite && !needsPendingFlag) {
     await applyPendingShopSectorFromStorage(user);
     clearPendingSignupMemory();
