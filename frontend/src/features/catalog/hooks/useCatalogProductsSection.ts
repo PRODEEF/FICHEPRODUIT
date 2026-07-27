@@ -2,15 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import type { CatalogProduct } from '@types-api';
 
-import { useBilling } from '../../billing/hooks/useBilling';
 import { useCatalogProductExport } from './useCatalogProductExport';
 import type { CatalogProductPayloadMetadata, ProductFilter } from '../types';
-import {
-  countFreeExportProducts,
-  estimateExportCredits,
-  getFreeLowPriceExportsExpiresAt,
-  hasActiveFreeLowPriceExports,
-} from '../lib/estimateExportCredits';
 import { findOptionCaseInsensitive } from '../lib/catalogFilterOptions';
 import { useProductFilters } from './useProductFilters';
 import { useProductSelection } from './useProductSelection';
@@ -32,13 +25,8 @@ export function useCatalogProductsSection({
   externalBrandFilter,
   onBrandFilterChange,
 }: UseCatalogProductsSectionOptions) {
-  const { summary: billingSummary, loading: billingLoading } = useBilling();
-  const {
-    exportConfirmOpen,
-    openExportConfirmation,
-    closeExportConfirmation,
-    confirmExport,
-  } = useCatalogProductExport();
+  const { exportConfirmOpen, openExportConfirmation, closeExportConfirmation, confirmExport } =
+    useCatalogProductExport();
   const [removedIds, setRemovedIds] = useState<Set<string>>(() => new Set());
 
   const allProducts = products.filter((p) => !removedIds.has(p.id));
@@ -79,11 +67,9 @@ export function useCatalogProductsSection({
     onBrandFilterChange?.('');
   }, [resetFilters, onBrandFilterChange]);
 
-  const canResetFilters =
-    hasActiveFilters || Boolean(externalBrandFilter?.trim());
+  const canResetFilters = hasActiveFilters || Boolean(externalBrandFilter?.trim());
 
-  const hasEffectiveFilters =
-    hasActiveFilters || Boolean(externalBrandFilter?.trim());
+  const hasEffectiveFilters = hasActiveFilters || Boolean(externalBrandFilter?.trim());
 
   const effectiveFilters: ProductFilter =
     canonicalExternalBrand !== undefined && canonicalExternalBrand !== filters.brand
@@ -105,44 +91,6 @@ export function useCatalogProductsSection({
     selectedInViewCount,
     deleteSelected,
   } = useProductSelection(displayProducts, effectiveFilters, handleRemoveIds);
-
-  const selectedProducts = useMemo(
-    () => displayProducts.filter((product) => selectedIds.has(product.id)),
-    [displayProducts, selectedIds],
-  );
-
-  const exportCreditsEstimate = useMemo(() => {
-    const estimate = estimateExportCredits(
-      selectedProducts,
-      selectedInViewCount,
-      billingSummary,
-    );
-
-    if (billingSummary?.hasUnlimitedExports) {
-      return estimate;
-    }
-
-    if (!billingSummary && selectedInViewCount > 0) {
-      return {
-        requiredCredits: selectedInViewCount,
-        availableCredits: 0,
-        hasEnoughCredits: false,
-      };
-    }
-
-    if (billingLoading && billingSummary) {
-      return {
-        ...estimate,
-        hasEnoughCredits: estimate.requiredCredits <= billingSummary.balance,
-      };
-    }
-
-    return estimate;
-  }, [selectedProducts, selectedInViewCount, billingSummary, billingLoading]);
-
-  const hasFreeLowPriceExports = hasActiveFreeLowPriceExports(billingSummary);
-  const freeExportCount = countFreeExportProducts(selectedProducts, hasFreeLowPriceExports);
-  const freeLowPriceExportsExpiresAt = getFreeLowPriceExportsExpiresAt(billingSummary);
 
   return {
     allProducts,
@@ -168,10 +116,5 @@ export function useCatalogProductsSection({
     openExportConfirmation,
     closeExportConfirmation,
     confirmExport,
-    exportCreditsEstimate,
-    billingSummary,
-    hasFreeLowPriceExports,
-    freeExportCount,
-    freeLowPriceExportsExpiresAt,
   };
 }

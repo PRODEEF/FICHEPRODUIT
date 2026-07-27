@@ -15,19 +15,14 @@ export function CreditBalanceBadge({ className }: CreditBalanceBadgeProps) {
   if (loading && !summary) {
     return (
       <Badge variant="warning" className={cn('gap-1', className)} aria-busy="true">
-        <Coins size={12} aria-hidden />
-        …
+        <Coins size={12} aria-hidden />…
       </Badge>
     );
   }
 
   if (error) {
     return (
-      <Badge
-        variant="warning"
-        className={cn('gap-1 whitespace-nowrap', className)}
-        title={error}
-      >
+      <Badge variant="warning" className={cn('gap-1 whitespace-nowrap', className)} title={error}>
         <Coins size={12} aria-hidden />
         Solde indisponible
       </Badge>
