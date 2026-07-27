@@ -33,14 +33,16 @@ export function BillingSuccess() {
         <Button href="/catalog" variant="primary" size="sm" glow>
           Retour au catalogue
         </Button>
-        <Button href="/pricing" variant="neutral-outline" size="sm">
+        {/* Pricing temporairement désactivé */}
+        {/* <Button href="/pricing" variant="neutral-outline" size="sm">
           Voir les tarifs
-        </Button>
+        </Button> */}
       </div>
+      {/* Facturation profil temporairement désactivée — renvoi vers /demo au lieu de /profile */}
       <p className="mt-6 text-xs text-text-muted">
         Un problème ?{' '}
-        <Link to="/profile" className="font-semibold text-purple-600 hover:underline">
-          Consulte ton profil
+        <Link to="/demo" className="font-semibold text-purple-600 hover:underline">
+          Demande une démo
         </Link>
       </p>
     </div>
