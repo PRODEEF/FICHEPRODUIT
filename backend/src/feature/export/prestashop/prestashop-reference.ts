@@ -51,3 +51,11 @@ export function validateProductReferences(products: CatalogProduct[]): Map<strin
 
   return byProductId;
 }
+
+/**
+ * Identifiant d’import PrestaShop dérivé de la référence, sans tirets
+ * (colonnes `ID` produits et `ID produit*` déclinaisons).
+ */
+export function toPrestashopImportId(reference: string): string {
+  return reference.replaceAll("-", "");
+}

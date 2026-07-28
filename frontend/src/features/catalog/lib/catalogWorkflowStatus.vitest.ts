@@ -12,7 +12,6 @@ function analysis(overrides: Partial<Analysis>): Analysis {
     errorCode: null,
     errorMessage: null,
     userId: 'u1',
-    sessionId: null,
     shopId: null,
     createdAt: new Date().toISOString(),
     ...overrides,

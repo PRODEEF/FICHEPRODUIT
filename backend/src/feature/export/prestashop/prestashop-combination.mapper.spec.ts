@@ -65,12 +65,22 @@ describe("PrestashopCombinationMapper", () => {
     expect(defaults[0]).toBe("1");
     expect(defaults.slice(1).every((d) => d === "0")).toBe(true);
 
-    expect(combinationCell(rows[0]!, "ID produit*")).toBe("REF-B");
+    expect(combinationCell(rows[0]!, "ID produit*")).toBe("REFB");
     expect(combinationCell(rows[0]!, "Attribut (Nom:Type:Position)*")).toBe(
       "Couleur:color:0,Taille:select:1",
     );
     expect(combinationCell(rows[0]!, "Valeur (Valeur:Position)*")).toBe("Noir:0,6.0m²:1");
     expect(combinationCell(rows[0]!, "Référence")).toBe("REF-B-Noir-6.0m²");
+  });
+
+  it("aligne ID produit* sans tirets sur l’ID produits", () => {
+    const product = sampleCatalogProduct({
+      attributes: { reference: "44260-3012", taille: "S,M" },
+    });
+    const rows = mapper.map([product], new Map([[product.id, "44260-3012"]]));
+    expect(rows).toHaveLength(2);
+    expect(combinationCell(rows[0]!, "ID produit*")).toBe("442603012");
+    expect(combinationCell(rows[1]!, "ID produit*")).toBe("442603012");
   });
 
   it("ignore les valeurs d’attribut vides après split", () => {

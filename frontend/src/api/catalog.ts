@@ -1,6 +1,6 @@
 import type { CatalogProduct } from './types/api.types';
 import { getApiBaseUrl } from './apiBase';
-import { apiFetch, guestOrAuthHeaders, guestOrAuthHeadersNoBodyWithGuestSession } from './apiAuth';
+import { apiFetch, guestOrAuthHeaders, guestOrAuthHeadersNoBody } from './apiAuth';
 
 export interface CatalogSearchCriteria {
   sector?: string;
@@ -74,17 +74,15 @@ function parseCatalogProductArray(parsed: unknown): CatalogProduct[] {
 }
 
 /**
- * Loads all catalog products whose brand is listed on the shop (JWT required).
+ * Charge tous les produits catalogue dont la marque figure sur la boutique.
+ * L'accès invité est géré par le cookie httpOnly `ficheproduct_guest_session`.
  */
-export async function fetchCatalogProductsByShopBrands(
-  shopId: string,
-  guestSessionId?: string | null,
-): Promise<CatalogProduct[]> {
+export async function fetchCatalogProductsByShopBrands(shopId: string): Promise<CatalogProduct[]> {
   const { parsed } = await apiFetch(
     `${getApiBaseUrl()}/api/catalog/products/by-shop-brands/${encodeURIComponent(shopId)}`,
     {
       method: 'GET',
-      headers: await guestOrAuthHeadersNoBodyWithGuestSession(guestSessionId),
+      headers: await guestOrAuthHeadersNoBody(),
     },
   );
   return parseCatalogProductArray(parsed);

@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus } from "@nestjs/common";
 
-/** Code d'erreur attendu par le client (`frontend/src/api/export.ts`). */
+/** Code d'erreur métier pour crédits insuffisants (`INSUFFICIENT_CREDITS`). */
 export const INSUFFICIENT_CREDITS_ERROR = "INSUFFICIENT_CREDITS";
 
 export type InsufficientCreditsBody = {

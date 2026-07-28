@@ -47,7 +47,7 @@ export async function runAnalysisWorkflow(
   try {
     while (current.status !== 'done' && current.status !== 'failed') {
       await sleep(POLL_INTERVAL_MS);
-      current = await getAnalysis(current.id, current.sessionId);
+      current = await getAnalysis(current.id);
       options?.onProgress?.({ ...current });
     }
   } catch (e) {

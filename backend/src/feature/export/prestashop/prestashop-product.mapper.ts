@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 
 import type { CatalogProduct } from "../../../domain/catalog/types/catalog.types";
 import { PRESTASHOP_PRODUCT_HEADERS, type PrestashopProductHeader } from "./prestashop-headers";
+import { toPrestashopImportId } from "./prestashop-reference";
 import type { PrestashopProductRow } from "./prestashop.types";
 
 function emptyProductRow(): PrestashopProductRow {
@@ -40,6 +41,8 @@ export class PrestashopProductMapper {
     const row = emptyProductRow();
     const reference = references.get(product.id) ?? "";
 
+    // ID sans tirets (aligné sur ID produit* des déclinaisons)
+    row["ID"] = toPrestashopImportId(reference);
     row["Actif (0/1)"] = "1";
     row["Nom *"] = product.name;
     row["Catégories (x,y,z...)"] = buildCategoriesCell(product);
@@ -49,12 +52,52 @@ export class PrestashopProductMapper {
     row["Résumé"] = product.description ?? "";
     row["Description"] = product.detailedDescription ?? "";
     row["URL des images (x,y,z...)"] = product.images.join(",");
-    row["État"] = readAttr(product, "condition");
+    row["État"] = mapProductCondition(readAttr(product, "condition"));
     row["Disponible à la commande (0 = Non, 1 = Oui)"] = "1";
     row["Afficher le prix (0 = Non, 1 = Oui)"] = "1";
 
     return row;
   }
+}
+
+const PRESTASHOP_CONDITIONS = new Set(["new", "used", "refurbished"]);
+
+/**
+ * Normalise l’attribut catalogue `condition` vers les valeurs PrestaShop
+ * (`new` | `used` | `refurbished`). Valeur absente ou inconnue → `new`.
+ */
+export function mapProductCondition(raw: string): string {
+  const normalized = raw.trim().toLowerCase();
+  if (normalized.length === 0) return "new";
+  if (PRESTASHOP_CONDITIONS.has(normalized)) return normalized;
+
+  if (
+    normalized === "neuf" ||
+    normalized === "nouveau" ||
+    normalized === "nouvelle" ||
+    normalized === "brand new"
+  ) {
+    return "new";
+  }
+  if (
+    normalized === "occasion" ||
+    normalized === "usagé" ||
+    normalized === "usage" ||
+    normalized === "seconde main" ||
+    normalized === "second hand"
+  ) {
+    return "used";
+  }
+  if (
+    normalized === "reconditionné" ||
+    normalized === "reconditionne" ||
+    normalized === "remis à neuf" ||
+    normalized === "remis a neuf"
+  ) {
+    return "refurbished";
+  }
+
+  return "new";
 }
 
 function formatPrice(price: number): string {

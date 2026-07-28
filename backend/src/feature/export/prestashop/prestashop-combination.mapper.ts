@@ -5,6 +5,7 @@ import {
   PRESTASHOP_COMBINATION_HEADERS,
   type PrestashopCombinationHeader,
 } from "./prestashop-headers";
+import { toPrestashopImportId } from "./prestashop-reference";
 import type {
   PrestashopAttributeChoice,
   PrestashopAttributeType,
@@ -161,7 +162,7 @@ export class PrestashopCombinationMapper {
     const row = emptyCombinationRow();
     const { attributeGroups, attributeValues } = buildAttributeColumns(choices);
 
-    row["ID produit*"] = productRef;
+    row["ID produit*"] = toPrestashopImportId(productRef);
     row["Attribut (Nom:Type:Position)*"] = attributeGroups;
     row["Valeur (Valeur:Position)*"] = attributeValues;
     row["Référence"] = buildCombinationReference(productRef, choices);

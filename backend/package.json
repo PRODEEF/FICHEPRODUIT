@@ -34,10 +34,8 @@
     "@nestjs/swagger": "^11.0.0",
     "@supabase/supabase-js": "^2.95.3",
     "@vercel/functions": "^3.5.1",
-    "axios": "^1.13.5",
     "cheerio": "^1.2.0",
     "csv-stringify": "^6.8.1",
-    "dotenv": "^17.2.4",
     "nestjs-zod": "^5.3.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
@@ -98,10 +96,10 @@
     "coverageDirectory": "../coverage",
     "coverageThreshold": {
       "global": {
-        "lines": 38,
-        "functions": 38,
-        "branches": 20,
-        "statements": 38
+        "lines": 50,
+        "functions": 50,
+        "branches": 30,
+        "statements": 50
       }
     },
     "testEnvironment": "node"

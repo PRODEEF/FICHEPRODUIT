@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+const STORAGE_KEY = 'ficheproduct_guest_session_id';
 const GUEST_SESSION_ID = '550e8400-e29b-41d4-a716-446655440000';
-const OTHER_SESSION_ID = '660e8400-e29b-41d4-a716-446655440001';
 
-function mockSessionStorage(): void {
+function mockSessionStorage(): Map<string, string> {
   const store = new Map<string, string>();
   vi.stubGlobal('sessionStorage', {
     getItem: (key: string) => store.get(key) ?? null,
@@ -17,32 +17,34 @@ function mockSessionStorage(): void {
       store.clear();
     },
   });
+  return store;
 }
 
 describe('guestSessionStorage', () => {
   beforeEach(() => {
     vi.resetModules();
-    mockSessionStorage();
   });
 
-  it('resolveGuestSessionId lit sessionStorage en priorité', async () => {
-    const { setGuestSessionId, resolveGuestSessionId } = await import('./guestSessionStorage');
-    setGuestSessionId(GUEST_SESSION_ID);
-    expect(resolveGuestSessionId(OTHER_SESSION_ID)).toBe(GUEST_SESSION_ID);
+  it('clearGuestSessionId retire la clé sessionStorage', async () => {
+    const store = mockSessionStorage();
+    store.set(STORAGE_KEY, GUEST_SESSION_ID);
+
+    const { clearGuestSessionId } = await import('./guestSessionStorage');
+    clearGuestSessionId();
+
+    expect(store.has(STORAGE_KEY)).toBe(false);
   });
 
-  it('resolveGuestSessionId retombe sur ?s= puis sessionId analyse', async () => {
-    const { resolveGuestSessionId } = await import('./guestSessionStorage');
-    expect(resolveGuestSessionId(GUEST_SESSION_ID)).toBe(GUEST_SESSION_ID);
-    expect(resolveGuestSessionId(null, OTHER_SESSION_ID)).toBe(OTHER_SESSION_ID);
-    expect(resolveGuestSessionId(null, null)).toBeNull();
-  });
+  it('clearGuestSessionId ne lève pas si sessionStorage est indisponible', async () => {
+    vi.stubGlobal('sessionStorage', {
+      removeItem: () => {
+        throw new Error('blocked');
+      },
+    });
 
-  it('resolveGuestSessionIdForClaim préfère l’argument explicite', async () => {
-    const { setGuestSessionId, resolveGuestSessionIdForClaim } =
-      await import('./guestSessionStorage');
-    setGuestSessionId(GUEST_SESSION_ID);
-    expect(resolveGuestSessionIdForClaim(OTHER_SESSION_ID)).toBe(OTHER_SESSION_ID);
-    expect(resolveGuestSessionIdForClaim(null)).toBe(GUEST_SESSION_ID);
+    const { clearGuestSessionId } = await import('./guestSessionStorage');
+    expect(() => {
+      clearGuestSessionId();
+    }).not.toThrow();
   });
 });

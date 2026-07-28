@@ -16,7 +16,6 @@ export interface SignupPostAuthInput {
   normalizedUsername: string;
   sector: ShopSectorLabel;
   websiteUrl: string;
-  guestSessionId: string | null;
   refreshProfile: () => Promise<void>;
   runAnalysis: (url: string) => Promise<RunAnalysisOutcome>;
   navigate: NavigateFunction;
@@ -30,27 +29,25 @@ export async function handleSignupWithActiveSession({
   normalizedUsername,
   sector,
   websiteUrl,
-  guestSessionId,
   refreshProfile,
   runAnalysis,
   navigate,
 }: SignupPostAuthInput): Promise<
   'guest_catalog' | 'analysis_started' | 'analysis_error' | 'store'
 > {
-  if (guestSessionId) {
-    await claimGuestSessionIfPresent(accessToken, guestSessionId);
-  }
+  // Toujours tenter le claim — le backend lit le cookie httpOnly.
+  const claimed = await claimGuestSessionIfPresent(accessToken);
 
   const repo = createSupabaseUserRepository(supabase);
   await repo.updateProfile(userId, {
     username: normalizedUsername,
     website_url: websiteUrl === '' ? null : websiteUrl,
-    pending_auto_analyze: guestSessionId ? false : websiteUrl !== '',
+    pending_auto_analyze: claimed ? false : websiteUrl !== '',
   });
   await patchMyShop({ sector });
   await refreshProfile();
 
-  if (guestSessionId) {
+  if (claimed) {
     void navigate('/catalog', { replace: true });
     return 'guest_catalog';
   }

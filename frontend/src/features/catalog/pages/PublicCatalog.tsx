@@ -1,11 +1,7 @@
 import { useEffect, useMemo } from 'react';
-import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router';
+import { Navigate, useNavigate, useParams } from 'react-router';
 
 import { isValidAnalysisId } from '@lib/analysis/analysisStorage';
-import {
-  persistGuestSessionFromSources,
-  resolveGuestSessionId,
-} from '@lib/analysis/guestSessionStorage';
 
 import { CatalogPageLayout } from '../components/CatalogPageLayout';
 import { CatalogProductsSection } from '../components/CatalogProductsSection';
@@ -16,15 +12,15 @@ import { useBrandToggle } from '../lib/useBrandToggle';
 import { resolveCatalogWorkflowStatus } from '../lib/catalogWorkflowStatus';
 
 /**
- * Vue publique d’une analyse pour les invités non connectés (`/catalog/public/:analysisId`),
- * typiquement après une analyse : la boutique vient d’être créée et les fiches exemples sont
- * les mêmes blocs que sur `/catalog`, avec un rappel d’inscription.
+ * Vue publique d'une analyse pour les invités non connectés (`/catalog/public/:analysisId`),
+ * typiquement après une analyse : la boutique vient d'être créée et les fiches exemples sont
+ * les mêmes blocs que sur `/catalog`, avec un rappel d'inscription.
  *
- * Toute analyse introuvable ou identifiant invalide redirige vers l’accueil.
+ * L'accès invité est géré par le cookie httpOnly `ficheproduct_guest_session`.
+ * Toute analyse introuvable ou identifiant invalide redirige vers l'accueil.
  */
 export function PublicCatalog() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const { analysisId } = useParams<{ analysisId: string }>();
 
   const hasValidAnalysisId = isValidAnalysisId(analysisId);
@@ -63,17 +59,7 @@ export function PublicCatalog() {
 
   const isLoadingProducts = workflowStatus === 'loading_products';
 
-  const sessionFromQuery = searchParams.get('s');
-  const guestSessionId = useMemo(
-    () => resolveGuestSessionId(sessionFromQuery, analysis?.sessionId ?? null),
-    [sessionFromQuery, analysis?.sessionId],
-  );
-
   const signupWebsiteUrl = analysis?.url ?? shop?.url ?? '';
-
-  useEffect(() => {
-    persistGuestSessionFromSources(sessionFromQuery, analysis?.sessionId ?? null);
-  }, [sessionFromQuery, analysis?.sessionId]);
 
   useEffect(() => {
     if (!analysisId || !hasValidAnalysisId || !analysisNotFound) return;
@@ -86,9 +72,7 @@ export function PublicCatalog() {
 
   return (
     <CatalogPageLayout
-      afterHeader={
-        <GuestCatalogCTA websiteUrl={signupWebsiteUrl} guestSessionId={guestSessionId} />
-      }
+      afterHeader={<GuestCatalogCTA websiteUrl={signupWebsiteUrl} />}
       shopLoading={shopLoading}
       shopError={shopErrorMessage}
       shop={shop}

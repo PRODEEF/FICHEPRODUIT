@@ -29,6 +29,7 @@ export const exportPrestashopQuerySchema = z.object({
     z
       .array(z.uuid())
       .min(1, "Sélectionne au moins un produit")
+      .max(500, "La sélection est limitée à 500 produits")
       .describe("UUID des produits catalogue sélectionnés"),
   ),
 });

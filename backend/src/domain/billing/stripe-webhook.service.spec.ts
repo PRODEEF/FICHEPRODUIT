@@ -1,5 +1,6 @@
 import { BadRequestException } from "@nestjs/common";
 import Stripe from "stripe";
+import { BillingPricingService } from "./pricing/billing-pricing.service";
 import { CreditService } from "./credit.service";
 import { StripeWebhookService } from "./stripe-webhook.service";
 import type { IUserBillingRepository } from "./repositories/user-billing.repository.interface";
@@ -30,12 +31,22 @@ describe("StripeWebhookService", () => {
     getClient: jest.fn(),
   } as unknown as jest.Mocked<StripeService>;
 
+  // La tarification serveur est la source de vérité — les métadonnées Stripe sont ignorées.
+  const billingPricingServiceMock = {
+    getCreditsForPlan: jest.fn(),
+  } as unknown as jest.Mocked<BillingPricingService>;
+
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
   const createService = () =>
-    new StripeWebhookService(stripeServiceMock, creditServiceMock, userBillingRepoMock);
+    new StripeWebhookService(
+      stripeServiceMock,
+      creditServiceMock,
+      billingPricingServiceMock,
+      userBillingRepoMock,
+    );
 
   it("rejette une signature invalide", () => {
     constructWebhookEventMock.mockImplementation(() => {
@@ -46,7 +57,10 @@ describe("StripeWebhookService", () => {
     expect(() => service.constructEvent(Buffer.from("{}"), "sig")).toThrow(BadRequestException);
   });
 
-  it("crédite un pack sur checkout.session.completed (idempotent côté CreditService)", async () => {
+  it("crédite un pack sur checkout.session.completed depuis la tarification serveur (pas les métadonnées)", async () => {
+    // Le plan "pro" = 10 crédits selon PLAN_CREDIT_AMOUNTS
+    billingPricingServiceMock.getCreditsForPlan.mockReturnValue(10);
+
     const session: Partial<Stripe.Checkout.Session> = {
       id: "cs_test_1",
       mode: "payment",
@@ -55,7 +69,6 @@ describe("StripeWebhookService", () => {
         user_id: "user-1",
         plan_id: "pro",
         sector: "Glisse",
-        credits_amount: "10",
       },
     };
 
@@ -70,6 +83,7 @@ describe("StripeWebhookService", () => {
     const service = createService();
     await service.handleEvent(event);
 
+    expect(billingPricingServiceMock.getCreditsForPlan).toHaveBeenCalledWith("pro");
     expect(creditServiceMock.grantPackPurchase).toHaveBeenCalledWith({
       userId: "user-1",
       planId: "pro",
@@ -79,16 +93,18 @@ describe("StripeWebhookService", () => {
     });
   });
 
-  it("ignore un plan_id invalide sur checkout.session.completed", async () => {
+  it("ignore un checkout.session.completed si getCreditsForPlan retourne null (plan illimité)", async () => {
+    // Le plan "platinum" est illimité — pas de pack d'achat unique possible.
+    billingPricingServiceMock.getCreditsForPlan.mockReturnValue(null);
+
     const session: Partial<Stripe.Checkout.Session> = {
-      id: "cs_test_bad",
+      id: "cs_platinum_payment",
       mode: "payment",
       payment_status: "paid",
       metadata: {
         user_id: "user-1",
-        plan_id: "invalid_plan",
+        plan_id: "platinum",
         sector: "Glisse",
-        credits_amount: "10",
       },
     };
 
@@ -103,16 +119,41 @@ describe("StripeWebhookService", () => {
     expect(creditServiceMock.grantPackPurchase).not.toHaveBeenCalled();
   });
 
-  it("ne crédite pas deux fois si grantPackPurchase est idempotent", async () => {
+  it("ignore un plan_id invalide sur checkout.session.completed", async () => {
     const session: Partial<Stripe.Checkout.Session> = {
-      id: "cs_test_1",
+      id: "cs_test_bad",
+      mode: "payment",
+      payment_status: "paid",
+      metadata: {
+        user_id: "user-1",
+        plan_id: "invalid_plan",
+        sector: "Glisse",
+      },
+    };
+
+    const event = {
+      type: "checkout.session.completed",
+      data: { object: session },
+    } as Stripe.Event;
+
+    const service = createService();
+    await service.handleEvent(event);
+
+    expect(billingPricingServiceMock.getCreditsForPlan).not.toHaveBeenCalled();
+    expect(creditServiceMock.grantPackPurchase).not.toHaveBeenCalled();
+  });
+
+  it("crédite le plan starter (1 crédit) depuis la tarification serveur", async () => {
+    billingPricingServiceMock.getCreditsForPlan.mockReturnValue(1);
+
+    const session: Partial<Stripe.Checkout.Session> = {
+      id: "cs_test_starter",
       mode: "payment",
       payment_status: "paid",
       metadata: {
         user_id: "user-1",
         plan_id: "starter",
         sector: "Vélo",
-        credits_amount: "1",
       },
     };
 
@@ -125,9 +166,11 @@ describe("StripeWebhookService", () => {
 
     const service = createService();
     await service.handleEvent(event);
-    await service.handleEvent(event);
 
-    expect(creditServiceMock.grantPackPurchase).toHaveBeenCalledTimes(2);
+    expect(billingPricingServiceMock.getCreditsForPlan).toHaveBeenCalledWith("starter");
+    expect(creditServiceMock.grantPackPurchase).toHaveBeenCalledWith(
+      expect.objectContaining({ creditsAmount: 1 }),
+    );
   });
 
   it("synchronise l'abonnement sur customer.subscription.updated", async () => {
@@ -190,7 +233,6 @@ describe("StripeWebhookService", () => {
         user_id: "user-1",
         plan_id: "platinum",
         sector: "Glisse",
-        credits_amount: "unlimited",
       },
     };
 
@@ -211,6 +253,8 @@ describe("StripeWebhookService", () => {
       }),
     );
     expect(creditServiceMock.grantPackPurchase).not.toHaveBeenCalled();
+    // En mode abonnement, getCreditsForPlan n'est pas appelé
+    expect(billingPricingServiceMock.getCreditsForPlan).not.toHaveBeenCalled();
   });
 
   it("accorde la période Platinium sur invoice.paid (renouvellement)", async () => {

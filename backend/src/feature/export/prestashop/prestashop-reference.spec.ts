@@ -1,9 +1,18 @@
 import {
   DuplicateProductReferenceError,
   MissingProductReferenceError,
+  toPrestashopImportId,
   validateProductReferences,
 } from "./prestashop-reference";
 import { sampleCatalogProduct } from "./prestashop-test.fixtures";
+
+describe("toPrestashopImportId", () => {
+  it("retire tous les tirets de la référence", () => {
+    expect(toPrestashopImportId("44260-3012")).toBe("442603012");
+    expect(toPrestashopImportId("REF-B")).toBe("REFB");
+    expect(toPrestashopImportId("ABC")).toBe("ABC");
+  });
+});
 
 describe("validateProductReferences", () => {
   it("retourne la map productId → référence", () => {

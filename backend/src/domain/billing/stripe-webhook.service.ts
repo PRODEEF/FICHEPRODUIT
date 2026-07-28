@@ -1,6 +1,7 @@
 import { BadRequestException, Inject, Injectable, Logger } from "@nestjs/common";
 import Stripe from "stripe";
 import { billingPlanIdSchema } from "./billing-plan.schema";
+import { BillingPricingService } from "./pricing/billing-pricing.service";
 import { CreditService } from "./credit.service";
 import {
   USER_BILLING_REPOSITORY,
@@ -22,6 +23,7 @@ export class StripeWebhookService {
   constructor(
     private readonly stripeService: StripeService,
     private readonly creditService: CreditService,
+    private readonly billingPricingService: BillingPricingService,
     @Inject(USER_BILLING_REPOSITORY)
     private readonly userBillingRepo: IUserBillingRepository,
   ) {}
@@ -84,11 +86,10 @@ export class StripeWebhookService {
     const planId = planIdParsed.data;
 
     if (session.mode === "payment") {
-      const creditsRaw = metadata.credits_amount;
-      const creditsAmount = creditsRaw ? Number.parseInt(creditsRaw, 10) : NaN;
-      if (!Number.isFinite(creditsAmount) || creditsAmount <= 0) {
+      const creditsAmount = this.billingPricingService.getCreditsForPlan(planId);
+      if (creditsAmount === null) {
         this.logger.warn(
-          `checkout.session.completed ${session.id} : credits_amount invalide (${creditsRaw})`,
+          `checkout.session.completed ${session.id} : plan ${planId} est illimité ou non applicable en mode paiement unique`,
         );
         return;
       }
