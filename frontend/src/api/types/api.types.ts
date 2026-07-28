@@ -68,6 +68,12 @@ export interface CreateAnalysisBody {
 // Shop
 // ---------------------------------------------------------------------------
 
+export interface ShopCategoryNode {
+  id: string;
+  name: string;
+  children: ShopCategoryNode[];
+}
+
 export interface Shop {
   id: string;
   name: string;
@@ -75,7 +81,7 @@ export interface Shop {
   cms: CmsType;
   sector: string | null;
   brands: string[];
-  categories: string[];
+  categoryTree: ShopCategoryNode[];
   ownerId: string;
   createdAt: string;
   updatedAt: string;
@@ -88,7 +94,7 @@ export interface PatchMyShopBody {
   cms?: CmsType;
   sector?: string | null;
   brands?: string[];
-  categories?: string[];
+  categoryTree?: ShopCategoryNode[];
 }
 
 // ---------------------------------------------------------------------------

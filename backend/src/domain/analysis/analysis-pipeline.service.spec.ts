@@ -2,6 +2,7 @@ import { AnalysisPipelineService } from "./analysis-pipeline.service";
 import type { IAnalysisRepository } from "./analysis.repository.interface";
 import type { SiteScraperService } from "../../core/scraper/site-scraper.service";
 import type { SiteClassifierService } from "../../core/scraper/site-classifier.service";
+import type { SiteCategoryExtractorService } from "../../core/scraper/site-category-extractor.service";
 import type { ShopService } from "../shop/shop.service";
 import type { Analysis } from "./analysis.types";
 
@@ -27,6 +28,12 @@ describe("AnalysisPipelineService", () => {
     classify: jest.Mock;
   };
 
+  const categoryExtractorMock = {
+    extract: jest.fn(),
+  } as unknown as jest.Mocked<Pick<SiteCategoryExtractorService, "extract">> & {
+    extract: jest.Mock;
+  };
+
   const shopServiceMock = {
     createOrUpdateFromAnalysis: jest.fn(),
   } as unknown as jest.Mocked<Pick<ShopService, "createOrUpdateFromAnalysis">> & {
@@ -37,6 +44,7 @@ describe("AnalysisPipelineService", () => {
     analysisRepoMock,
     scraperMock as unknown as SiteScraperService,
     classifierMock as unknown as SiteClassifierService,
+    categoryExtractorMock as unknown as SiteCategoryExtractorService,
     shopServiceMock as unknown as ShopService,
   );
 
@@ -55,9 +63,18 @@ describe("AnalysisPipelineService", () => {
     createdAt: new Date().toISOString(),
   };
 
+  const sampleTree = [
+    {
+      id: "11111111-1111-4111-8111-111111111111",
+      name: "Glisse",
+      children: [],
+    },
+  ];
+
   beforeEach(() => {
     jest.clearAllMocks();
     analysisRepoMock.updateStatus.mockResolvedValue(undefined);
+    categoryExtractorMock.extract.mockResolvedValue(sampleTree);
   });
 
   it("crée un shop guest et marque l'analyse done avec shopId", async () => {
@@ -81,7 +98,7 @@ describe("AnalysisPipelineService", () => {
       cms: "inconnu",
       sector: "sport",
       brands: ["BrandA"],
-      categories: ["CatA"],
+      categoryTree: sampleTree,
       ownerId: null,
       sessionId: "session-1",
       createdAt: new Date().toISOString(),
@@ -90,11 +107,18 @@ describe("AnalysisPipelineService", () => {
 
     await run(guestAnalysis, "");
 
+    expect(categoryExtractorMock.extract).toHaveBeenCalledWith({
+      html: "<html></html>",
+      cms: "unknown",
+      baseUrl: "https://guest-shop.test",
+    });
     expect(shopServiceMock.createOrUpdateFromAnalysis).toHaveBeenCalledWith(
       expect.objectContaining({
         ownerId: null,
         sessionId: "session-1",
-        sector: null,
+        sector: "sport",
+        brands: ["BrandA"],
+        categoryTree: sampleTree,
       }),
       "",
     );
@@ -119,6 +143,7 @@ describe("AnalysisPipelineService", () => {
     await run(guestAnalysis, "");
 
     expect(classifierMock.classify).not.toHaveBeenCalled();
+    expect(categoryExtractorMock.extract).not.toHaveBeenCalled();
     expect(shopServiceMock.createOrUpdateFromAnalysis).not.toHaveBeenCalled();
     expect(analysisRepoMock.updateStatus).toHaveBeenCalledWith(
       "analysis-1",

@@ -25,7 +25,7 @@ describe("ShopService", () => {
     cms: "shopify",
     sector: null,
     brands: [],
-    categories: [],
+    categoryTree: [],
     ownerId: "user-1",
     sessionId: null,
     createdAt: "2020-01-01T00:00:00.000Z",
@@ -84,7 +84,7 @@ describe("ShopService", () => {
         cms: "inconnu",
         sector: null,
         brands: [],
-        categories: [],
+        categoryTree: [],
         ownerId: "user-1",
         sessionId: null,
       }),
@@ -148,5 +148,52 @@ describe("ShopService", () => {
       BadRequestException,
     );
     expect(repo.update).not.toHaveBeenCalled();
+  });
+
+  it("createOrUpdateFromAnalysis met à jour le magasin principal connecté", async () => {
+    const emptyPrimary: Shop = {
+      ...sampleShop,
+      id: "shop-primary",
+      name: "Mon magasin",
+      url: "",
+      cms: "inconnu",
+      brands: [],
+      categoryTree: [],
+    };
+    const updated: Shop = {
+      ...emptyPrimary,
+      name: "exemple.fr",
+      url: "https://exemple.fr",
+      cms: "prestashop",
+      brands: ["Nike"],
+      categoryTree: [{ id: "c1", name: "Chaussures", children: [] }],
+    };
+    repo.findAllByOwner.mockResolvedValue([emptyPrimary]);
+    repo.update.mockResolvedValue(updated);
+
+    const out = await service.createOrUpdateFromAnalysis(
+      {
+        url: "https://exemple.fr",
+        cms: "prestashop",
+        sector: null,
+        brands: ["Nike"],
+        categoryTree: [{ id: "c1", name: "Chaussures", children: [] }],
+        ownerId: "user-1",
+        sessionId: null,
+      },
+      "tok",
+    );
+
+    expect(out).toBe(updated);
+    expect(repo.update).toHaveBeenCalledWith(
+      "shop-primary",
+      expect.objectContaining({
+        url: "https://exemple.fr",
+        cms: "prestashop",
+        brands: ["Nike"],
+      }),
+      "tok",
+    );
+    expect(repo.upsertFromAnalysis).not.toHaveBeenCalled();
   });
 });

@@ -211,7 +211,7 @@ export type Database = {
       shops: {
         Row: {
           brands: string[];
-          categories: string[];
+          category_tree: Json;
           cms: Database["public"]["Enums"]["shop_cms"];
           created_at: string;
           id: string;
@@ -224,7 +224,7 @@ export type Database = {
         };
         Insert: {
           brands?: string[];
-          categories?: string[];
+          category_tree?: Json;
           cms?: Database["public"]["Enums"]["shop_cms"];
           created_at?: string;
           id?: string;
@@ -237,7 +237,7 @@ export type Database = {
         };
         Update: {
           brands?: string[];
-          categories?: string[];
+          category_tree?: Json;
           cms?: Database["public"]["Enums"]["shop_cms"];
           created_at?: string;
           id?: string;

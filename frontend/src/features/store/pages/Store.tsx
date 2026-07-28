@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 
-import { needsShopSetup } from '@shared/lib/needsShopSetup';
-
 import type { Shop } from '../types';
+import { CategoryTreeEditor } from '../components/CategoryTreeEditor';
 import { ShopInfoSection } from '../components/ShopInfoSection';
 import { StoreUrlAnalysisBanner } from '../components/StoreUrlAnalysisBanner';
 import { TagListEditor } from '../components/TagListEditor';
 import { findTagCaseInsensitive, shopTagDuplicateMessage } from '../lib/shopSchemas';
+import { computeStoreAnalysisUi } from '../lib/storeAnalysisUi';
 import { useShop } from '../hooks/useShop';
 import { useShopPatch } from '../hooks/useShopPatch';
 
@@ -52,14 +52,6 @@ function StoreLoaded({
     [shop.brands],
   );
 
-  const validateCategoryBeforeAdd = useCallback(
-    (tag: string) => {
-      const existing = findTagCaseInsensitive(shop.categories, tag);
-      return existing ? shopTagDuplicateMessage(existing) : null;
-    },
-    [shop.categories],
-  );
-
   return (
     <>
       <ShopInfoSection
@@ -84,16 +76,11 @@ function StoreLoaded({
           await patchShop({ brands: shop.brands.filter((t) => t !== tag) });
         }}
       />
-      <TagListEditor
-        label="Catégories"
-        tags={shop.categories}
+      <CategoryTreeEditor
+        tree={shop.categoryTree}
         disabled={patching}
-        onValidateBeforeAdd={validateCategoryBeforeAdd}
-        onAdd={async (tag) => {
-          await patchShop({ categories: [...shop.categories, tag] });
-        }}
-        onRemove={async (tag) => {
-          await patchShop({ categories: shop.categories.filter((t) => t !== tag) });
+        onChange={async (categoryTree) => {
+          await patchShop({ categoryTree });
         }}
       />
     </>
@@ -102,7 +89,7 @@ function StoreLoaded({
 
 export function MyStore() {
   const navigate = useNavigate();
-  const { shop, loading, error, updateShop } = useShop();
+  const { shop, loading, error, updateShop, refetch } = useShop();
   const [pendingAnalysisUrl, setPendingAnalysisUrl] = useState<string | null>(null);
   const [analysisBannerOpen, setAnalysisBannerOpen] = useState(false);
   const [setupHeroDismissed, setSetupHeroDismissed] = useState(false);
@@ -117,8 +104,12 @@ export function MyStore() {
   const handleAnalysisSuccess = useCallback(() => {
     setPendingAnalysisUrl(null);
     setAnalysisBannerOpen(false);
-    void navigate('/catalog', { replace: true });
-  }, [navigate]);
+    setSetupHeroDismissed(true);
+    void (async () => {
+      await refetch();
+      void navigate('/catalog', { replace: true });
+    })();
+  }, [navigate, refetch]);
 
   const handleAnalysisHeroDismiss = useCallback(() => {
     setAnalysisBannerOpen(false);
@@ -137,6 +128,22 @@ export function MyStore() {
     }
   }, [loading, shop, error, navigate]);
 
+  useEffect(() => {
+    if (!shop) return;
+    const ui = computeStoreAnalysisUi({
+      analysisBannerOpen,
+      setupHeroDismissed,
+      pendingAnalysisUrl,
+      shopUrl: shop.url,
+      brands: shop.brands,
+      cms: shop.cms,
+      categoryTree: shop.categoryTree,
+    });
+    if (ui.shouldAutoOpenBanner && !analysisBannerOpen) {
+      setAnalysisBannerOpen(true);
+    }
+  }, [shop, analysisBannerOpen, setupHeroDismissed, pendingAnalysisUrl]);
+
   if (loading) {
     return <LoadingState />;
   }
@@ -154,16 +161,16 @@ export function MyStore() {
     return null;
   }
 
-  const showAnalysisHero =
-    analysisBannerOpen &&
-    (pendingAnalysisUrl !== null || (needsShopSetup(shop) && !setupHeroDismissed));
-  const analysisBannerVariant = pendingAnalysisUrl !== null ? 'prompt' : 'onboarding';
-  const analysisBannerUrl = pendingAnalysisUrl ?? shop.url;
-
-  const showAnalyzeAction =
-    !showAnalysisHero &&
-    ((pendingAnalysisUrl !== null && shop.url.trim() === pendingAnalysisUrl.trim()) ||
-      (needsShopSetup(shop) && setupHeroDismissed && pendingAnalysisUrl === null));
+  const { showAnalysisHero, showAnalyzeAction, analysisBannerUrl, analysisBannerVariant } =
+    computeStoreAnalysisUi({
+      analysisBannerOpen,
+      setupHeroDismissed,
+      pendingAnalysisUrl,
+      shopUrl: shop.url,
+      brands: shop.brands,
+      cms: shop.cms,
+      categoryTree: shop.categoryTree,
+    });
 
   return (
     <div className="relative z-[1] w-full px-12 pb-12 pt-9">
