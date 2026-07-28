@@ -2,10 +2,7 @@ import { useId, useRef, useState, type ChangeEvent } from 'react';
 
 import { Button } from '@shared/ui';
 
-import {
-  mergeBrands,
-  parsePrestashopBrandsCsv,
-} from '../lib/parse-prestashop-brands-csv';
+import { mergeBrands, parsePrestashopBrandsCsv } from '../lib/parse-prestashop-brands-csv';
 
 interface BrandsCsvImportButtonProps {
   existingBrands: string[];
@@ -23,25 +20,18 @@ function buildImportFeedback(params: {
   const parts: string[] = [];
 
   if (params.added > 0) {
-    parts.push(
-      params.added === 1
-        ? '1 marque ajoutée'
-        : `${params.added} marques ajoutées`,
-    );
+    parts.push(params.added === 1 ? '1 marque ajoutée' : `${params.added} marques ajoutées`);
   } else {
     parts.push('Aucune nouvelle marque');
   }
 
   if (params.alreadyPresent > 0) {
     parts.push(
-      params.alreadyPresent === 1
-        ? '1 déjà présente'
-        : `${params.alreadyPresent} déjà présentes`,
+      params.alreadyPresent === 1 ? '1 déjà présente' : `${params.alreadyPresent} déjà présentes`,
     );
   }
 
-  const skipped =
-    params.skippedInactive + params.skippedInvalid + params.skippedDuplicate;
+  const skipped = params.skippedInactive + params.skippedInvalid + params.skippedDuplicate;
   if (skipped > 0) {
     parts.push(skipped === 1 ? '1 ignorée' : `${skipped} ignorées`);
   }
@@ -51,6 +41,7 @@ function buildImportFeedback(params: {
 
 /**
  * Bouton d’import d’un CSV marques PrestaShop (délimiteur `;`, colonne « Nom »).
+ * Le message de retour passe en pleine largeur grâce à `basis-full` dans un flex parent.
  */
 export function BrandsCsvImportButton({
   existingBrands,
@@ -100,18 +91,14 @@ export function BrandsCsvImportButton({
         }),
       );
     } catch (e) {
-      setError(
-        e instanceof Error
-          ? e.message
-          : 'Impossible d’importer le fichier CSV.',
-      );
+      setError(e instanceof Error ? e.message : 'Impossible d’importer le fichier CSV.');
     } finally {
       setBusy(false);
     }
   };
 
   return (
-    <div className="flex flex-col items-start gap-1">
+    <>
       <input
         ref={fileInputRef}
         id={inputId}
@@ -127,23 +114,22 @@ export function BrandsCsvImportButton({
         variant="neutral-outline"
         size="sm"
         disabled={locked}
+        className="h-[42px]"
         onClick={() => fileInputRef.current?.click()}
-        aria-describedby={
-          error ? `${inputId}-error` : feedback ? `${inputId}-feedback` : undefined
-        }
+        aria-describedby={error ? `${inputId}-error` : feedback ? `${inputId}-feedback` : undefined}
       >
-        {busy ? 'Import…' : 'Importer CSV PrestaShop'}
+        {busy ? 'Import…' : 'Importer'}
       </Button>
       {error ? (
-        <p id={`${inputId}-error`} className="m-0 text-xs text-red-600" role="alert">
+        <p id={`${inputId}-error`} className="m-0 basis-full text-xs text-red-600" role="alert">
           {error}
         </p>
       ) : null}
       {feedback && !error ? (
-        <p id={`${inputId}-feedback`} className="m-0 text-xs text-text-secondary">
+        <p id={`${inputId}-feedback`} className="m-0 basis-full text-xs text-text-secondary">
           {feedback}
         </p>
       ) : null}
-    </div>
+    </>
   );
 }

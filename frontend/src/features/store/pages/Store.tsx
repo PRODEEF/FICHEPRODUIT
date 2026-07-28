@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 
 import type { Shop } from '../types';
+import { BrandsCsvImportButton } from '../components/BrandsCsvImportButton';
 import { CategoryTreeEditor } from '../components/CategoryTreeEditor';
 import { ShopInfoSection } from '../components/ShopInfoSection';
 import { StoreUrlAnalysisBanner } from '../components/StoreUrlAnalysisBanner';
@@ -68,6 +69,15 @@ function StoreLoaded({
         label="Marques"
         tags={shop.brands}
         disabled={patching}
+        trailingActions={
+          <BrandsCsvImportButton
+            existingBrands={shop.brands}
+            disabled={patching}
+            onImportBrands={async (brands) => {
+              await patchShop({ brands });
+            }}
+          />
+        }
         onValidateBeforeAdd={validateBrandBeforeAdd}
         onAdd={async (tag) => {
           await patchShop({ brands: [...shop.brands, tag] });
@@ -128,22 +138,6 @@ export function MyStore() {
     }
   }, [loading, shop, error, navigate]);
 
-  useEffect(() => {
-    if (!shop) return;
-    const ui = computeStoreAnalysisUi({
-      analysisBannerOpen,
-      setupHeroDismissed,
-      pendingAnalysisUrl,
-      shopUrl: shop.url,
-      brands: shop.brands,
-      cms: shop.cms,
-      categoryTree: shop.categoryTree,
-    });
-    if (ui.shouldAutoOpenBanner && !analysisBannerOpen) {
-      setAnalysisBannerOpen(true);
-    }
-  }, [shop, analysisBannerOpen, setupHeroDismissed, pendingAnalysisUrl]);
-
   if (loading) {
     return <LoadingState />;
   }
@@ -161,16 +155,23 @@ export function MyStore() {
     return null;
   }
 
+  const analysisUi = computeStoreAnalysisUi({
+    analysisBannerOpen,
+    setupHeroDismissed,
+    pendingAnalysisUrl,
+    shopUrl: shop.url,
+    brands: shop.brands,
+    cms: shop.cms,
+    categoryTree: shop.categoryTree,
+  });
+
+  // Ajustement d’état pendant le rendu (évite setState dans un effect).
+  if (analysisUi.shouldAutoOpenBanner && !analysisBannerOpen) {
+    setAnalysisBannerOpen(true);
+  }
+
   const { showAnalysisHero, showAnalyzeAction, analysisBannerUrl, analysisBannerVariant } =
-    computeStoreAnalysisUi({
-      analysisBannerOpen,
-      setupHeroDismissed,
-      pendingAnalysisUrl,
-      shopUrl: shop.url,
-      brands: shop.brands,
-      cms: shop.cms,
-      categoryTree: shop.categoryTree,
-    });
+    analysisUi;
 
   return (
     <div className="relative z-[1] w-full px-12 pb-12 pt-9">

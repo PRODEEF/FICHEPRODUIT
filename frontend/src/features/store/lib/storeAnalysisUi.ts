@@ -30,14 +30,14 @@ export interface StoreAnalysisUi {
  */
 export function computeStoreAnalysisUi(input: StoreAnalysisUiInput): StoreAnalysisUi {
   const shopUrl = input.shopUrl.trim();
-  const pending = input.pendingAnalysisUrl?.trim() || null;
+  const pending = input.pendingAnalysisUrl?.trim() ?? null;
   const analysisBannerUrl = pending ?? shopUrl;
   const hasAnalysisUrl = analysisBannerUrl.length > 0;
   const needsSetup = needsShopSetup({
     url: shopUrl,
     brands: input.brands,
-    cms: input.cms,
-    categoryTree: input.categoryTree,
+    cms: input.cms ?? null,
+    categoryTree: input.categoryTree ?? null,
   });
 
   const showAnalysisHero = input.analysisBannerOpen && hasAnalysisUrl;
