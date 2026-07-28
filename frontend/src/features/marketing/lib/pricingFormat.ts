@@ -12,10 +12,7 @@ export function formatPriceEur(amount: number, options?: { decimals?: number }):
 }
 
 /** Formate un montant tarifaire avec le suffixe HT. */
-export function formatPriceEurExclTax(
-  amount: number,
-  options?: { decimals?: number },
-): string {
+export function formatPriceEurExclTax(amount: number, options?: { decimals?: number }): string {
   return `${formatPriceEur(amount, options)} ${PRICE_EXCL_TAX_LABEL}`;
 }
 

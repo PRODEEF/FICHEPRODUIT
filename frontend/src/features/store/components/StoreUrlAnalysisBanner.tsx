@@ -9,21 +9,19 @@ import { Button } from '@shared/ui';
 
 export type StoreUrlAnalysisBannerVariant = 'onboarding' | 'prompt';
 
-const VARIANT_COPY: Record<
-  StoreUrlAnalysisBannerVariant,
-  { title: string; description: string }
-> = {
-  onboarding: {
-    title: 'Commencez par votre site',
-    description:
-      'Indiquez l’URL de votre boutique pour détecter le CMS, les marques et les catégories.',
-  },
-  prompt: {
-    title: 'URL mise à jour',
-    description:
-      'Lancez une analyse pour détecter le CMS, les marques et les catégories de votre boutique.',
-  },
-};
+const VARIANT_COPY: Record<StoreUrlAnalysisBannerVariant, { title: string; description: string }> =
+  {
+    onboarding: {
+      title: 'Commencez par votre site',
+      description:
+        'Indiquez l’URL de votre boutique pour détecter le CMS, les marques et les catégories.',
+    },
+    prompt: {
+      title: 'URL mise à jour',
+      description:
+        'Lancez une analyse pour détecter le CMS, les marques et les catégories de votre boutique.',
+    },
+  };
 
 interface StoreUrlAnalysisBannerProps {
   url: string;

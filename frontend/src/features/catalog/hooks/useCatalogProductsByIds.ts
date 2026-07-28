@@ -13,10 +13,13 @@ interface UseCatalogProductsByIdsResult {
   error: string | null;
 }
 
+/**
+ * Charge les produits catalogue associés à la boutique.
+ * L'accès invité est géré par le cookie httpOnly `ficheproduct_guest_session`.
+ */
 export function useCatalogProductsByIds(
   shop: Shop | null,
   enabled: boolean,
-  guestSessionId?: string | null,
 ): UseCatalogProductsByIdsResult {
   const [products, setProducts] = useState<CatalogProduct[] | null>(null);
   const [metadata, setMetadata] = useState<CatalogProductPayloadMetadata | null>(null);
@@ -40,7 +43,7 @@ export function useCatalogProductsByIds(
       setError(null);
 
       try {
-        const loadedProducts = await fetchCatalogProductsByShopBrands(shop.id, guestSessionId);
+        const loadedProducts = await fetchCatalogProductsByShopBrands(shop.id);
         if (guard.cancelled) return;
         setProducts(loadedProducts);
         setMetadata(buildCatalogProductMetadata(loadedProducts));
@@ -57,7 +60,7 @@ export function useCatalogProductsByIds(
     return () => {
       guard.cancelled = true;
     };
-  }, [enabled, shop, guestSessionId]);
+  }, [enabled, shop]);
 
   return { products, metadata, loading, error };
 }

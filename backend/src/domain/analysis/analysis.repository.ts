@@ -109,6 +109,13 @@ export class AnalysisRepository implements IAnalysisRepository {
     accessToken: string,
     guestSessionId?: string | null,
   ): Promise<void> {
+    // Sécurité : une mise à jour admin anonyme (sans JWT ni sessionId) est refusée.
+    if (!accessToken && !guestSessionId) {
+      throw new BadRequestException(
+        "Mise à jour d'analyse refusée : accessToken ou guestSessionId requis",
+      );
+    }
+
     const client = accessToken ? this.supabase.forUser(accessToken) : this.supabase.admin;
 
     let query = client

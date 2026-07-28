@@ -36,6 +36,7 @@ Reprendre la liste de [`.env.example`](.env.example). En production :
 - Définir **`CORS_ORIGIN`** avec l'URL exacte du frontend (ou plusieurs origines séparées par des virgules). Éviter `*` avec cookies / credentials.
 - Renseigner toutes les clés **Supabase**, **OpenAI** et **Tavily** (obligatoires au démarrage, voir `configuration.ts`).
 - **`NODE_ENV`** = `production` sur Vercel (désactive Swagger, restreint les logs).
+- **`TRUST_PROXY=true`** sur Vercel (ou derrière nginx) pour que le rate-limit utilise `X-Forwarded-For` ; sinon seule l’IP socket est prise en compte.
 
 **CORS en preview** : Vercel expose `VERCEL_ENV=preview`. Le backend autorise alors automatiquement les origines `*.vercel.app` et `localhost` en plus de `CORS_ORIGIN` (voir [`cors-origin.ts`](src/core/http/cors-origin.ts)).
 

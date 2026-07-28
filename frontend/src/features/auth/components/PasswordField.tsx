@@ -86,9 +86,7 @@ export function PasswordField({
           {visible ? <EyeOff {...passwordToggleIconProps} /> : <Eye {...passwordToggleIconProps} />}
         </button>
       </div>
-      {showStrengthMeter ? (
-        <PasswordStrengthMeter id={strengthId} password={value} />
-      ) : null}
+      {showStrengthMeter ? <PasswordStrengthMeter id={strengthId} password={value} /> : null}
       {error ? (
         <p id={errorId} className="m-0 text-sm text-red-500" role="alert">
           {error}

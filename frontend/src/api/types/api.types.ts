@@ -55,7 +55,6 @@ export interface Analysis {
   errorCode: AnalysisErrorCode | null;
   errorMessage: string | null;
   userId: string | null;
-  sessionId: string | null;
   /** Défini quand status === 'done'. */
   shopId: string | null;
   createdAt: string;
@@ -113,26 +112,25 @@ export interface CatalogProduct {
 }
 
 // ---------------------------------------------------------------------------
-// Export
+// Export PrestaShop
 // ---------------------------------------------------------------------------
 
-export interface ExportBody {
-  /** IDs des produits catalogue à exporter. */
-  productIds: string[];
+export type PrestashopExportType = 'products' | 'combinations';
+
+export interface PrestashopExportParams {
+  /** Type de fichier CSV PrestaShop à générer. */
+  type: PrestashopExportType;
   /** UUID de la boutique (contrôle d’accès). */
   shopId: string;
+  /** IDs des produits catalogue à exporter. */
+  productIds: string[];
 }
 
 // ---------------------------------------------------------------------------
 // Billing
 // ---------------------------------------------------------------------------
 
-export type BillingPlanId =
-  | 'starter'
-  | 'pro'
-  | 'business_silver'
-  | 'business_custom'
-  | 'platinum';
+export type BillingPlanId = 'starter' | 'pro' | 'business_silver' | 'business_custom' | 'platinum';
 
 export type BillingEntitlementType = 'free_low_price_exports';
 
@@ -224,13 +222,7 @@ export interface SuggestUrlsResponse {
 // Guest session claim
 // ---------------------------------------------------------------------------
 
-export interface ClaimGuestSessionBody {
-  sessionId?: string;
-}
-
 export interface ClaimGuestSessionOptions {
-  /** Session invité explicite (prioritaire sur sessionStorage). */
-  sessionId?: string | null;
   /** JWT fraîchement émis (évite une course avec getSession() juste après signUp). */
   accessToken?: string;
 }

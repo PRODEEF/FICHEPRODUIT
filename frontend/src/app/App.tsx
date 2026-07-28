@@ -64,7 +64,9 @@ function AppShellLayout({ userEmail }: { userEmail: string | null }) {
   useEffect(() => {
     if (userEmail) {
       // Différé pour éviter un setState synchrone dans le corps de l'effet
-      queueMicrotask(() => { setDrawerOpen(true); });
+      queueMicrotask(() => {
+        setDrawerOpen(true);
+      });
     }
   }, [userEmail]);
 
@@ -107,9 +109,7 @@ export function App() {
         <BrowserRouter>
           <Toaster richColors position="bottom-right" />
           <Routes>
-            <Route element={<AppShell />}>
-              {appRouteElements}
-            </Route>
+            <Route element={<AppShell />}>{appRouteElements}</Route>
           </Routes>
         </BrowserRouter>
       </BillingProvider>

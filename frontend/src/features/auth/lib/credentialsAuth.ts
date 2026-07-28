@@ -16,7 +16,6 @@ export async function signInWithEmailPassword(
     email: email.trim(),
     password,
   });
-  if (error)
-    return { ok: false, message: authErrorMessage(error), code: error.code };
+  if (error) return { ok: false, message: authErrorMessage(error), code: error.code };
   return { ok: true };
 }

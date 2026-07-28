@@ -25,8 +25,7 @@ export function BillingPurchaseList({ purchases }: BillingPurchaseListProps) {
     <ul className="m-0 list-none space-y-2 p-0">
       {purchases.map((lot) => {
         const subtitle = formatPurchaseSubtitle(lot);
-        const creditAmount =
-          lot.source === 'subscription_grant' ? null : `+${lot.amountInitial}`;
+        const creditAmount = lot.source === 'subscription_grant' ? null : `+${lot.amountInitial}`;
 
         return (
           <li

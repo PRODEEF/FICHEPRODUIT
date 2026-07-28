@@ -45,9 +45,7 @@ export function useBillingPlans(sector: ShopSectorLabel, options: UseBillingPlan
       .catch(() => {
         if (cancelled) return;
         setPlans([]);
-        setPlansError(
-          'Impossible de charger les tarifs. Vérifiez votre connexion et réessayez.',
-        );
+        setPlansError('Impossible de charger les tarifs. Vérifiez votre connexion et réessayez.');
       })
       .finally(() => {
         if (!cancelled) setPlansLoading(false);

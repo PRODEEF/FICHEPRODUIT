@@ -27,7 +27,11 @@ export function useCatalogProducts({
   shopLoading,
 }: UseCatalogProductsParams): UseCatalogProductsResult {
   const brandsSignature = useMemo(
-    () => (shop?.brands ?? []).map((b) => b.trim()).filter(Boolean).join('\u0001'),
+    () =>
+      (shop?.brands ?? [])
+        .map((b) => b.trim())
+        .filter(Boolean)
+        .join('\u0001'),
     [shop?.brands],
   );
 

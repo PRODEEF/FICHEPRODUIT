@@ -15,18 +15,19 @@ src/
 
 ## Glossaire métier
 
-| Terme                          | Description                                                                                 |
-| ------------------------------ | ------------------------------------------------------------------------------------------- |
-| **Shop / boutique**            | Site e-commerce analysé (URL, CMS, secteur, marques).                                       |
-| **Analysis / analyse**         | Job d'analyse d'une URL ; statuts `pending` → `running` → `done` / `failed`.                |
-| **Guest / invité**             | Utilisateur sans compte ; identifié par `session_id` (cookie `ficheproduct_guest_session`). |
-| **Catalog**                    | Produits fabricants scrappés (lecture seule côté API).                                      |
+| Terme                  | Description                                                                                 |
+| ---------------------- | ------------------------------------------------------------------------------------------- |
+| **Shop / boutique**    | Site e-commerce analysé (URL, CMS, secteur, marques).                                       |
+| **Analysis / analyse** | Job d'analyse d'une URL ; statuts `pending` → `running` → `done` / `failed`.                |
+| **Guest / invité**     | Utilisateur sans compte ; identifié par `session_id` (cookie `ficheproduct_guest_session`). |
+| **Catalog**            | Produits fabricants scrappés (lecture seule côté API).                                      |
 
 ## Authentification
 
 - **JWT Supabase** : header `Authorization: Bearer <token>`.
-- **Invité** : cookie httpOnly ou header `x-session-id` (tests).
+- **Invité** : cookie httpOnly `ficheproduct_guest_session` uniquement (pas d’en-tête `x-session-id`).
 - Les **repositories** utilisent `supabase.forUser(token)` (RLS actives) ; le client **admin** est réservé au parcours invité et aux transferts au signup.
+- **Export PrestaShop** (`feature/export/prestashop/`) : CSV catalogue, sans débit de crédits. Le ledger (`CreditLedgerService.reserveCreditsForExport`) reste disponible pour un futur export facturé.
 
 ## Où modifier quoi
 
@@ -34,7 +35,7 @@ src/
 | ---------------------------------- | ------------------------------------------------------------------- |
 | Infos boutique                     | `domain/shop/`                                                      |
 | Analyse de site                    | `domain/analysis/` (+ pipeline dans `analysis-pipeline.service.ts`) |
-| Export CSV                         | `feature/export/`                                                   |
+| Export PrestaShop CSV              | `feature/export/prestashop/`                                        |
 | Suggestions d'URL                  | `feature/suggest-urls/`                                             |
 | Sécurité HTTP (rate limit, Helmet) | `core/http/fastify-security-plugins.ts`                             |
 | Politique SSRF scraping            | `core/scraper/scrape-url-policy.ts`                                 |
@@ -48,6 +49,7 @@ src/
 ## Dette technique connue (hors scope actuel)
 
 - `openapi/api.yaml` à la racine du monorepo peut être désynchronisé du Swagger live.
+- SDK Stripe actuellement en v18 — planifier une montée vers la dernière majeure (breaking changes webhooks/types) avec rejeu des specs `stripe-webhook`.
 
 ## Déploiement
 

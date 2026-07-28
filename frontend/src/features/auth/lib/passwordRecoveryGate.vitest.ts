@@ -22,11 +22,7 @@ function createSessionStorageMock() {
   };
 }
 
-function stubWindow(location: {
-  hash: string;
-  pathname: string;
-  search: string;
-}) {
+function stubWindow(location: { hash: string; pathname: string; search: string }) {
   const sessionStorage = createSessionStorageMock();
   vi.stubGlobal('sessionStorage', sessionStorage);
   vi.stubGlobal('window', {

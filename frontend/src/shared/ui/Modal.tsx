@@ -11,14 +11,7 @@ interface ModalProps {
   panelClassName?: string;
 }
 
-export function Modal({
-  open,
-  title,
-  children,
-  onClose,
-  className,
-  panelClassName,
-}: ModalProps) {
+export function Modal({ open, title, children, onClose, className, panelClassName }: ModalProps) {
   useEffect(() => {
     if (!open) return;
     const onKeyDown = (event: KeyboardEvent) => {

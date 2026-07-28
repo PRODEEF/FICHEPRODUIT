@@ -8,46 +8,27 @@ type ReplyWithCookies = FastifyReply & {
 
 export const GUEST_SESSION_COOKIE_NAME = "ficheproduct_guest_session";
 
-/** Cookie httpOnly uniquement (pas d’en-tête `x-session-id`). */
+/** Lit l'identifiant de session invité depuis le cookie httpOnly uniquement. */
 export function readGuestSessionCookie(req: FastifyRequest): string | undefined {
   const fromCookie = (req as RequestWithCookies).cookies?.[GUEST_SESSION_COOKIE_NAME];
   if (fromCookie?.trim()) return fromCookie.trim();
   return undefined;
 }
 
-function readGuestSessionHeader(req: FastifyRequest): string | undefined {
-  const h = req.headers["x-session-id"];
-  if (typeof h === "string" && h.trim()) return h.trim();
-  if (Array.isArray(h) && h[0]?.trim()) return h[0].trim();
-  return undefined;
-}
-
 /**
- * Lit l’identifiant de session invité : cookie httpOnly en priorité, puis en-tête `x-session-id`.
+ * Lit l'identifiant de session invité.
+ * Cookie httpOnly uniquement — l'en-tête `x-session-id` n'est plus accepté.
  */
 export function readGuestSessionId(req: FastifyRequest): string | undefined {
-  return readGuestSessionCookie(req) ?? readGuestSessionHeader(req);
+  return readGuestSessionCookie(req);
 }
 
 /**
- * Résout l’ID de session pour le claim post-auth (JWT requis) :
- * cookie en priorité ; sinon body ou en-tête `x-session-id` (cross-origin / nouvel onglet).
+ * Résout l'ID de session pour le claim post-auth (JWT requis).
+ * Cookie httpOnly uniquement — body et en-tête `x-session-id` sont rejetés.
  */
-export function resolveClaimGuestSessionId(
-  req: FastifyRequest,
-  bodySessionId?: string,
-): string | null {
-  const fromCookie = readGuestSessionCookie(req);
-  const fromBody = bodySessionId?.trim();
-
-  if (fromCookie) {
-    if (fromBody && fromBody !== fromCookie) return null;
-    return fromCookie;
-  }
-
-  if (fromBody) return fromBody;
-
-  return readGuestSessionHeader(req) ?? null;
+export function resolveClaimGuestSessionId(req: FastifyRequest): string | null {
+  return readGuestSessionCookie(req) ?? null;
 }
 
 export function setGuestSessionCookie(

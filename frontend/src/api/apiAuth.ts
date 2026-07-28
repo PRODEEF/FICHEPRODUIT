@@ -2,7 +2,8 @@
  * Helpers pour construire les headers HTTP vers le backend NestJS.
  *
  * - Authentifié : `Authorization: Bearer <supabase_access_token>`
- * - Invité      : cookie httpOnly posé par `POST /api/analyses`, ou en-tête `x-session-id` si fourni explicitement.
+ * - Invité      : cookie httpOnly `ficheproduct_guest_session` posé par `POST /api/analyses`.
+ *                 L'en-tête `x-session-id` est ignoré par le backend — ne plus l'envoyer.
  *
  * Tous les appels API utilisent `credentials: 'include'` (voir `apiFetch`).
  */
@@ -68,26 +69,6 @@ export async function guestOrAuthHeadersNoBody(): Promise<ApiHeaders> {
   return omitContentType(h);
 }
 
-/**
- * Ajoute `x-session-id` si fourni (filet quand le cookie httpOnly n’est pas envoyé, ex. localhost vs 127.0.0.1).
- */
-export async function guestOrAuthHeadersWithGuestSession(
-  guestSessionId?: string | null,
-  accessTokenOverride?: string,
-): Promise<ApiHeaders> {
-  const h = await authHeaders(accessTokenOverride);
-  const sid = guestSessionId?.trim();
-  if (!sid) return h;
-  return { ...h, 'x-session-id': sid };
-}
-
-export async function guestOrAuthHeadersNoBodyWithGuestSession(
-  guestSessionId?: string | null,
-): Promise<ApiHeaders> {
-  const h = await guestOrAuthHeadersWithGuestSession(guestSessionId);
-  return omitContentType(h);
-}
-
 /** Erreur HTTP renvoyée par {@link apiFetch} lorsque `response.ok` est faux. */
 export class ApiHttpError extends Error {
   readonly status: number;
@@ -124,7 +105,8 @@ export async function apiFetch(
     try {
       parsed = JSON.parse(text);
     } catch {
-      if (!res.ok) throw new ApiHttpError(`Réponse non-JSON du serveur (${res.status}).`, res.status);
+      if (!res.ok)
+        throw new ApiHttpError(`Réponse non-JSON du serveur (${res.status}).`, res.status);
     }
   }
 
