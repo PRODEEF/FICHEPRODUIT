@@ -65,6 +65,7 @@ export async function downloadPrestashopExportCsv(params: PrestashopExportParams
     const res = await fetch(`${getApiBaseUrl()}/api/export/prestashop`, {
       method: 'POST',
       headers,
+      credentials: 'include',
       body: JSON.stringify(body),
     });
 
@@ -99,7 +100,9 @@ export async function downloadPrestashopExportCsv(params: PrestashopExportParams
 
     triggerDownload(blob, finalFilename);
   } catch (err) {
-    throw new Error(formatExportClientError(err, 'Impossible de générer l’export.'), { cause: err });
+    throw new Error(formatExportClientError(err, 'Impossible de générer l’export.'), {
+      cause: err,
+    });
   }
 }
 

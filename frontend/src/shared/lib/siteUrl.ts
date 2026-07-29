@@ -1,4 +1,19 @@
 /**
+ * Indique si l’URL utilise uniquement les schémas `http:` ou `https:`
+ * (refuse `javascript:`, `data:`, etc. pour les attributs `href` / `src`).
+ */
+export function isSafeHttpUrl(raw: string): boolean {
+  const trimmed = raw.trim();
+  if (!trimmed) return false;
+  try {
+    const parsed = new URL(trimmed);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Si la saisie est déjà une URL ou un nom de domaine seul, retourne une URL https normalisée.
  * Sinon retourne `null` (texte libre : recherche Tavily / suggestions heuristiques).
  */

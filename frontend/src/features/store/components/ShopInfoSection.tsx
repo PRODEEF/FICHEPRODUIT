@@ -1,6 +1,5 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 
-import { ApiHttpError } from '@api/apiAuth';
 import type { PatchMyShopBody } from '@types-api';
 import { cn } from '@shared/lib/cn';
 import { Button } from '@shared/ui';
@@ -11,6 +10,7 @@ import {
   shopSectorRequiredSchema,
   shopUrlSchema,
 } from '../lib/shopSchemas';
+import { mapShopSaveError } from '../lib/shopSaveErrors';
 import { type Shop, type ShopCms, SHOP_SECTOR_LABELS, isShopSectorLabel } from '../types';
 
 const CMS_OPTIONS: ShopCms[] = ['prestashop', 'shopify', 'woocommerce', 'autre', 'inconnu'];
@@ -60,13 +60,6 @@ function buffersFromShop(shop: Shop): Buffers {
 function isLegacySector(value: string): boolean {
   const trimmed = value.trim();
   return trimmed.length > 0 && !isShopSectorLabel(trimmed);
-}
-
-function mapSaveError(editing: RowKey, error: unknown): string {
-  if (error instanceof ApiHttpError && error.status === 422 && editing === 'url') {
-    return SHOP_URL_INVALID_MESSAGE;
-  }
-  return error instanceof Error ? error.message : 'Enregistrement impossible.';
 }
 
 export function ShopInfoSection({
@@ -172,7 +165,7 @@ export function ShopInfoSection({
       setEditing(null);
       setDraft(null);
     } catch (e) {
-      setFieldError({ key: editing, message: mapSaveError(editing, e) });
+      setFieldError({ key: editing, message: mapShopSaveError(editing, e) });
     }
   };
 

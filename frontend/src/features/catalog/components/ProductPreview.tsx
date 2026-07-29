@@ -3,6 +3,7 @@ import { useState } from 'react';
 import type { CatalogProduct } from '@types-api';
 import { Button, Modal } from '@shared/ui';
 import { cn } from '@shared/lib/cn';
+import { isSafeHttpUrl } from '@lib/siteUrl';
 
 import { formatPrice } from '../lib/productUtils';
 
@@ -25,7 +26,9 @@ export function ProductPreview({ shopName, product, open, onClose }: ProductPrev
   const images = product.images;
   const safeIndex = images.length > 0 ? Math.min(mainImageIndex, images.length - 1) : 0;
   const mainSrc = images[safeIndex];
+  const safeMainSrc = mainSrc !== undefined && isSafeHttpUrl(mainSrc) ? mainSrc : undefined;
   const attrRows = sortedAttributeEntries(product.attributes);
+  const safeProductUrl = product.url && isSafeHttpUrl(product.url) ? product.url : null;
 
   return (
     <Modal
@@ -48,10 +51,10 @@ export function ProductPreview({ shopName, product, open, onClose }: ProductPrev
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-3">
-          {product.url ? (
+          {safeProductUrl ? (
             <p className="m-0 flex items-center text-sm">
               <a
-                href={product.url}
+                href={safeProductUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-semibold text-purple-600 no-underline hover:underline"
@@ -76,8 +79,8 @@ export function ProductPreview({ shopName, product, open, onClose }: ProductPrev
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]">
           <div className="space-y-3">
             <div className="aspect-square w-full overflow-hidden rounded-xl border border-soft bg-bg-main">
-              {mainSrc ? (
-                <img src={mainSrc} alt="" className="h-full w-full object-contain" />
+              {safeMainSrc ? (
+                <img src={safeMainSrc} alt="" className="h-full w-full object-contain" />
               ) : (
                 <div className="flex h-full w-full items-center justify-center text-sm text-text-muted">
                   Aucune image
@@ -86,28 +89,31 @@ export function ProductPreview({ shopName, product, open, onClose }: ProductPrev
             </div>
             {images.length > 1 ? (
               <ul className="flex flex-wrap gap-2" aria-label="Miniatures">
-                {images.map((src, i) => (
-                  <li key={src}>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className={cn(
-                        'h-14 w-14 shrink-0 rounded-lg border p-0.5',
-                        i === safeIndex
-                          ? 'border-purple-600 ring-2 ring-purple-500/30'
-                          : 'border-soft',
-                      )}
-                      onClick={() => {
-                        setMainImageIndex(i);
-                      }}
-                      aria-label={`Afficher l’image ${i + 1}`}
-                      aria-current={i === safeIndex ? 'true' : undefined}
-                    >
-                      <img src={src} alt="" className="h-full w-full rounded-md object-cover" />
-                    </Button>
-                  </li>
-                ))}
+                {images.map((src, i) => {
+                  if (!isSafeHttpUrl(src)) return null;
+                  return (
+                    <li key={src}>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className={cn(
+                          'h-14 w-14 shrink-0 rounded-lg border p-0.5',
+                          i === safeIndex
+                            ? 'border-purple-600 ring-2 ring-purple-500/30'
+                            : 'border-soft',
+                        )}
+                        onClick={() => {
+                          setMainImageIndex(i);
+                        }}
+                        aria-label={`Afficher l’image ${i + 1}`}
+                        aria-current={i === safeIndex ? 'true' : undefined}
+                      >
+                        <img src={src} alt="" className="h-full w-full rounded-md object-cover" />
+                      </Button>
+                    </li>
+                  );
+                })}
               </ul>
             ) : null}
           </div>

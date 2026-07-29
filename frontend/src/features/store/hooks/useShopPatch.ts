@@ -12,16 +12,22 @@ interface UseShopPatchOptions {
 
 export function useShopPatch({ updateShop, onUrlSaved }: UseShopPatchOptions) {
   const [patching, setPatching] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const patchShop = useCallback(
     async (partial: PatchMyShopBody) => {
       setPatching(true);
+      setError(null);
       try {
         const updated = await patchMyShop(partial);
         updateShop(updated);
         if (partial.url !== undefined) {
           onUrlSaved?.(updated.url);
         }
+      } catch (e) {
+        const message = e instanceof Error ? e.message : 'Enregistrement impossible.';
+        setError(message);
+        throw e;
       } finally {
         setPatching(false);
       }
@@ -29,5 +35,5 @@ export function useShopPatch({ updateShop, onUrlSaved }: UseShopPatchOptions) {
     [onUrlSaved, updateShop],
   );
 
-  return { patchShop, patching };
+  return { patchShop, patching, error };
 }

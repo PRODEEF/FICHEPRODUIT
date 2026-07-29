@@ -1,73 +1,39 @@
-# React + TypeScript + Vite
+# Frontend — ficheproduit
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+SPA React 19 + Vite + TypeScript + Tailwind.
 
-Currently, two official plugins are available:
+## Démarrage
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-]);
+```bash
+cp .env.example .env   # renseigner VITE_SUPABASE_* au minimum
+npm ci
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Le proxy Vite envoie `/api` vers `http://localhost:3000` (voir `vite.config.ts`).
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x';
-import reactDom from 'eslint-plugin-react-dom';
+## Variables d’environnement
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-]);
-```
+Voir [`.env.example`](.env.example) :
+
+| Variable                 | Rôle                                        |
+| ------------------------ | ------------------------------------------- |
+| `VITE_SUPABASE_URL`      | Projet Supabase                             |
+| `VITE_SUPABASE_ANON_KEY` | Clé anon (publique)                         |
+| `VITE_API_URL`           | URL backend en cross-origin (vide en local) |
+| `VITE_SITE_URL`          | Origine frontend pour redirects auth        |
+| `VITE_CONTACT_EMAIL`     | Email contact / pricing (optionnel)         |
+
+## Scripts
+
+| Commande               | Description                             |
+| ---------------------- | --------------------------------------- |
+| `npm run dev`          | Serveur de développement                |
+| `npm run build`        | `tsc -b` + build Vite                   |
+| `npm run test`         | Vitest (`*.vitest.ts` / `*.vitest.tsx`) |
+| `npm run lint`         | ESLint                                  |
+| `npm run format:check` | Prettier                                |
+
+## Déploiement
+
+Hébergement Vercel (dossier `frontend/`), rewrite SPA dans `vercel.json`. Guide complet : [../backend/DEPLOY.md](../backend/DEPLOY.md).

@@ -16,7 +16,6 @@ import { HowItWorks } from '../components/HowItWorks';
 import { SellingPoints } from '../components/SellingPoints';
 import { SocialProofBar } from '../components/SocialProofBar';
 import { Testimonials } from '../components/Testimonials';
-// import { LandingFooter } from '../components/LandingFooter'; // TODO: Remettre une fois qu'on aura les CGU
 
 export function Home() {
   const navigate = useNavigate();
@@ -133,7 +132,6 @@ export function Home() {
         <Testimonials />
         <ExpertiseGrid />
         <FinalCTA />
-        {/* <LandingFooter /> */}
       </div>
     </>
   );
