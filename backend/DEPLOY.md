@@ -144,4 +144,4 @@ La migration `20240021_schedule_guest_cleanup_cron.sql` active **pg_cron** pour 
 
 ## CI
 
-Le dépôt inclut [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) pour valider lint, format, tests unitaires, e2e backend, audit npm (non bloquant si vulnérabilités déjà connues — Dependabot) et builds sur chaque PR.
+Le dépôt inclut [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) pour valider lint, format, tests unitaires, e2e backend, audit npm et builds sur chaque PR.

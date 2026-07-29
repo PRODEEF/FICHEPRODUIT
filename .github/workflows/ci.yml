@@ -29,9 +29,7 @@ jobs:
           cache: npm
           cache-dependency-path: backend/package-lock.json
       - run: npm ci
-      - name: npm audit (high+)
-        run: npm audit --audit-level=high
-        continue-on-error: true
+      - run: npm audit --audit-level=high
       - run: npm run lint
       - run: npm run format:check
       - run: node ./node_modules/jest/bin/jest.js
@@ -51,9 +49,7 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
-      - name: npm audit (high+)
-        run: npm audit --audit-level=high
-        continue-on-error: true
+      - run: npm audit --audit-level=high
       - run: npm run lint
       - run: npm run format:check
       - run: npm run test
