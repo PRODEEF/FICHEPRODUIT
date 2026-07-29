@@ -9,9 +9,7 @@ import {
 
 const SESSION_ID = "550e8400-e29b-41d4-a716-446655440000";
 
-function reqWith(
-  options: { cookie?: string; header?: string } = {},
-): FastifyRequest {
+function reqWith(options: { cookie?: string; header?: string } = {}): FastifyRequest {
   const cookies: Record<string, string> = {};
   if (options.cookie) cookies[GUEST_SESSION_COOKIE_NAME] = options.cookie;
   const headers: Record<string, string> = {};
