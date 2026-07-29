@@ -97,8 +97,15 @@ export function useCatalogProductsSection({
   const {
     exportConfirmOpen,
     isExporting,
+    previewLoading,
+    previewError,
+    pairs,
+    treeOptions,
+    selections,
+    manufacturerValue,
     openExportConfirmation,
     closeExportConfirmation,
+    setPairSelection,
     confirmExport,
   } = useCatalogProductExport({ shopId, selectedProductIds });
 
@@ -124,8 +131,15 @@ export function useCatalogProductsSection({
     deleteSelected,
     exportConfirmOpen,
     isExporting,
+    previewLoading,
+    previewError,
+    pairs,
+    treeOptions,
+    selections,
+    manufacturerValue,
     openExportConfirmation,
     closeExportConfirmation,
+    setPairSelection,
     confirmExport,
   };
 }

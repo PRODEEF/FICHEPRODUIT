@@ -5,7 +5,16 @@ import {
   combinationCell,
   extractVariantGroups,
 } from "./prestashop-combination.mapper";
+import { FICHEPRODUIT_PRESTASHOP_ID_BASE } from "./prestashop-reference";
 import { sampleCatalogProduct } from "./prestashop-test.fixtures";
+
+function idsFor(...products: { id: string }[]): Map<string, string> {
+  const map = new Map<string, string>();
+  products.forEach((p, index) => {
+    map.set(p.id, String(FICHEPRODUIT_PRESTASHOP_ID_BASE + index));
+  });
+  return map;
+}
 
 describe("extractVariantGroups / cartesian / buildAttributeColumns", () => {
   it("extrait couleur puis taille avec positions croissantes", () => {
@@ -45,7 +54,7 @@ describe("PrestashopCombinationMapper", () => {
     const product = sampleCatalogProduct({
       attributes: { reference: "REF-A" },
     });
-    const rows = mapper.map([product], new Map([[product.id, "REF-A"]]));
+    const rows = mapper.map([product], new Map([[product.id, "REF-A"]]), idsFor(product));
     expect(rows).toEqual([]);
   });
 
@@ -57,7 +66,7 @@ describe("PrestashopCombinationMapper", () => {
         taille: "6.0m², 11.0m²",
       },
     });
-    const rows = mapper.map([product], new Map([[product.id, "REF-B"]]));
+    const rows = mapper.map([product], new Map([[product.id, "REF-B"]]), idsFor(product));
     expect(rows).toHaveLength(4);
 
     const defaults = rows.map((r) => combinationCell(r, "Défaut (0 = Non, 1 = Oui)"));
@@ -65,7 +74,7 @@ describe("PrestashopCombinationMapper", () => {
     expect(defaults[0]).toBe("1");
     expect(defaults.slice(1).every((d) => d === "0")).toBe(true);
 
-    expect(combinationCell(rows[0]!, "ID produit*")).toBe("REFB");
+    expect(combinationCell(rows[0]!, "ID produit*")).toBe(String(FICHEPRODUIT_PRESTASHOP_ID_BASE));
     expect(combinationCell(rows[0]!, "Attribut (Nom:Type:Position)*")).toBe(
       "Couleur:color:0,Taille:select:1",
     );
@@ -73,21 +82,22 @@ describe("PrestashopCombinationMapper", () => {
     expect(combinationCell(rows[0]!, "Référence")).toBe("REF-B-Noir-6.0m²");
   });
 
-  it("aligne ID produit* sans tirets sur l’ID produits", () => {
+  it("aligne ID produit* sur l’ID numérique products.csv", () => {
     const product = sampleCatalogProduct({
       attributes: { reference: "44260-3012", taille: "S,M" },
     });
-    const rows = mapper.map([product], new Map([[product.id, "44260-3012"]]));
+    const importIds = idsFor(product);
+    const rows = mapper.map([product], new Map([[product.id, "44260-3012"]]), importIds);
     expect(rows).toHaveLength(2);
-    expect(combinationCell(rows[0]!, "ID produit*")).toBe("442603012");
-    expect(combinationCell(rows[1]!, "ID produit*")).toBe("442603012");
+    expect(combinationCell(rows[0]!, "ID produit*")).toBe(String(FICHEPRODUIT_PRESTASHOP_ID_BASE));
+    expect(combinationCell(rows[1]!, "ID produit*")).toBe(String(FICHEPRODUIT_PRESTASHOP_ID_BASE));
   });
 
   it("ignore les valeurs d’attribut vides après split", () => {
     const product = sampleCatalogProduct({
       attributes: { reference: "REF-C", taille: "S, , M" },
     });
-    const rows = mapper.map([product], new Map([[product.id, "REF-C"]]));
+    const rows = mapper.map([product], new Map([[product.id, "REF-C"]]), idsFor(product));
     expect(rows).toHaveLength(2);
     expect(combinationCell(rows[0]!, "Valeur (Valeur:Position)*")).toBe("S:0");
     expect(combinationCell(rows[1]!, "Valeur (Valeur:Position)*")).toBe("M:0");

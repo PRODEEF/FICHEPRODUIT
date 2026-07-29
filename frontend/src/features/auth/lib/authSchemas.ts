@@ -13,9 +13,6 @@ export const USERNAME_MAX_LENGTH = 30;
 
 export const PASSWORD_MIN = 8;
 
-/** Alias historique pour la longueur minimale du mot de passe. */
-export const MIN_PASSWORD_LENGTH = PASSWORD_MIN;
-
 const USERNAME_REGEX = /^[a-zA-Z0-9_\- ]+$/;
 
 const WEBSITE_URL_INVALID_MESSAGE =
@@ -137,15 +134,3 @@ export type ProfilePayload = z.output<typeof profileSchema>;
 export type ForgotPasswordPayload = z.output<typeof forgotPasswordSchema>;
 export type ResetPasswordPayload = z.output<typeof resetPasswordSchema>;
 export type ChangePasswordPayload = z.output<typeof changePasswordSchema>;
-
-export function validatePasswordMinLength(
-  password: string,
-  minLength = PASSWORD_MIN,
-): string | null {
-  const r = z
-    .string()
-    .min(minLength, `Le mot de passe doit contenir au moins ${minLength} caractères.`)
-    .safeParse(password);
-  if (r.success) return null;
-  return r.error.issues[0]?.message ?? null;
-}

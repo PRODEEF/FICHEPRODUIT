@@ -25,7 +25,7 @@ describe("PrestashopExportService", () => {
 
   beforeEach(async () => {
     jest.clearAllMocks();
-    mockShop.getForUser.mockResolvedValue({ id: shopId });
+    mockShop.getForUser.mockResolvedValue({ id: shopId, categoryTree: [] });
 
     const moduleRef: TestingModule = await Test.createTestingModule({
       providers: [

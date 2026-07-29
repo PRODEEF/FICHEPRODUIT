@@ -57,7 +57,7 @@ export function CatalogPageLayout({
 
         <div className="flex flex-col gap-4">
           {shop === null ? null : productsLoading ? (
-            <LoadingState label="Chargement des exemples de fiches…" />
+            <LoadingState label="Chargement des fiches…" />
           ) : productsError ? (
             <ErrorState message={productsError} />
           ) : (

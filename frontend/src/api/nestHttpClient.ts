@@ -95,6 +95,7 @@ export async function requestNestJson<T>(options: RequestNestJsonOptions): Promi
   const init: RequestInit = {
     method: options.method,
     headers: merged,
+    credentials: 'include',
   };
   if (options.body !== undefined) {
     init.body = JSON.stringify(options.body);

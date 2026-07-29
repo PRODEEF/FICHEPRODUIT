@@ -9,6 +9,7 @@ import type { CmsType } from "../../core/scraper/scraper.types";
 import type { AuthenticatedUser } from "../../core/auth/types/jwt-payload.types";
 import { SHOP_REPOSITORY, type IShopRepository } from "./shop.repository.interface";
 import type { Shop, ShopCms } from "./types/shop.types";
+import type { ShopCategoryNode } from "./types/shop-category.types";
 
 function shopDisplayNameFromUrl(url: string): string {
   try {
@@ -42,8 +43,8 @@ export class ShopService {
 
   /**
    * Création ou mise à jour depuis le pipeline d’analyse.
-   * - connecté : ownership via ownerId
-   * - invité : ownership via sessionId
+   * - connecté : met à jour le magasin principal du compte (évite un 2ᵉ shop)
+   * - invité : upsert via sessionId + URL
    */
   async createOrUpdateFromAnalysis(
     input: {
@@ -51,7 +52,7 @@ export class ShopService {
       cms: CmsType;
       sector: string | null;
       brands: string[];
-      categories: string[];
+      categoryTree: ShopCategoryNode[];
       ownerId: string | null;
       sessionId: string | null;
     },
@@ -60,6 +61,25 @@ export class ShopService {
     const name = shopDisplayNameFromUrl(input.url);
     const cms = mapScraperCmsToShopCms(input.cms);
 
+    if (input.ownerId) {
+      const shops = await this.shopRepo.findAllByOwner(input.ownerId, accessToken);
+      const primary = this.pickPrimaryShop(shops);
+      if (primary) {
+        return this.shopRepo.update(
+          primary.id,
+          {
+            name,
+            url: input.url,
+            cms,
+            brands: input.brands,
+            categoryTree: input.categoryTree,
+            ...(primary.sector?.trim() ? {} : { sector: input.sector }),
+          },
+          accessToken,
+        );
+      }
+    }
+
     return this.shopRepo.upsertFromAnalysis(
       {
         name,
@@ -67,7 +87,7 @@ export class ShopService {
         cms,
         sector: input.sector,
         brands: input.brands,
-        categories: input.categories,
+        categoryTree: input.categoryTree,
         ownerId: input.ownerId,
         sessionId: input.sessionId,
       },
@@ -91,7 +111,7 @@ export class ShopService {
       cms: ShopCms;
       sector: string | null;
       brands: string[];
-      categories: string[];
+      categoryTree: ShopCategoryNode[];
     }>,
     accessToken: string,
   ): Promise<Shop> {
@@ -141,7 +161,7 @@ export class ShopService {
           cms: "inconnu",
           sector: null,
           brands: [],
-          categories: [],
+          categoryTree: [],
           ownerId,
           sessionId: null,
         },

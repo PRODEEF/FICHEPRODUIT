@@ -11,7 +11,7 @@ import { ShopModule } from "../shop/shop.module";
 @Module({
   imports: [
     AuthModule,
-    ScraperModule, // SiteScraperService + SiteClassifierService
+    ScraperModule, // SiteScraperService + SiteClassifierService + SiteCategoryExtractorService
     ShopModule, // ShopService.createOrUpdateFromAnalysis()
   ],
   controllers: [AnalysisController],

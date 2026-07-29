@@ -2,6 +2,7 @@ import { Injectable, Logger, Inject } from "@nestjs/common";
 import { scheduleBackgroundWork } from "../../core/http/serverless-background";
 import { SiteScraperService } from "../../core/scraper/site-scraper.service";
 import { SiteClassifierService } from "../../core/scraper/site-classifier.service";
+import { SiteCategoryExtractorService } from "../../core/scraper/site-category-extractor.service";
 import { ShopService } from "../shop/shop.service";
 import { ANALYSIS_REPOSITORY, type IAnalysisRepository } from "./analysis.repository.interface";
 import type { Analysis } from "./analysis.types";
@@ -15,6 +16,7 @@ export class AnalysisPipelineService {
     private readonly analysisRepo: IAnalysisRepository,
     private readonly scraper: SiteScraperService,
     private readonly classifier: SiteClassifierService,
+    private readonly categoryExtractor: SiteCategoryExtractorService,
     private readonly shopService: ShopService,
   ) {}
 
@@ -54,23 +56,30 @@ export class AnalysisPipelineService {
         return;
       }
 
-      // 2. Classifier le site (IA + heuristiques)
-      const classification = await this.classifier.classify({
-        url: analysis.url,
-        html: scrapeResult.html,
-        cms: scrapeResult.cms,
-        title: scrapeResult.title,
-        textSample: scrapeResult.textSample,
-      });
+      // 2. Classifier le site (marques / secteur) + extraction menu catégories
+      const [classification, categoryTree] = await Promise.all([
+        this.classifier.classify({
+          url: analysis.url,
+          html: scrapeResult.html,
+          cms: scrapeResult.cms,
+          title: scrapeResult.title,
+          textSample: scrapeResult.textSample,
+        }),
+        this.categoryExtractor.extract({
+          html: scrapeResult.html,
+          cms: scrapeResult.cms,
+          baseUrl: analysis.url,
+        }),
+      ]);
 
       // 3. Boutique persistée pour connecté OU invité (session_id)
       const shop = await this.shopService.createOrUpdateFromAnalysis(
         {
           url: analysis.url,
           cms: scrapeResult.cms,
-          sector: null,
+          sector: classification.sector,
           brands: classification.brands,
-          categories: classification.categories,
+          categoryTree,
           ownerId: analysis.userId,
           sessionId: analysis.sessionId,
         },
@@ -102,7 +111,9 @@ export class AnalysisPipelineService {
           accessToken,
           analysis.sessionId,
         )
-        .catch(() => undefined); // ne pas crasher si le update échoue aussi
+        .catch((updateErr) => {
+          this.logger.error(`Failed to mark analysis ${analysis.id} as failed`, updateErr);
+        });
     }
   }
 }

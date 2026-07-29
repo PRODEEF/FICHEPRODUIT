@@ -18,6 +18,7 @@ describe("CatalogService", () => {
     sector: "s",
     brands,
     categories: ["CatA"],
+    categoryTree: [],
     ownerId: user.id,
     sessionId: null,
     createdAt: new Date().toISOString(),

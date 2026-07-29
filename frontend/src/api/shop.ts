@@ -2,7 +2,7 @@
  * Client API — magasin connecté (`/api/shop`).
  */
 
-import type { Shop, PatchMyShopBody, CmsType } from './types/api.types';
+import type { Shop, PatchMyShopBody, CmsType, ShopCategoryNode } from './types/api.types';
 import { getApiBaseUrl } from './apiBase';
 import { apiFetch, authHeaders, guestOrAuthHeadersNoBody, extractErrorMessage } from './apiAuth';
 
@@ -17,6 +17,24 @@ function normalizeCms(raw: unknown): CmsType {
     return 'inconnu';
   }
   return 'inconnu';
+}
+
+function normalizeCategoryNode(raw: unknown): ShopCategoryNode | null {
+  if (typeof raw !== 'object' || raw === null) return null;
+  const o = raw as Record<string, unknown>;
+  const id = typeof o['id'] === 'string' ? o['id'].trim() : '';
+  const name = typeof o['name'] === 'string' ? o['name'].trim() : '';
+  if (!id || !name) return null;
+  const childrenRaw = Array.isArray(o['children']) ? o['children'] : [];
+  const children = childrenRaw
+    .map(normalizeCategoryNode)
+    .filter((n): n is ShopCategoryNode => n !== null);
+  return { id, name, children };
+}
+
+function normalizeCategoryTree(raw: unknown): ShopCategoryNode[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.map(normalizeCategoryNode).filter((n): n is ShopCategoryNode => n !== null);
 }
 
 export function normalizeShop(raw: unknown): Shop | null {
@@ -52,9 +70,9 @@ export function normalizeShop(raw: unknown): Shop | null {
   const brands = Array.isArray(o['brands'])
     ? (o['brands'] as unknown[]).filter((x): x is string => typeof x === 'string')
     : [];
-  const categories = Array.isArray(o['categories'])
-    ? (o['categories'] as unknown[]).filter((x): x is string => typeof x === 'string')
-    : [];
+
+  const categoryTreeRaw = o['categoryTree'] ?? o['category_tree'];
+  const categoryTree = normalizeCategoryTree(categoryTreeRaw);
 
   return {
     id,
@@ -63,7 +81,7 @@ export function normalizeShop(raw: unknown): Shop | null {
     cms: normalizeCms(o['cms']),
     sector,
     brands,
-    categories,
+    categoryTree,
     ownerId,
     createdAt,
     updatedAt,

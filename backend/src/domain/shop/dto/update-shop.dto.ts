@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { shopCmsSchema } from "./shop-cms.schema";
 import { shopSectorSchema } from "./shop-sector.schema";
+import { shopCategoryTreeSchema } from "./shop-category-tree.schema";
 
 const SHOP_TAG_MAX_LENGTH = 64;
 
@@ -17,7 +18,7 @@ export const updateShopSchema = z.object({
   cms: shopCmsSchema.optional().describe("CMS"),
   sector: shopSectorSchema.nullable().optional().describe("Secteur métier"),
   brands: z.array(shopTagItemSchema).optional().describe("Marques"),
-  categories: z.array(shopTagItemSchema).optional().describe("Catégories"),
+  categoryTree: shopCategoryTreeSchema.optional().describe("Arborescence des catégories"),
 });
 
 export class UpdateShopDto extends createZodDto(updateShopSchema) {}
