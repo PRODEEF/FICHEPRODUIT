@@ -2,7 +2,7 @@ export interface ShopSetupInput {
   url: string;
   cms: string | null;
   brands: string[];
-  categoryTree: unknown[];
+  categoryTree: unknown[] | null;
 }
 
 /**
