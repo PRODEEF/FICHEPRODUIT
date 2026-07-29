@@ -2,6 +2,7 @@ import { useState } from 'react';
 
 import type { CatalogProduct } from '@types-api';
 import { cn } from '@shared/lib/cn';
+import { isSafeHttpUrl } from '@lib/siteUrl';
 import { Button } from '@shared/ui';
 
 import { CATALOG_TABLE_COLUMNS, CATALOG_TABLE_HEAD_CLASS } from '../lib/catalogTableColumns';
@@ -80,7 +81,7 @@ export function ProductTable({
                   />
                 </td>
                 <td className="w-14 align-middle px-2 py-2 border-b border-soft">
-                  {p.images[0] ? (
+                  {p.images[0] && isSafeHttpUrl(p.images[0]) ? (
                     <img
                       className="block h-11 w-11 rounded-lg border border-soft object-cover"
                       src={p.images[0]}

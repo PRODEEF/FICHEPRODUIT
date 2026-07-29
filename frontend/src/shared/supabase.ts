@@ -26,12 +26,3 @@ export function getSupabaseClient(): SupabaseClient | null {
 
   return client;
 }
-
-export function getSupabaseClientOrThrow(): SupabaseClient {
-  const c = getSupabaseClient();
-  if (!c)
-    throw new Error(
-      'Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY. Copy frontend/.env.example to frontend/.env.',
-    );
-  return c;
-}
