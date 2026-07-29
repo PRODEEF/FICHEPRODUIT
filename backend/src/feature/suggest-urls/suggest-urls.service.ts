@@ -224,7 +224,8 @@ export class SuggestUrlsService {
   }
 
   async suggest(q: string): Promise<SuggestUrlsResponse> {
-    let urls: string[] | null = null;
+    let urls: string[] | null;
+
     try {
       urls = await this.suggestWithTavilySearch(q);
     } catch {
