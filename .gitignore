@@ -12,3 +12,9 @@ backend/logs/
 
 frontend-test/
 .env*
+!.env.example
+!**/.env.example
+coverage/
+**/__pycache__/
+*.pyc
+*.tsbuildinfo

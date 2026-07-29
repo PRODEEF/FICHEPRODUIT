@@ -6,12 +6,12 @@
 
 ```md
 FICHEPRODUIT/
-├── frontend/          # React 19 + TypeScript + Vite + Tailwind
-│   └── src/
-├── backend/           # NestJS 11 + Fastify + Zod + Supabase
-│   ├── src/
-│   ├── src/main.ts    # Entrée NestJS (local + Vercel zero-config)
-│   └── vercel.json
+├── frontend/ # React 19 + TypeScript + Vite + Tailwind
+│ └── src/
+├── backend/ # NestJS 11 + Fastify + Zod + Supabase
+│ ├── src/
+│ ├── src/main.ts # Entrée NestJS (local + Vercel zero-config)
+│ └── vercel.json
 ├── .github/workflows/ # CI (lint, tests, build)
 └── README.md
 ```
@@ -43,11 +43,11 @@ Le proxy Vite envoie `/api` vers `http://localhost:3000` (voir [frontend/vite.co
 ### Tests
 
 - **Backend** : `cd backend && npm test` ; e2e : `npm run test:e2e` (variables d’environnement requises, voir [`.github/workflows/ci.yml`](.github/workflows/ci.yml)).
-- **Frontend** : `cd frontend && npm run test` (fichiers `*.vitest.ts` / `*.vitest.tsx` avec Vitest). Les tests existants au format `node:test` (`*.test.ts`) peuvent être lancés avec `node --test` sur les fichiers concernés.
+- **Frontend** : `cd frontend && npm run test` (fichiers `*.vitest.ts` / `*.vitest.tsx` avec Vitest).
 
 ## CI
 
-Le workflow [`.github/workflows/ci.yml`](.github/workflows/ci.yml) exécute lint, tests et build sur `backend/` et `frontend/` à chaque push ou pull request sur `main` / `master`.
+Le workflow [`.github/workflows/ci.yml`](.github/workflows/ci.yml) exécute lint, format, `npm audit`, tests unitaires, e2e backend et build sur `backend/` et `frontend/` à chaque push ou pull request sur `main` / `master`.
 
 ## Déploiement (Vercel)
 
@@ -67,9 +67,11 @@ Résumé :
 
 **Preview cross-origin** : si le front et le backend sont sur deux projets Vercel, désactiver **Deployment Protection** sur les previews backend et définir `VITE_API_URL` (env Preview) sur le frontend — voir [backend/DEPLOY.md](backend/DEPLOY.md).
 
-Le pipeline d’analyse s’enregistre avec `waitUntil` ([`@vercel/functions`](https://vercel.com/docs/functions/functions-api-reference/vercel-functions-package)) pour laisser le scrape et l’IA se terminer après la réponse HTTP. `maxDuration` est à **60** secondes dans `vercel.json` (ajuster selon le plan Vercel).
+Le pipeline d’analyse s’enregistre avec `waitUntil` ([`@vercel/functions`](https://vercel.com/docs/functions/functions-api-reference/vercel-functions-package)) pour laisser le scrape et l’IA se terminer après la réponse HTTP. **Max Duration** Vercel backend : garder le défaut du plan (ex. 300 s) ; ne pas mettre `functions`/`maxDuration` dans `vercel.json` pour NestJS zero-config (incompatible avec le CLI actuel).
 
-Le frontend est une SPA Vite : build classique (`npm run build` dans `frontend/`), hébergement statique ou CDN, avec `VITE_API_URL` pointant vers l’URL du backend si le front et l’API ne sont pas sur la même origine.
+Checklist variables + monitoring `/health` : **[backend/DEPLOY.md](backend/DEPLOY.md)**.
+
+Le frontend est une SPA Vite : build classique (`npm run build` dans `frontend/`), hébergement statique ou CDN, avec `VITE_API_URL` pointant vers l’URL du backend si le front et l’API ne sont pas sur la même origine. Variables : [`frontend/.env.example`](frontend/.env.example).
 
 ---
 

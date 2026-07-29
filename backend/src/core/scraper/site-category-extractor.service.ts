@@ -104,7 +104,8 @@ export class SiteCategoryExtractorService {
    * Retourne `[]` si aucun menu exploitable n’est trouvé.
    */
   async extract(input: ExtractInput): Promise<ShopCategoryNode[]> {
-    let tree: ShopCategoryNode[] = [];
+    let tree: ShopCategoryNode[];
+
     try {
       tree = this.extractFromHtml(input);
     } catch (err) {
