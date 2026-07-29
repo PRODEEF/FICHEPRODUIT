@@ -9,6 +9,7 @@ import { ProductTable } from './ProductTable';
 
 export interface CatalogProductsSectionProps {
   shopName?: string | undefined;
+  shopId?: string | null | undefined;
   isConnected: boolean;
   products: CatalogProduct[];
   productPayload: CatalogProductPayloadMetadata | null;
@@ -21,6 +22,7 @@ export interface CatalogProductsSectionProps {
 
 export function CatalogProductsSection({
   shopName = '',
+  shopId,
   isConnected,
   products,
   productPayload,
@@ -35,6 +37,7 @@ export function CatalogProductsSection({
   const section = useCatalogProductsSection({
     products,
     productPayload,
+    shopId,
     shopBrands,
     defaultShopSector,
     externalBrandFilter,
@@ -78,7 +81,7 @@ export function CatalogProductsSection({
             selectedCount={section.selectedInViewCount}
             onDelete={section.deleteSelected}
             onExport={() => {
-              if (section.selectedInViewCount === 0) return;
+              if (section.selectedInViewCount === 0 || section.isExporting) return;
               section.openExportConfirmation();
             }}
           />
@@ -112,7 +115,17 @@ export function CatalogProductsSection({
         open={section.exportConfirmOpen}
         onClose={section.closeExportConfirmation}
         selectedCount={section.selectedInViewCount}
-        onConfirm={section.confirmExport}
+        onConfirm={() => {
+          void section.confirmExport();
+        }}
+        isExporting={section.isExporting}
+        previewLoading={section.previewLoading}
+        previewError={section.previewError}
+        pairs={section.pairs}
+        treeOptions={section.treeOptions}
+        selections={section.selections}
+        manufacturerValue={section.manufacturerValue}
+        onSelectionChange={section.setPairSelection}
       />
     </section>
   );

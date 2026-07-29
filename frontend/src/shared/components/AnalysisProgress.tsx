@@ -42,7 +42,12 @@ export function AnalysisProgress({ analysis, onDismiss }: AnalysisProgressProps)
   const isDone = status === 'done';
 
   return (
-    <Modal open title="Progression de l’analyse" onClose={onDismiss ?? (() => undefined)} className="z-[210]">
+    <Modal
+      open
+      title="Progression de l’analyse"
+      onClose={onDismiss ?? (() => undefined)}
+      className="z-[210]"
+    >
       <div aria-labelledby="analysis-progress-title" aria-busy={!isFailed}>
         <div className="mb-2 flex justify-center">
           {isFailed ? (

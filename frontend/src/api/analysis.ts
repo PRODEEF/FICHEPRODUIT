@@ -2,15 +2,20 @@
  * Client API — Analyses
  *
  * Routes NestJS :
- *   POST   /api/analyses          (auth optionnelle)
+ *   POST   /api/analyses          (auth optionnelle — cookie invité)
  *   GET    /api/analyses          (auth requise)
- *   GET    /api/analyses/:id      (auth optionnelle)
+ *   GET    /api/analyses/:id      (auth optionnelle — cookie invité)
  */
 
 import type { Analysis, CreateAnalysisBody } from '@types-api';
 
 import { getApiBaseUrl } from './apiBase';
-import { apiFetch, authHeadersNoBody, guestOrAuthHeaders, guestOrAuthHeadersNoBodyWithGuestSession } from './apiAuth';
+import {
+  apiFetch,
+  authHeadersNoBody,
+  guestOrAuthHeaders,
+  guestOrAuthHeadersNoBody,
+} from './apiAuth';
 
 // ---------------------------------------------------------------------------
 // Normalisation JSON → Analysis
@@ -42,12 +47,6 @@ function normalizeAnalysis(raw: unknown): Analysis | null {
       : typeof o['user_id'] === 'string'
         ? o['user_id']
         : null;
-  const sessionId =
-    typeof o['sessionId'] === 'string'
-      ? o['sessionId']
-      : typeof o['session_id'] === 'string'
-        ? o['session_id']
-        : null;
   const shopId =
     typeof o['shopId'] === 'string'
       ? o['shopId']
@@ -61,7 +60,7 @@ function normalizeAnalysis(raw: unknown): Analysis | null {
         ? o['created_at']
         : new Date().toISOString();
 
-  return { id, url, status, errorCode, errorMessage, userId, sessionId, shopId, createdAt };
+  return { id, url, status, errorCode, errorMessage, userId, shopId, createdAt };
 }
 
 function normalizeStatus(raw: unknown): Analysis['status'] {
@@ -87,7 +86,7 @@ function normalizeErrorCode(raw: unknown): Analysis['errorCode'] {
 /**
  * Lance une analyse (invitée ou authentifiée).
  *
- * - Sans session Supabase : envoie `x-session-id` → analyse guest.
+ * - Sans session Supabase : cookie `ficheproduct_guest_session` géré côté navigateur.
  * - Avec session          : envoie `Authorization: Bearer …` → analyse rattachée au compte.
  *
  * @throws {Error} réseau, validation, ou corps invalide.
@@ -109,14 +108,14 @@ export async function createAnalysis(url: string): Promise<Analysis> {
 
 /**
  * Lit l'état courant d'une analyse.
+ * L'authentification invitée est assurée par le cookie httpOnly `ficheproduct_guest_session`.
  *
- * @param guestSessionId - Optionnel : session invité si le cookie n’est pas disponible (ex. cross-origin).
  * @throws {Error} 401, 404 ou réseau.
  */
-export async function getAnalysis(id: string, guestSessionId?: string | null): Promise<Analysis> {
+export async function getAnalysis(id: string): Promise<Analysis> {
   const { parsed } = await apiFetch(`${getApiBaseUrl()}/api/analyses/${encodeURIComponent(id)}`, {
     method: 'GET',
-    headers: await guestOrAuthHeadersNoBodyWithGuestSession(guestSessionId),
+    headers: await guestOrAuthHeadersNoBody(),
   });
 
   const analysis = normalizeAnalysis(parsed);

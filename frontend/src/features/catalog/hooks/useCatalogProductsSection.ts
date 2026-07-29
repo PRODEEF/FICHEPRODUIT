@@ -11,6 +11,7 @@ import { useProductSelection } from './useProductSelection';
 interface UseCatalogProductsSectionOptions {
   products: CatalogProduct[];
   productPayload: CatalogProductPayloadMetadata | null;
+  shopId?: string | null | undefined;
   shopBrands?: string[] | undefined;
   defaultShopSector?: string | null | undefined;
   externalBrandFilter?: string | undefined;
@@ -20,13 +21,12 @@ interface UseCatalogProductsSectionOptions {
 export function useCatalogProductsSection({
   products,
   productPayload,
+  shopId,
   shopBrands,
   defaultShopSector,
   externalBrandFilter,
   onBrandFilterChange,
 }: UseCatalogProductsSectionOptions) {
-  const { exportConfirmOpen, openExportConfirmation, closeExportConfirmation, confirmExport } =
-    useCatalogProductExport();
   const [removedIds, setRemovedIds] = useState<Set<string>>(() => new Set());
 
   const allProducts = products.filter((p) => !removedIds.has(p.id));
@@ -92,6 +92,23 @@ export function useCatalogProductsSection({
     deleteSelected,
   } = useProductSelection(displayProducts, effectiveFilters, handleRemoveIds);
 
+  const selectedProductIds = useMemo(() => Array.from(selectedIds), [selectedIds]);
+
+  const {
+    exportConfirmOpen,
+    isExporting,
+    previewLoading,
+    previewError,
+    pairs,
+    treeOptions,
+    selections,
+    manufacturerValue,
+    openExportConfirmation,
+    closeExportConfirmation,
+    setPairSelection,
+    confirmExport,
+  } = useCatalogProductExport({ shopId, selectedProductIds });
+
   return {
     allProducts,
     displayProducts,
@@ -113,8 +130,16 @@ export function useCatalogProductsSection({
     selectedInViewCount,
     deleteSelected,
     exportConfirmOpen,
+    isExporting,
+    previewLoading,
+    previewError,
+    pairs,
+    treeOptions,
+    selections,
+    manufacturerValue,
     openExportConfirmation,
     closeExportConfirmation,
+    setPairSelection,
     confirmExport,
   };
 }

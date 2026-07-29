@@ -4,7 +4,7 @@
 
 ## Structure du dépôt
 
-```markdown
+```md
 FICHEPRODUIT/
 ├── frontend/          # React 19 + TypeScript + Vite + Tailwind
 │   └── src/

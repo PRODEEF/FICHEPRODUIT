@@ -47,7 +47,17 @@ describe("AnalysisService", () => {
 
     const result = await service.create("https://shop.test", user);
 
-    expect(result).toEqual(created);
+    expect(result).toEqual({
+      id: "a1",
+      url: "https://shop.test",
+      status: "pending",
+      errorCode: null,
+      errorMessage: null,
+      userId: "user-1",
+      shopId: null,
+      createdAt: "2024-01-01T00:00:00.000Z",
+    });
+    expect(result).not.toHaveProperty("sessionId");
     expect(pipeline.runInBackground).toHaveBeenCalledWith(created, "tok");
   });
 
@@ -88,6 +98,7 @@ describe("AnalysisService", () => {
       "",
     );
     expect(pipeline.runInBackground).toHaveBeenCalledWith(created, "");
-    expect(result.sessionId).toBe("sess-1");
+    expect(result).not.toHaveProperty("sessionId");
+    expect(result.id).toBe("g1");
   });
 });

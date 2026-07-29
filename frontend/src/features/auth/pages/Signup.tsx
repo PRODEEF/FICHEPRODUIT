@@ -3,10 +3,6 @@ import { useNavigate, useSearchParams } from 'react-router';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
-import {
-  persistGuestSessionFromSources,
-  resolveGuestSessionId,
-} from '@lib/analysis/guestSessionStorage';
 import { parseAsFullSiteUrl } from '@lib/siteUrl';
 import { getSupabaseClient } from '@shared/supabase';
 import { AnalysisProgress } from '@shared/components/AnalysisProgress';
@@ -72,10 +68,6 @@ export function Signup() {
   const websiteUrlValue = useWatch({ control, name: 'websiteUrl', defaultValue: '' });
   const emailValue = useWatch({ control, name: 'email', defaultValue: '' });
 
-  useEffect(() => {
-    persistGuestSessionFromSources(searchParams.get('s'));
-  }, [searchParams]);
-
   const urlFromQuery = searchParams.get('url');
   useEffect(() => {
     if (!urlFromQuery) return;
@@ -112,8 +104,7 @@ export function Signup() {
       const emailTrim = data.email.trim();
       const normalizedUsername = data.username.trim();
       const websiteUrl = data.websiteUrl;
-      const guestSessionId = resolveGuestSessionId(searchParams.get('s'));
-      const shouldRunSignupAnalysis = websiteUrl !== '' && guestSessionId === null;
+      const shouldRunSignupAnalysis = websiteUrl !== '';
 
       if (shouldRunSignupAnalysis) {
         setSignupUrlAnalysisActive(true);
@@ -124,7 +115,7 @@ export function Signup() {
         password: data.password,
         options: {
           emailRedirectTo: `${window.location.origin}/catalog`,
-          data: buildSignupUserMetadata(normalizedUsername, websiteUrl, guestSessionId !== null),
+          data: buildSignupUserMetadata(normalizedUsername, websiteUrl, false),
         },
       });
 
@@ -172,7 +163,6 @@ export function Signup() {
           normalizedUsername,
           sector: data.sector,
           websiteUrl,
-          guestSessionId,
           refreshProfile,
           runAnalysis,
           navigate,
@@ -190,7 +180,7 @@ export function Signup() {
           username: normalizedUsername,
           sector: data.sector,
           websiteUrl,
-          pendingAutoAnalyze: guestSessionId !== null ? false : websiteUrl !== '',
+          pendingAutoAnalyze: websiteUrl !== '',
         });
         signupPostAuthRef.current = false;
         setVerifyEmailSent(true);
@@ -200,7 +190,7 @@ export function Signup() {
       signupPostAuthRef.current = false;
       setFormError('Inscription impossible pour le moment. Réessayez plus tard.');
     },
-    [navigate, refreshProfile, runAnalysis, searchParams, setError],
+    [navigate, refreshProfile, runAnalysis, setError],
   );
 
   const isDisabled = isSubmitting || authLoading || signupUrlAnalysisActive;
@@ -274,8 +264,8 @@ export function Signup() {
                 ))}
               </SelectField>
               <p className="m-0 text-xs text-text-secondary">
-                Ce choix définit votre univers produit et les tarifs associés. Il ne pourra plus être
-                modifié par la suite.
+                Ce choix définit votre univers produit et les tarifs associés. Il ne pourra plus
+                être modifié par la suite.
               </p>
             </div>
             <InputField
@@ -320,7 +310,9 @@ export function Signup() {
               {emailAlreadyRegistered ? (
                 <p className="m-0 pb-1 text-center text-sm text-text-secondary">
                   Ce mail existe déjà,{' '}
-                  <TextLink to={`/login${buildAuthEmailQuery(emailValue)}`}>se connecter ?</TextLink>
+                  <TextLink to={`/login${buildAuthEmailQuery(emailValue)}`}>
+                    se connecter ?
+                  </TextLink>
                 </p>
               ) : null}
               <Button type="submit" variant="gradient" disabled={isDisabled}>

@@ -1,15 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router';
 
 import { getAnalysis } from '@api/analysis';
 import { ApiHttpError } from '@api/apiAuth';
 import { getMyShop } from '@api/shop';
 import type { Analysis, CatalogProduct, Shop } from '@types-api';
-import {
-  getAnalysisDetailCache,
-  isValidGuestSessionId,
-  setAnalysisDetailCache,
-} from '@lib/analysis/analysisStorage';
+import { getAnalysisDetailCache, setAnalysisDetailCache } from '@lib/analysis/analysisStorage';
 
 import { useCatalogProductsByIds } from './useCatalogProductsByIds';
 import type { CatalogProductPayloadMetadata } from '../types';
@@ -24,9 +19,9 @@ interface UseAnalysisDetailResult {
   loading: boolean;
   error: string | null;
   analysisNotFound: boolean;
-  /** Chargement de l’analyse et de la boutique (hors fiches catalogue par IDs). */
+  /** Chargement de l'analyse et de la boutique (hors fiches catalogue par IDs). */
   analysisShopLoading: boolean;
-  /** Chargement des fiches produits liées à l’analyse (`fetchCatalogProductsByShopBrands`). */
+  /** Chargement des fiches produits liées à l'analyse (`fetchCatalogProductsByShopBrands`). */
   catalogProductsLoading: boolean;
 }
 
@@ -42,37 +37,28 @@ export function useAnalysisDetail(
   options?: UseAnalysisDetailOptions,
 ): UseAnalysisDetailResult {
   const loadProducts = options?.loadProducts !== false;
-  const [searchParams] = useSearchParams();
   const cacheUserId = userId ?? CACHE_GUEST_KEY;
-
-  const guestSessionFromQuery = useMemo(() => {
-    if (userId) return undefined;
-    const raw = searchParams.get('s');
-    return isValidGuestSessionId(raw) ? raw : undefined;
-  }, [userId, searchParams]);
 
   const [loading, setLoading] = useState(() => Boolean(analysisId));
   const [analysis, setAnalysis] = useState<Analysis | null>(() => {
     if (!analysisId) return null;
-    return getAnalysisDetailCache<Analysis, CatalogProductPayloadMetadata, Shop>(cacheUserId, analysisId)
-      ?.analysis ?? null;
+    return (
+      getAnalysisDetailCache<Analysis, CatalogProductPayloadMetadata, Shop>(cacheUserId, analysisId)
+        ?.analysis ?? null
+    );
   });
   const [shop, setShop] = useState<Shop | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [analysisNotFound, setAnalysisNotFound] = useState(false);
 
   const shouldLoadProducts = analysis?.status === 'done';
-  const guestSessionForCatalog = useMemo(() => {
-    if (userId) return undefined;
-    return guestSessionFromQuery ?? analysis?.sessionId ?? undefined;
-  }, [userId, guestSessionFromQuery, analysis?.sessionId]);
 
   const {
     products,
     metadata: productPayload,
     loading: productsLoading,
     error: productsError,
-  } = useCatalogProductsByIds(shop, shouldLoadProducts && loadProducts, guestSessionForCatalog);
+  } = useCatalogProductsByIds(shop, shouldLoadProducts && loadProducts);
 
   useEffect(() => {
     if (!analysisId || authLoading) return;
@@ -103,9 +89,8 @@ export function useAnalysisDetail(
 
     void (async () => {
       try {
-        const a = await getAnalysis(analysisId, guestSessionFromQuery);
+        const a = await getAnalysis(analysisId);
         if (isStale()) return;
-        const guestHdr = !userId ? (guestSessionFromQuery ?? a.sessionId) ?? undefined : undefined;
 
         let nextShop: Shop | null = null;
         if (a.status === 'done' && a.shopId) {
@@ -116,7 +101,7 @@ export function useAnalysisDetail(
               nextShop = myShop;
             }
           } else {
-            nextShop = await getMyShop(a.shopId, guestHdr);
+            nextShop = await getMyShop(a.shopId);
             if (isStale()) return;
             if (nextShop && nextShop.id !== a.shopId) {
               nextShop = null;
@@ -153,7 +138,7 @@ export function useAnalysisDetail(
     return () => {
       guard.cancelled = true;
     };
-  }, [userId, analysisId, authLoading, cacheUserId, guestSessionFromQuery]);
+  }, [userId, analysisId, authLoading, cacheUserId]);
 
   const combinedLoading = loading || (loadProducts && productsLoading);
   const combinedError = useMemo(() => {

@@ -77,6 +77,7 @@ export function Catalog() {
         catalogProducts !== null ? (
           <CatalogProductsSection
             shopName={shop?.name ?? ''}
+            shopId={shop?.id}
             isConnected={Boolean(userEmail)}
             products={allProducts}
             productPayload={productPayload}

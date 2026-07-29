@@ -7,6 +7,12 @@ import type { CatalogProduct, CatalogSearchCriteria } from "./types/catalog.type
 type CatalogProductRow = Database["public"]["Tables"]["catalog_products"]["Row"];
 
 /**
+ * Taille max d’un lot `.in("id", …)` PostgREST.
+ * Au-delà (~200+ UUID), l’URL dépasse la limite headers Supabase (~16 KB).
+ */
+export const CATALOG_FIND_BY_IDS_BATCH_SIZE = 100;
+
+/**
  * Reads on `catalog_products` (RLS applies).
  */
 @Injectable()
@@ -36,18 +42,30 @@ export class CatalogRepository implements ICatalogRepository {
     if (ids.length === 0) return [];
 
     const uniqueIds = [...new Set(ids)];
-    const { data, error } = await this.supabase.anon
-      .from("catalog_products")
-      .select("*")
-      .in("id", uniqueIds);
+    const byId = new Map<string, CatalogProduct>();
+    let batchCount = 0;
 
-    if (error) {
-      this.logger.error(`findByIds(${uniqueIds.length} ids) failed`, error);
-      throw new InternalServerErrorException("Échec de la récupération des produits catalogue");
+    for (let offset = 0; offset < uniqueIds.length; offset += CATALOG_FIND_BY_IDS_BATCH_SIZE) {
+      const batch = uniqueIds.slice(offset, offset + CATALOG_FIND_BY_IDS_BATCH_SIZE);
+      batchCount += 1;
+
+      const { data, error } = await this.supabase.anon
+        .from("catalog_products")
+        .select("*")
+        .in("id", batch);
+
+      if (error) {
+        this.logger.error(
+          `findByIds batch ${batchCount} (${batch.length} ids, offset ${offset}/${uniqueIds.length}) failed`,
+          error,
+        );
+        throw new InternalServerErrorException("Échec de la récupération des produits catalogue");
+      }
+
+      for (const row of (data ?? []) as CatalogProductRow[]) {
+        byId.set(row.id, this.toEntity(row));
+      }
     }
-
-    const rows = (data ?? []) as CatalogProductRow[];
-    const byId = new Map(rows.map((row) => [row.id, this.toEntity(row)] as const));
 
     return ids.map((id) => byId.get(id)).filter((p): p is CatalogProduct => p !== undefined);
   }

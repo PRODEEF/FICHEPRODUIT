@@ -27,8 +27,7 @@ function AuthProviderInner({ children }: { children: ReactNode }) {
   const [profileLoading, setProfileLoading] = useState(false);
   const [loading, setLoading] = useState(() => Boolean(getSupabaseClient()));
 
-  const profile =
-    user && profileBundle?.userId === user.id ? profileBundle.profile : null;
+  const profile = user && profileBundle?.userId === user.id ? profileBundle.profile : null;
 
   useClaimGuestSessionOnAuth(session, loading);
 

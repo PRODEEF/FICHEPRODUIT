@@ -23,7 +23,8 @@ function registerStripeWebhookRawBody(app: NestFastifyApplication): void {
   const fastify = app.getHttpAdapter().getInstance();
 
   fastify.addHook("preParsing", (request, _reply, payload, done) => {
-    if (request.url !== STRIPE_WEBHOOK_PATH) {
+    const pathname = (request.url ?? "").split("?")[0];
+    if (pathname !== STRIPE_WEBHOOK_PATH) {
       done(null, payload);
       return;
     }

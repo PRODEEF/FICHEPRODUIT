@@ -3,7 +3,6 @@ import { motion } from 'motion/react';
 import { useEffect, useState } from 'react';
 
 import { fadeUp, titleReveal, badgeBounce } from '@lib/motionVariants';
-import { setGuestSessionId } from '@lib/analysis/guestSessionStorage';
 import { AnalysisProgress } from '@shared/components/AnalysisProgress';
 import { UrlSearchForm } from '@shared/components/UrlSearchForm';
 import { UrlsSuggestions } from '@shared/components/UrlsSuggestions';
@@ -24,14 +23,9 @@ export function Home() {
   const { user } = useAuth();
   const { runAnalysis, analysisOpen, siteAnalysis, dismissError } = useSiteAnalysis({
     onSuccess: (summary) => {
-      // Les invités atterrissent sur la vue publique d'analyse,
+      // Les invités atterrissent sur la vue publique d'analyse (cookie httpOnly géré par le navigateur),
       // les utilisateurs connectés sur leur catalogue privé.
-      if (!user && summary.sessionId) {
-        setGuestSessionId(summary.sessionId);
-      }
-      const target = user
-        ? '/catalog'
-        : `/catalog/public/${summary.id}${summary.sessionId ? `?s=${encodeURIComponent(summary.sessionId)}` : ''}`;
+      const target = user ? '/catalog' : `/catalog/public/${summary.id}`;
       void navigate(target);
     },
   });

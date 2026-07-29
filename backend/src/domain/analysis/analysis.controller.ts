@@ -2,7 +2,6 @@ import {
   Body,
   Controller,
   Get,
-  Headers,
   Param,
   ParseUUIDPipe,
   Post,
@@ -16,7 +15,6 @@ import {
   ApiBadRequestResponse,
   ApiBearerAuth,
   ApiCreatedResponse,
-  ApiHeader,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
@@ -45,16 +43,10 @@ export class AnalysisController {
   @Post()
   @UseGuards(OptionalJwtGuard)
   @ApiBearerAuth("bearerAuth")
-  @ApiHeader({
-    name: "x-session-id",
-    required: false,
-    description:
-      "Session invité (optionnel) : sinon le serveur en crée une et la pose en cookie httpOnly. Ignoré si un JWT valide est fourni.",
-  })
   @ApiOperation({
     summary: "Lancer une analyse de site",
     description:
-      "Avec JWT : l'analyse est rattachée à l'utilisateur. Sans JWT : parcours invité ; cookie `ficheproduct_guest_session` (session_id aligné en base).",
+      "Avec JWT : l'analyse est rattachée à l'utilisateur. Sans JWT : parcours invité ; cookie `ficheproduct_guest_session` posé en httpOnly.",
   })
   @ApiCreatedResponse({
     description: "Analyse créée (statut initial pending)",
@@ -64,15 +56,13 @@ export class AnalysisController {
   async create(
     @Body() body: CreateAnalysisDto,
     @CurrentUser() user: AuthenticatedUser | undefined,
-    @Headers("x-session-id") headerSessionId: string | undefined,
     @Req() req: FastifyRequest,
     @Res({ passthrough: true }) reply: FastifyReply,
   ) {
     if (user) {
       return this.service.create(body.url, user);
     }
-    const fromCookie = readGuestSessionId(req);
-    const sid = (fromCookie ?? headerSessionId)?.trim() || crypto.randomUUID();
+    const sid = readGuestSessionId(req) ?? crypto.randomUUID();
     const analysis = await this.service.createForGuest(body.url, sid);
     const secure = this.config.get<string>("nodeEnv") === "production";
     const maxAge = this.config.get<number>("guestSessionCookieMaxAgeSec", 60 * 60 * 24 * 30);
@@ -96,22 +86,16 @@ export class AnalysisController {
   @Get(":id")
   @UseGuards(OptionalJwtGuard)
   @ApiBearerAuth("bearerAuth")
-  @ApiHeader({
-    name: "x-session-id",
-    required: false,
-    description:
-      "Optionnel si le cookie de session invité est déjà présent ; doit correspondre à l'analyse invité.",
-  })
   @ApiOperation({
     summary: "Récupérer une analyse par identifiant",
     description:
-      "Avec JWT : accès si l'analyse appartient à l'utilisateur. Sans JWT : cookie invité (ou en-tête x-session-id) aligné sur `analyses.session_id`.",
+      "Avec JWT : accès si l'analyse appartient à l'utilisateur. Sans JWT : cookie invité `ficheproduct_guest_session` aligné sur `analyses.session_id`.",
   })
   @ApiParam({ name: "id", description: "UUID de l'analyse", format: "uuid" })
   @ApiOkResponse({ description: "Analyse trouvée", type: AnalysisResponseDto })
   @ApiBadRequestResponse({ description: "id n'est pas un UUID valide" })
   @ApiUnauthorizedResponse({
-    description: "Parcours invité sans session (cookie ou en-tête manquant)",
+    description: "Parcours invité sans cookie de session",
   })
   @ApiNotFoundResponse({ description: "Analyse introuvable ou non autorisée" })
   getOne(

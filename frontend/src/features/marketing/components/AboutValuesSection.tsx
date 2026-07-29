@@ -57,7 +57,9 @@ export function AboutValuesSection() {
               <Card className="flex h-full flex-col gap-4 p-6">
                 <Icon className="h-7 w-7 text-purple-600" strokeWidth={2} aria-hidden />
                 <h3 className="text-lg font-bold text-text-primary">{value.title}</h3>
-                <p className="m-0 text-sm leading-relaxed text-text-secondary">{value.description}</p>
+                <p className="m-0 text-sm leading-relaxed text-text-secondary">
+                  {value.description}
+                </p>
               </Card>
             </motion.div>
           );

@@ -64,7 +64,9 @@ export function ResetPassword() {
   return (
     <PageSection className="max-w-2xl pt-8">
       <Card className="mx-auto w-full max-w-[30rem]">
-        <h1 className="mb-2 text-center text-2xl font-extrabold text-text-primary">Nouveau mot de passe</h1>
+        <h1 className="mb-2 text-center text-2xl font-extrabold text-text-primary">
+          Nouveau mot de passe
+        </h1>
         {gate === 'loading' ? (
           <p className="mb-5 text-center text-sm text-text-secondary" aria-busy="true">
             Vérification du lien…

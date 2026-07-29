@@ -1,10 +1,16 @@
 import { Injectable, InternalServerErrorException, Logger } from "@nestjs/common";
 import { SupabaseService } from "../../core/supabase/supabase.service";
-import type { Database } from "../../core/supabase/database.types";
+import type { Database, Json } from "../../core/supabase/database.types";
+import { parseCategoryTree } from "./dto/shop-category-tree.schema";
 import type { IShopRepository } from "./shop.repository.interface";
 import type { CreateShop, Shop, UpdateShop, UpsertShopFromAnalysis } from "./types/shop.types";
+import type { ShopCategoryNode } from "./types/shop-category.types";
 
 type ShopRow = Database["public"]["Tables"]["shops"]["Row"];
+
+function categoryTreeToJson(tree: ShopCategoryNode[]): Json {
+  return tree as unknown as Json;
+}
 
 @Injectable()
 export class ShopRepository implements IShopRepository {
@@ -72,7 +78,7 @@ export class ShopRepository implements IShopRepository {
         cms: data.cms,
         sector: data.sector,
         brands: data.brands,
-        categories: data.categories,
+        category_tree: categoryTreeToJson(data.categoryTree),
         user_id: data.ownerId,
         session_id: null,
       })
@@ -140,7 +146,7 @@ export class ShopRepository implements IShopRepository {
           name: data.name,
           cms: data.cms,
           brands: data.brands,
-          categories: data.categories,
+          category_tree: categoryTreeToJson(data.categoryTree),
         })
         .eq("id", prev.id)
         .select()
@@ -161,7 +167,7 @@ export class ShopRepository implements IShopRepository {
         cms: data.cms,
         sector: null,
         brands: data.brands,
-        categories: data.categories,
+        category_tree: categoryTreeToJson(data.categoryTree),
         user_id: data.ownerId,
         session_id: data.sessionId,
       })
@@ -215,7 +221,9 @@ export class ShopRepository implements IShopRepository {
       ...(data.cms !== undefined ? { cms: data.cms } : {}),
       ...(data.sector !== undefined ? { sector: data.sector } : {}),
       ...(data.brands !== undefined ? { brands: data.brands } : {}),
-      ...(data.categories !== undefined ? { categories: data.categories } : {}),
+      ...(data.categoryTree !== undefined
+        ? { category_tree: categoryTreeToJson(data.categoryTree) }
+        : {}),
     };
   }
 
@@ -227,7 +235,7 @@ export class ShopRepository implements IShopRepository {
       cms: row.cms,
       sector: row.sector,
       brands: row.brands ?? [],
-      categories: row.categories ?? [],
+      categoryTree: parseCategoryTree(row.category_tree),
       ownerId: row.user_id,
       sessionId: row.session_id,
       createdAt: row.created_at,

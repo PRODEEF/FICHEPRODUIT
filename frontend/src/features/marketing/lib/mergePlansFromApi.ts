@@ -23,8 +23,7 @@ export function mergePlansFromApi(
       recommended: ui.recommended,
       ctaLabel: ui.ctaLabel,
       ctaPrimary: ui.ctaPrimary,
-      ctaMailto:
-        plan.id === 'business_custom' ? buildBusinessCustomContactMailto(sector) : null,
+      ctaMailto: plan.id === 'business_custom' ? buildBusinessCustomContactMailto(sector) : null,
     };
   });
 }

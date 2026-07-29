@@ -13,12 +13,7 @@ export function isSupabaseConfigured(): boolean {
 export function getSupabaseClient(): SupabaseClient | null {
   const url = import.meta.env.VITE_SUPABASE_URL;
   const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-  if (
-    url === undefined ||
-    anonKey === undefined ||
-    url.trim() === '' ||
-    anonKey.trim() === ''
-  ) {
+  if (url === undefined || anonKey === undefined || url.trim() === '' || anonKey.trim() === '') {
     return null;
   }
   client ??= createClient(url, anonKey, {

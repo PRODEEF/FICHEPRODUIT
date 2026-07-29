@@ -11,7 +11,13 @@ export function Testimonials() {
   const { ref, inView } = useScrollReveal(0.2);
 
   return (
-    <motion.section className="bg-gray-50 py-20 px-4" variants={cardReveal} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.15 }}>
+    <motion.section
+      className="bg-gray-50 py-20 px-4"
+      variants={cardReveal}
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, amount: 0.15 }}
+    >
       <motion.h2
         ref={titleRef}
         variants={titleReveal}
@@ -43,7 +49,12 @@ export function Testimonials() {
           </motion.article>
         ))}
       </motion.div>
-      <motion.div className="text-center mt-10" variants={titleReveal} initial="hidden" animate={inView ? 'visible' : 'hidden'}>
+      <motion.div
+        className="text-center mt-10"
+        variants={titleReveal}
+        initial="hidden"
+        animate={inView ? 'visible' : 'hidden'}
+      >
         <Button href="/signup" variant="ghost">
           Rejoindre 2 000 marchands →
         </Button>

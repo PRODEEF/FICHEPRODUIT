@@ -2,6 +2,7 @@ import { createZodDto } from "nestjs-zod";
 import { z } from "zod";
 
 import { shopCmsSchema } from "./shop-cms.schema";
+import { shopCategoryNodeSchema } from "./shop-category-tree.schema";
 
 export const shopResponseSchema = z.object({
   id: z.uuid().describe("Identifiant de la boutique"),
@@ -10,7 +11,9 @@ export const shopResponseSchema = z.object({
   cms: shopCmsSchema.describe("CMS détecté ou déclaré"),
   sector: z.string().nullable().describe("Secteur métier"),
   brands: z.array(z.string()).describe("Marques associées"),
-  categories: z.array(z.string()).describe("Catégories détectées ou saisies"),
+  categoryTree: z
+    .array(shopCategoryNodeSchema)
+    .describe("Arborescence des catégories (menu du site)"),
   ownerId: z
     .uuid()
     .nullable()

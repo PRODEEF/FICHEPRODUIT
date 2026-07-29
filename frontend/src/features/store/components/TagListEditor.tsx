@@ -1,4 +1,4 @@
-import { useId, useState, type KeyboardEvent } from 'react';
+import { useId, useState, type KeyboardEvent, type ReactNode } from 'react';
 
 import { Button, InputField, Modal, Tag } from '@shared/ui';
 
@@ -8,6 +8,8 @@ interface TagListEditorProps {
   label: string;
   tags: string[];
   disabled?: boolean;
+  /** Actions additionnelles à droite de « Ajouter » (ex. import CSV). */
+  trailingActions?: ReactNode;
   onAdd: (tag: string) => void | Promise<void>;
   onRemove: (tag: string) => void | Promise<void>;
   onValidateBeforeAdd?: (tag: string) => string | null;
@@ -17,6 +19,7 @@ export function TagListEditor({
   label,
   tags,
   disabled = false,
+  trailingActions,
   onAdd,
   onRemove,
   onValidateBeforeAdd,
@@ -79,37 +82,28 @@ export function TagListEditor({
   const locked = disabled || busy;
 
   return (
-    <div className="mt-8">
-      <h2 className="mb-3 text-sm font-semibold text-gray-900">{label}</h2>
-      <div className="flex flex-wrap items-center gap-2">
-        {tags.map((tag) => (
-          <Tag
-            key={tag}
-            variant="primary"
-            onDismiss={locked ? undefined : () => void setTagToConfirm(tag)}
-            dismissLabel={`Retirer ${tag}`}
-          >
-            {tag}
-          </Tag>
-        ))}
-      </div>
-      <div className="mt-3 flex flex-wrap items-end gap-2">
-        <InputField
-          id={inputId}
-          label={`Ajouter une nouvelle ${label.slice(0, -1)}`}
-          value={input}
-          onChange={(e) => {
-            setError(null);
-            setInput(e.target.value);
-          }}
-          onKeyDown={onKeyDown}
-          placeholder="Ajouter…"
-          disabled={locked}
-          maxLength={SHOP_TAG_MAX_LENGTH}
-          showCharacterCount
-          error={error ?? undefined}
-          errorId={`${inputId}-error`}
-        />
+    <section className="mt-8 rounded-xl border border-gray-100 bg-bg-white px-5 py-4">
+      <h2 className="mb-3 m-0 text-base font-medium text-text-primary">{label}</h2>
+
+      <div className="flex flex-wrap items-end gap-2">
+        <div className="min-w-[12rem] flex-1 basis-[14rem]">
+          <InputField
+            id={inputId}
+            label={`Ajouter une nouvelle ${label.slice(0, -1)}`}
+            value={input}
+            onChange={(e) => {
+              setError(null);
+              setInput(e.target.value);
+            }}
+            onKeyDown={onKeyDown}
+            placeholder="Ajouter…"
+            disabled={locked}
+            maxLength={SHOP_TAG_MAX_LENGTH}
+            showCharacterCount
+            error={error ?? undefined}
+            errorId={`${inputId}-error`}
+          />
+        </div>
         <Button
           type="button"
           variant="neutral-outline"
@@ -120,7 +114,23 @@ export function TagListEditor({
         >
           Ajouter
         </Button>
+        {trailingActions}
       </div>
+
+      {tags.length > 0 ? (
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          {tags.map((tag) => (
+            <Tag
+              key={tag}
+              variant="primary"
+              onDismiss={locked ? undefined : () => void setTagToConfirm(tag)}
+              dismissLabel={`Retirer ${tag}`}
+            >
+              {tag}
+            </Tag>
+          ))}
+        </div>
+      ) : null}
 
       <Modal
         open={tagToConfirm !== null}
@@ -159,6 +169,6 @@ export function TagListEditor({
           </Button>
         </div>
       </Modal>
-    </div>
+    </section>
   );
 }

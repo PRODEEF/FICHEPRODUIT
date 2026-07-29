@@ -19,10 +19,7 @@ function matchesBrand(product: CatalogProduct, brand: string): boolean {
 }
 
 /** Retrouve une option dont la valeur correspond sans tenir compte de la casse. */
-export function findOptionCaseInsensitive(
-  options: string[],
-  value: string,
-): string | undefined {
+export function findOptionCaseInsensitive(options: string[], value: string): string | undefined {
   const needle = value.trim().toLowerCase();
   if (!needle) return undefined;
   return options.find((option) => option.trim().toLowerCase() === needle);

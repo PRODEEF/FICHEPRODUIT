@@ -60,7 +60,9 @@ export function AboutDifferentiatorsSection() {
                 </p>
                 <Icon className="h-6 w-6 text-purple-600" strokeWidth={2} aria-hidden />
                 <h3 className="text-lg font-bold text-text-primary">{item.title}</h3>
-                <p className="m-0 text-sm leading-relaxed text-text-secondary">{item.description}</p>
+                <p className="m-0 text-sm leading-relaxed text-text-secondary">
+                  {item.description}
+                </p>
               </Card>
             </motion.div>
           );

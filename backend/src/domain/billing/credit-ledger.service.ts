@@ -82,6 +82,7 @@ export class CreditLedgerService {
   /**
    * Réserve et débite les crédits en FIFO avant la génération d'export.
    * Le débit atomique Postgres fait foi ; le pré-contrôle évite un aller-retour DB évident.
+   * Note : l'export PrestaShop catalogue actuel ne débite pas ; cette méthode est prête pour un export facturé.
    * @returns Identifiant de tentative pour remboursement si la génération échoue, sinon `null` si gratuit.
    */
   async reserveCreditsForExport(

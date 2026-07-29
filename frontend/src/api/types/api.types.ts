@@ -55,7 +55,6 @@ export interface Analysis {
   errorCode: AnalysisErrorCode | null;
   errorMessage: string | null;
   userId: string | null;
-  sessionId: string | null;
   /** Défini quand status === 'done'. */
   shopId: string | null;
   createdAt: string;
@@ -69,6 +68,12 @@ export interface CreateAnalysisBody {
 // Shop
 // ---------------------------------------------------------------------------
 
+export interface ShopCategoryNode {
+  id: string;
+  name: string;
+  children: ShopCategoryNode[];
+}
+
 export interface Shop {
   id: string;
   name: string;
@@ -76,7 +81,7 @@ export interface Shop {
   cms: CmsType;
   sector: string | null;
   brands: string[];
-  categories: string[];
+  categoryTree: ShopCategoryNode[];
   ownerId: string;
   createdAt: string;
   updatedAt: string;
@@ -89,7 +94,7 @@ export interface PatchMyShopBody {
   cms?: CmsType;
   sector?: string | null;
   brands?: string[];
-  categories?: string[];
+  categoryTree?: ShopCategoryNode[];
 }
 
 // ---------------------------------------------------------------------------
@@ -113,26 +118,62 @@ export interface CatalogProduct {
 }
 
 // ---------------------------------------------------------------------------
-// Export
+// Export PrestaShop
 // ---------------------------------------------------------------------------
 
-export interface ExportBody {
-  /** IDs des produits catalogue à exporter. */
-  productIds: string[];
+export type PrestashopExportType = 'products' | 'combinations';
+
+export type CategoryExportMatchKind = 'exact' | 'token' | 'none';
+
+export interface CategoryExportOverride {
+  sourceKey: string;
+  /** UUID nœud magasin, ou "" pour forcer les catégories fabricant. */
+  targetNodeId: string;
+}
+
+export interface PrestashopExportParams {
+  /** Type de fichier CSV PrestaShop à générer. */
+  type: PrestashopExportType;
   /** UUID de la boutique (contrôle d’accès). */
   shopId: string;
+  /** IDs des produits catalogue à exporter. */
+  productIds: string[];
+  /** Overrides manuels optionnels (session d’export). */
+  categoryOverrides?: CategoryExportOverride[];
+}
+
+export interface CategoryExportPreviewPair {
+  sourceKey: string;
+  category: string;
+  subCategory: string | null;
+  manufacturerPath: string;
+  suggestedPath: string;
+  suggestedNodeId: string | null;
+  matchKind: CategoryExportMatchKind;
+  productCount: number;
+}
+
+export interface CategoryExportTreeOption {
+  id: string;
+  path: string;
+  depth: number;
+}
+
+export interface CategoryExportPreviewResponse {
+  pairs: CategoryExportPreviewPair[];
+  treeOptions: CategoryExportTreeOption[];
+}
+
+export interface CategoryExportPreviewParams {
+  shopId: string;
+  productIds: string[];
 }
 
 // ---------------------------------------------------------------------------
 // Billing
 // ---------------------------------------------------------------------------
 
-export type BillingPlanId =
-  | 'starter'
-  | 'pro'
-  | 'business_silver'
-  | 'business_custom'
-  | 'platinum';
+export type BillingPlanId = 'starter' | 'pro' | 'business_silver' | 'business_custom' | 'platinum';
 
 export type BillingEntitlementType = 'free_low_price_exports';
 
@@ -224,13 +265,7 @@ export interface SuggestUrlsResponse {
 // Guest session claim
 // ---------------------------------------------------------------------------
 
-export interface ClaimGuestSessionBody {
-  sessionId?: string;
-}
-
 export interface ClaimGuestSessionOptions {
-  /** Session invité explicite (prioritaire sur sessionStorage). */
-  sessionId?: string | null;
   /** JWT fraîchement émis (évite une course avec getSession() juste après signUp). */
   accessToken?: string;
 }

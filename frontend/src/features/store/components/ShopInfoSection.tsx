@@ -30,7 +30,10 @@ interface ShopInfoSectionProps {
 
 type RowKey = 'name' | 'url' | 'cms' | 'sector';
 
-interface FieldError { key: RowKey; message: string }
+interface FieldError {
+  key: RowKey;
+  message: string;
+}
 
 interface Buffers {
   name: string;

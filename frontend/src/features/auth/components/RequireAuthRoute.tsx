@@ -34,6 +34,6 @@ export function RequireAuthRoute() {
     );
 
   if (!user) return <Navigate to="/" replace />;
-  
+
   return <Outlet />;
 }

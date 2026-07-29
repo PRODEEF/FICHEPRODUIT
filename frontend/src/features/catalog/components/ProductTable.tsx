@@ -54,7 +54,9 @@ export function ProductTable({
                   scope="col"
                   className={cn(
                     CATALOG_TABLE_HEAD_CLASS,
-                    label === 'Prix' ? 'whitespace-nowrap text-right' : 'whitespace-nowrap text-left',
+                    label === 'Prix'
+                      ? 'whitespace-nowrap text-right'
+                      : 'whitespace-nowrap text-left',
                     className,
                   )}
                 >
@@ -104,7 +106,9 @@ export function ProductTable({
                 </td>
                 <td className="align-middle px-3 py-2 border-b border-soft">{p.brand}</td>
                 <td className="align-middle px-3 py-2 border-b border-soft">{p.category}</td>
-                <td className="align-middle px-3 py-2 border-b border-soft">{p.subCategory ?? '—'}</td>
+                <td className="align-middle px-3 py-2 border-b border-soft">
+                  {p.subCategory ?? '—'}
+                </td>
                 <td className="align-middle px-3 py-2 border-b border-soft">
                   <p className="m-0 line-clamp-3 overflow-hidden break-words text-text-primary">
                     {p.description || '—'}

@@ -1,5 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import { load } from "cheerio";
 import { normalizeShopSector, SHOP_SECTOR_VALUES } from "../../domain/shop/dto/shop-sector.schema";
 import type { CmsType, ClassifyResult } from "./scraper.types";
 import { HEURISTIC_RULES } from "./scraper.constants";
@@ -21,6 +22,7 @@ export class SiteClassifierService {
   }): Promise<ClassifyResult> {
     const title = input.title ?? "";
     const textSample = input.textSample ?? "";
+    const htmlBrands = this.extractBrandsFromHtml(input.html);
 
     // Essai IA d'abord
     const apiKey = this.config.get<string>("openaiApiKey");
@@ -32,14 +34,58 @@ export class SiteClassifierService {
           title,
           textSample,
         });
-        if (fromAi) return fromAi;
+        if (fromAi) {
+          return this.mergeBrands(fromAi, htmlBrands);
+        }
       } catch (err) {
         this.logger.warn("OpenAI classification failed, falling back to heuristics", err);
       }
     }
 
     // Fallback heuristiques
-    return this.classifyHeuristic(`${title}\n${textSample}`);
+    return this.mergeBrands(this.classifyHeuristic(`${title}\n${textSample}`), htmlBrands);
+  }
+
+  /** Fusionne les marques IA/heuristiques avec celles extraites du HTML. */
+  private mergeBrands(result: ClassifyResult, htmlBrands: string[]): ClassifyResult {
+    if (htmlBrands.length === 0) return result;
+    const seen = new Set(result.brands.map((b) => b.toLocaleLowerCase()));
+    const merged = [...result.brands];
+    for (const brand of htmlBrands) {
+      const key = brand.toLocaleLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      merged.push(brand);
+    }
+    return { ...result, brands: merged };
+  }
+
+  /**
+   * Marques depuis liens fabricant / brand (PrestaShop, WooCommerce, etc.).
+   */
+  private extractBrandsFromHtml(html: string): string[] {
+    try {
+      const $ = load(html);
+      const brands: string[] = [];
+      const seen = new Set<string>();
+      $("a[href]").each((_, el) => {
+        if (brands.length >= 20) return;
+        const href = (($(el).attr("href") ?? "") + "").toLowerCase();
+        if (!/\/(brand|brands|manufacturer|manufacturers|marque|marques)(\/|$)/i.test(href)) {
+          return;
+        }
+        const name = $(el).text().replace(/\s+/g, " ").trim();
+        if (!name || name.length < 2 || name.length > 60) return;
+        const key = name.toLocaleLowerCase();
+        if (seen.has(key)) return;
+        if (/^(marques?|brands?|manufacturers?|tous|all|voir)$/i.test(name)) return;
+        seen.add(key);
+        brands.push(name);
+      });
+      return brands;
+    } catch {
+      return [];
+    }
   }
 
   private async classifyWithOpenAI(input: {

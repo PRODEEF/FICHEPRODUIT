@@ -20,7 +20,12 @@ export function useCatalogNavigationState(): UseCatalogNavigationStateResult {
 
   const enabled = Boolean(user?.id && !authLoading);
 
-  const { latestId, loading: latestLoading, error: latestError, refetch } = useLatestSiteAnalysisId({
+  const {
+    latestId,
+    loading: latestLoading,
+    error: latestError,
+    refetch,
+  } = useLatestSiteAnalysisId({
     userId: user?.id,
     enabled,
   });

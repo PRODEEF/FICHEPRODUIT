@@ -1,62 +1,148 @@
-import { describe, expect, it } from 'vitest';
+// @vitest-environment jsdom
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import {
-  ExportInsufficientCreditsError,
-  parseInsufficientCreditsBody,
-} from './export';
+const { mockAuthHeaders } = vi.hoisted(() => ({
+  mockAuthHeaders: vi.fn(),
+}));
 
-describe('parseInsufficientCreditsBody', () => {
-  it('détecte le code erreur NestJS (filtre global)', () => {
-    const result = parseInsufficientCreditsBody({
-      statusCode: 402,
-      message: 'INSUFFICIENT_CREDITS: Crédits insuffisants pour cet export.',
-      error: 'INSUFFICIENT_CREDITS',
-    });
+vi.mock('./apiBase', () => ({
+  getApiBaseUrl: () => 'http://api.test',
+}));
 
-    expect(result).toEqual({ isInsufficient: true });
+vi.mock('./apiAuth', () => ({
+  authHeaders: mockAuthHeaders,
+  extractErrorMessage: (parsed: unknown, fallback: string) => {
+    if (typeof parsed === 'object' && parsed !== null && 'message' in parsed) {
+      const message = parsed.message;
+      if (typeof message === 'string') return message;
+    }
+    return fallback;
+  },
+}));
+
+const { mockRequestNestJson } = vi.hoisted(() => ({
+  mockRequestNestJson: vi.fn(),
+}));
+
+vi.mock('./nestHttpClient', () => ({
+  requestNestJson: mockRequestNestJson,
+  getSupabaseSessionAuthHeaders: vi.fn(),
+}));
+
+import { downloadPrestashopExportCsv, fetchCategoryExportPreview } from './export';
+
+describe('fetchCategoryExportPreview', () => {
+  const shopId = '550e8400-e29b-41d4-a716-446655440003';
+  const productId = '550e8400-e29b-41d4-a716-446655440001';
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockRequestNestJson.mockResolvedValue({ pairs: [], treeOptions: [] });
   });
 
-  it('extrait required et available quand présents dans le corps', () => {
-    const result = parseInsufficientCreditsBody({
-      statusCode: 402,
-      message: 'INSUFFICIENT_CREDITS: Crédits insuffisants pour cet export.',
-      error: 'INSUFFICIENT_CREDITS',
-      required: 5,
-      available: 2,
-    });
+  it('appelle POST /api/export/prestashop/category-preview avec le corps JSON', async () => {
+    await fetchCategoryExportPreview({ shopId, productIds: [productId] });
 
-    expect(result).toEqual({
-      isInsufficient: true,
-      required: 5,
-      available: 2,
-    });
-  });
-
-  it('ignore un corps non pertinent', () => {
-    expect(parseInsufficientCreditsBody(null)).toEqual({ isInsufficient: false });
-    expect(parseInsufficientCreditsBody({ message: 'Autre erreur' })).toEqual({
-      isInsufficient: false,
+    expect(mockRequestNestJson).toHaveBeenCalledWith({
+      method: 'POST',
+      path: '/export/prestashop/category-preview',
+      body: { shopId, productIds: [productId] },
+      authHeaders: expect.any(Function) as () => Promise<Record<string, string>>,
     });
   });
 });
 
-describe('ExportInsufficientCreditsError', () => {
-  it('expose required et available quand fournis', () => {
-    const err = new ExportInsufficientCreditsError('Crédits insuffisants', {
-      required: 5,
-      available: 2,
-    });
+describe('downloadPrestashopExportCsv', () => {
+  const shopId = '550e8400-e29b-41d4-a716-446655440003';
+  const productId = '550e8400-e29b-41d4-a716-446655440001';
 
-    expect(err.code).toBe('INSUFFICIENT_CREDITS');
-    expect(err.status).toBe(402);
-    expect(err.requiredCredits).toBe(5);
-    expect(err.availableCredits).toBe(2);
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockAuthHeaders.mockResolvedValue({
+      Authorization: 'Bearer jwt',
+      'Content-Type': 'application/json',
+    });
+    vi.stubGlobal('URL', {
+      createObjectURL: vi.fn(() => 'blob:mock'),
+      revokeObjectURL: vi.fn(),
+    });
   });
 
-  it('n’assigne pas requiredCredits si absent (exactOptionalPropertyTypes)', () => {
-    const err = new ExportInsufficientCreditsError('Crédits insuffisants');
+  it('appelle POST /api/export/prestashop avec le corps JSON attendu', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response('csv', {
+        status: 200,
+        headers: {
+          'Content-Type': 'text/csv',
+          'Content-Disposition': 'attachment; filename="products.csv"',
+        },
+      }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
 
-    expect('requiredCredits' in err).toBe(false);
-    expect('availableCredits' in err).toBe(false);
+    await downloadPrestashopExportCsv({
+      type: 'products',
+      shopId,
+      productIds: [productId],
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://api.test/api/export/prestashop',
+      expect.objectContaining({
+        method: 'POST',
+        headers: {
+          Authorization: 'Bearer jwt',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          type: 'products',
+          shopId,
+          productIds: [productId],
+        }),
+      }),
+    );
+  });
+
+  it('lève une erreur claire sur 401', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('{}', { status: 401 })));
+
+    await expect(
+      downloadPrestashopExportCsv({
+        type: 'combinations',
+        shopId,
+        productIds: [productId],
+      }),
+    ).rejects.toThrow('Session expirée ou non autorisée');
+  });
+
+  it('propage le message Nest sur erreur métier', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockResolvedValue(
+          new Response(JSON.stringify({ message: 'Référence manquante' }), { status: 400 }),
+        ),
+    );
+
+    await expect(
+      downloadPrestashopExportCsv({
+        type: 'products',
+        shopId,
+        productIds: [productId],
+      }),
+    ).rejects.toThrow('Référence manquante');
+  });
+
+  it('remplace Failed to fetch par un message explicite', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Failed to fetch')));
+
+    await expect(
+      downloadPrestashopExportCsv({
+        type: 'products',
+        shopId,
+        productIds: [productId],
+      }),
+    ).rejects.toThrow('Impossible de contacter le serveur');
   });
 });

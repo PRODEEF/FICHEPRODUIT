@@ -10,7 +10,12 @@ interface MarketingPageHeroProps {
   subtitle: string;
 }
 
-export function MarketingPageHero({ badge, title, titleHighlight, subtitle }: MarketingPageHeroProps) {
+export function MarketingPageHero({
+  badge,
+  title,
+  titleHighlight,
+  subtitle,
+}: MarketingPageHeroProps) {
   const [prefersReduced, setPrefersReduced] = useState(false);
 
   useEffect(() => {

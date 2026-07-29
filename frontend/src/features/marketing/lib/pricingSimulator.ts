@@ -44,14 +44,9 @@ export function computeAnnualSavings(manualCostEur: number, ficheproductCostEur:
   return roundPrice(Math.max(0, manualCostEur - ficheproductCostEur));
 }
 
-export function computeSavingsSimulation(
-  input: SavingsSimulationInput,
-): SavingsSimulationResult {
+export function computeSavingsSimulation(input: SavingsSimulationInput): SavingsSimulationResult {
   const manualCostEur = computeManualWritingCost(input.annualSheets, input.manualMinutesPerSheet);
-  const ficheproductCostEur = computeFicheproductCost(
-    input.annualSheets,
-    input.pricePerSheetEur,
-  );
+  const ficheproductCostEur = computeFicheproductCost(input.annualSheets, input.pricePerSheetEur);
   const annualSavingsEur = computeAnnualSavings(manualCostEur, ficheproductCostEur);
 
   return { manualCostEur, ficheproductCostEur, annualSavingsEur };
