@@ -14,9 +14,7 @@ export default () => {
 
   // Sur Vercel Production, NODE_ENV=production est obligatoire (CORS strict, Swagger off).
   if (vercelEnv === "production" && nodeEnv !== "production") {
-    throw new Error(
-      'NODE_ENV doit être "production" lorsque VERCEL_ENV=production.',
-    );
+    throw new Error('NODE_ENV doit être "production" lorsque VERCEL_ENV=production.');
   }
 
   const corsOriginRaw = process.env["CORS_ORIGIN"]?.trim();

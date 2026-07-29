@@ -1,5 +1,10 @@
 import { Controller, Get, HttpStatus, Res } from "@nestjs/common";
-import { ApiOkResponse, ApiOperation, ApiServiceUnavailableResponse, ApiTags } from "@nestjs/swagger";
+import {
+  ApiOkResponse,
+  ApiOperation,
+  ApiServiceUnavailableResponse,
+  ApiTags,
+} from "@nestjs/swagger";
 import type { FastifyReply } from "fastify";
 import { HealthResponseDto } from "./dto/health-response.dto";
 import type { HealthResponse } from "./health.types";
