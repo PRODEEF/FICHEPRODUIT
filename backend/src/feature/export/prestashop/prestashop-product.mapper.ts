@@ -1,8 +1,9 @@
 import { Injectable } from "@nestjs/common";
 
 import type { CatalogProduct } from "../../../domain/catalog/types/catalog.types";
+import type { ShopCategoryNode } from "../../../domain/shop/types/shop-category.types";
+import { resolveExportCategoryPath, type CategoryOverrideMap } from "./category-tree-matcher";
 import { PRESTASHOP_PRODUCT_HEADERS, type PrestashopProductHeader } from "./prestashop-headers";
-import { toPrestashopImportId } from "./prestashop-reference";
 import type { PrestashopProductRow } from "./prestashop.types";
 
 function emptyProductRow(): PrestashopProductRow {
@@ -14,14 +15,14 @@ function emptyProductRow(): PrestashopProductRow {
 }
 
 /**
- * Construit la valeur « Catégories » : noms plats séparés par `,`, sans hiérarchie `>`.
+ * Construit la valeur « Catégories » à partir de l’arbre magasin (ou fabricant si pas de match).
  */
-export function buildCategoriesCell(product: CatalogProduct): string {
-  const parts = [product.category.trim()];
-  if (product.subCategory !== null && product.subCategory.trim().length > 0) {
-    parts.push(product.subCategory.trim());
-  }
-  return parts.filter((p) => p.length > 0).join(",");
+export function buildCategoriesCell(
+  product: CatalogProduct,
+  categoryTree: ShopCategoryNode[] = [],
+  overrides: CategoryOverrideMap = new Map(),
+): string {
+  return resolveExportCategoryPath(product, categoryTree, overrides);
 }
 
 /**
@@ -32,20 +33,41 @@ export class PrestashopProductMapper {
   /**
    * @param products Produits catalogue
    * @param references Map `productId → référence` déjà validée
+   * @param importIds Map `productId → ID numérique FicheProduit` (aligné déclinaisons)
+   * @param categoryTree Arborescence magasin pour résoudre les chemins PrestaShop
+   * @param categoryOverrides Overrides manuels `sourceKey → nodeId` (session d’export)
    */
-  map(products: CatalogProduct[], references: Map<string, string>): PrestashopProductRow[] {
-    return products.map((product) => this.mapOne(product, references));
+  map(
+    products: CatalogProduct[],
+    references: Map<string, string>,
+    importIds: Map<string, string>,
+    categoryTree: ShopCategoryNode[] = [],
+    categoryOverrides: CategoryOverrideMap = new Map(),
+  ): PrestashopProductRow[] {
+    return products.map((product) =>
+      this.mapOne(product, references, importIds, categoryTree, categoryOverrides),
+    );
   }
 
-  private mapOne(product: CatalogProduct, references: Map<string, string>): PrestashopProductRow {
+  private mapOne(
+    product: CatalogProduct,
+    references: Map<string, string>,
+    importIds: Map<string, string>,
+    categoryTree: ShopCategoryNode[],
+    categoryOverrides: CategoryOverrideMap,
+  ): PrestashopProductRow {
     const row = emptyProductRow();
     const reference = references.get(product.id) ?? "";
+    const importId = importIds.get(product.id) ?? "";
 
-    // ID sans tirets (aligné sur ID produit* des déclinaisons)
-    row["ID"] = toPrestashopImportId(reference);
+    row["ID"] = importId;
     row["Actif (0/1)"] = "1";
     row["Nom *"] = product.name;
-    row["Catégories (x,y,z...)"] = buildCategoriesCell(product);
+    row["Catégories (x,y,z...)"] = resolveExportCategoryPath(
+      product,
+      categoryTree,
+      categoryOverrides,
+    );
     row["Prix hors taxe"] = formatPrice(product.price);
     row["Référence #"] = reference;
     row["Marque"] = product.brand;

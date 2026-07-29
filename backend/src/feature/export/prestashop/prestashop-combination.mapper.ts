@@ -5,7 +5,6 @@ import {
   PRESTASHOP_COMBINATION_HEADERS,
   type PrestashopCombinationHeader,
 } from "./prestashop-headers";
-import { toPrestashopImportId } from "./prestashop-reference";
 import type {
   PrestashopAttributeChoice,
   PrestashopAttributeType,
@@ -134,20 +133,26 @@ export class PrestashopCombinationMapper {
   /**
    * @param products Produits catalogue
    * @param references Map `productId → référence` déjà validée
+   * @param importIds Map `productId → ID numérique FicheProduit` (même que products.csv)
    */
-  map(products: CatalogProduct[], references: Map<string, string>): PrestashopCombinationRow[] {
+  map(
+    products: CatalogProduct[],
+    references: Map<string, string>,
+    importIds: Map<string, string>,
+  ): PrestashopCombinationRow[] {
     const rows: PrestashopCombinationRow[] = [];
 
     for (const product of products) {
       const productRef = references.get(product.id);
-      if (productRef === undefined) continue;
+      const importId = importIds.get(product.id);
+      if (productRef === undefined || importId === undefined) continue;
 
       const groups = extractVariantGroups(product.attributes);
       const combos = cartesianAttributeChoices(groups);
       if (combos.length === 0) continue;
 
       combos.forEach((choices, index) => {
-        rows.push(this.mapOne(productRef, choices, index === 0));
+        rows.push(this.mapOne(importId, productRef, choices, index === 0));
       });
     }
 
@@ -155,6 +160,7 @@ export class PrestashopCombinationMapper {
   }
 
   private mapOne(
+    importId: string,
     productRef: string,
     choices: PrestashopAttributeChoice[],
     isDefault: boolean,
@@ -162,7 +168,7 @@ export class PrestashopCombinationMapper {
     const row = emptyCombinationRow();
     const { attributeGroups, attributeValues } = buildAttributeColumns(choices);
 
-    row["ID produit*"] = toPrestashopImportId(productRef);
+    row["ID produit*"] = importId;
     row["Attribut (Nom:Type:Position)*"] = attributeGroups;
     row["Valeur (Valeur:Position)*"] = attributeValues;
     row["Référence"] = buildCombinationReference(productRef, choices);

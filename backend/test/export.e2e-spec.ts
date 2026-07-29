@@ -67,7 +67,7 @@ describe("ExportController (e2e)", () => {
       })
       .overrideProvider(ShopService)
       .useValue({
-        getForUser: jest.fn().mockResolvedValue({ id: shopId }),
+        getForUser: jest.fn().mockResolvedValue({ id: shopId, categoryTree: [] }),
       })
       .compile();
 
@@ -80,7 +80,39 @@ describe("ExportController (e2e)", () => {
     if (app) await app.close();
   });
 
-  it("GET /api/export/prestashop?type=products — 200 et products.csv", async () => {
+  it("POST /api/export/prestashop?type=products — 200 et products.csv", async () => {
+    const res = await app.inject({
+      method: "POST",
+      url: "/api/export/prestashop",
+      payload: {
+        type: "products",
+        shopId,
+        productIds: [product.id],
+      },
+    });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.headers["content-type"]).toMatch(/text\/csv/);
+    expect(res.headers["content-disposition"]).toBe('attachment; filename="products.csv"');
+    expect(res.payload.startsWith("\uFEFF") || res.payload.includes(";")).toBe(true);
+  });
+
+  it("POST /api/export/prestashop?type=combinations — 200 et combinations.csv", async () => {
+    const res = await app.inject({
+      method: "POST",
+      url: "/api/export/prestashop",
+      payload: {
+        type: "combinations",
+        shopId,
+        productIds: [product.id],
+      },
+    });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.headers["content-disposition"]).toBe('attachment; filename="combinations.csv"');
+  });
+
+  it("GET /api/export/prestashop?type=products — 200 et products.csv (legacy)", async () => {
     const res = await app.inject({
       method: "GET",
       url: `/api/export/prestashop?type=products&shopId=${shopId}&productIds=${product.id}`,
@@ -92,7 +124,7 @@ describe("ExportController (e2e)", () => {
     expect(res.payload.startsWith("\uFEFF") || res.payload.includes(";")).toBe(true);
   });
 
-  it("GET /api/export/prestashop?type=combinations — 200 et combinations.csv", async () => {
+  it("GET /api/export/prestashop?type=combinations — 200 et combinations.csv (legacy)", async () => {
     const res = await app.inject({
       method: "GET",
       url: `/api/export/prestashop?type=combinations&shopId=${shopId}&productIds=${product.id}`,

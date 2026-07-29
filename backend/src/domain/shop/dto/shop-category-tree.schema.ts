@@ -24,22 +24,20 @@ export const shopCategoryNodeSchema: z.ZodType<ShopCategoryNode> = z.lazy(() =>
   }),
 );
 
-export const shopCategoryTreeSchema = z
-  .array(shopCategoryNodeSchema)
-  .superRefine((tree, ctx) => {
-    if (countNodes(tree) > SHOP_CATEGORY_MAX_NODES) {
-      ctx.addIssue({
-        code: "custom",
-        message: `Maximum ${SHOP_CATEGORY_MAX_NODES} catégories autorisées.`,
-      });
-    }
-    if (maxDepth(tree) > SHOP_CATEGORY_MAX_DEPTH) {
-      ctx.addIssue({
-        code: "custom",
-        message: `Profondeur maximale ${SHOP_CATEGORY_MAX_DEPTH} niveaux.`,
-      });
-    }
-  });
+export const shopCategoryTreeSchema = z.array(shopCategoryNodeSchema).superRefine((tree, ctx) => {
+  if (countNodes(tree) > SHOP_CATEGORY_MAX_NODES) {
+    ctx.addIssue({
+      code: "custom",
+      message: `Maximum ${SHOP_CATEGORY_MAX_NODES} catégories autorisées.`,
+    });
+  }
+  if (maxDepth(tree) > SHOP_CATEGORY_MAX_DEPTH) {
+    ctx.addIssue({
+      code: "custom",
+      message: `Profondeur maximale ${SHOP_CATEGORY_MAX_DEPTH} niveaux.`,
+    });
+  }
+});
 
 /**
  * Normalise une valeur JSONB brute en arbre de catégories.

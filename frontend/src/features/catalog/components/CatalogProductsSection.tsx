@@ -119,6 +119,13 @@ export function CatalogProductsSection({
           void section.confirmExport();
         }}
         isExporting={section.isExporting}
+        previewLoading={section.previewLoading}
+        previewError={section.previewError}
+        pairs={section.pairs}
+        treeOptions={section.treeOptions}
+        selections={section.selections}
+        manufacturerValue={section.manufacturerValue}
+        onSelectionChange={section.setPairSelection}
       />
     </section>
   );

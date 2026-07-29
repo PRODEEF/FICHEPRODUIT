@@ -1,4 +1,5 @@
 import { useEffect, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 
 import { cn } from '../lib/cn';
 
@@ -21,12 +22,21 @@ export function Modal({ open, title, children, onClose, className, panelClassNam
     return () => void window.removeEventListener('keydown', onKeyDown);
   }, [open, onClose]);
 
+  useEffect(() => {
+    if (!open) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [open]);
+
   if (!open) return null;
 
-  return (
+  return createPortal(
     <div
       className={cn(
-        'fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/45 p-6 backdrop-blur',
+        'fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/45 p-4 sm:p-6 backdrop-blur',
         className,
       )}
       role="presentation"
@@ -44,6 +54,7 @@ export function Modal({ open, title, children, onClose, className, panelClassNam
       >
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

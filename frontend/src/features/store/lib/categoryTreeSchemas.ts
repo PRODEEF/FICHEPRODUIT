@@ -30,11 +30,7 @@ export function categoryNodeDepth(nodes: ShopCategoryNode[], depth = 1): number 
 }
 
 /** Profondeur du nœud `id` (1 = racine). */
-export function findNodeDepth(
-  nodes: ShopCategoryNode[],
-  id: string,
-  depth = 1,
-): number | null {
+export function findNodeDepth(nodes: ShopCategoryNode[], id: string, depth = 1): number | null {
   for (const node of nodes) {
     if (node.id === id) return depth;
     const found = findNodeDepth(node.children, id, depth + 1);
@@ -50,9 +46,7 @@ export function findSiblingDuplicateName(
 ): string | undefined {
   const needle = candidate.trim().toLocaleLowerCase();
   if (!needle) return undefined;
-  return siblings.find(
-    (n) => n.id !== excludeId && n.name.toLocaleLowerCase() === needle,
-  )?.name;
+  return siblings.find((n) => n.id !== excludeId && n.name.toLocaleLowerCase() === needle)?.name;
 }
 
 export function updateNodeName(

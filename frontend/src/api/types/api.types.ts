@@ -123,12 +123,49 @@ export interface CatalogProduct {
 
 export type PrestashopExportType = 'products' | 'combinations';
 
+export type CategoryExportMatchKind = 'exact' | 'token' | 'none';
+
+export interface CategoryExportOverride {
+  sourceKey: string;
+  /** UUID nœud magasin, ou "" pour forcer les catégories fabricant. */
+  targetNodeId: string;
+}
+
 export interface PrestashopExportParams {
   /** Type de fichier CSV PrestaShop à générer. */
   type: PrestashopExportType;
   /** UUID de la boutique (contrôle d’accès). */
   shopId: string;
   /** IDs des produits catalogue à exporter. */
+  productIds: string[];
+  /** Overrides manuels optionnels (session d’export). */
+  categoryOverrides?: CategoryExportOverride[];
+}
+
+export interface CategoryExportPreviewPair {
+  sourceKey: string;
+  category: string;
+  subCategory: string | null;
+  manufacturerPath: string;
+  suggestedPath: string;
+  suggestedNodeId: string | null;
+  matchKind: CategoryExportMatchKind;
+  productCount: number;
+}
+
+export interface CategoryExportTreeOption {
+  id: string;
+  path: string;
+  depth: number;
+}
+
+export interface CategoryExportPreviewResponse {
+  pairs: CategoryExportPreviewPair[];
+  treeOptions: CategoryExportTreeOption[];
+}
+
+export interface CategoryExportPreviewParams {
+  shopId: string;
   productIds: string[];
 }
 

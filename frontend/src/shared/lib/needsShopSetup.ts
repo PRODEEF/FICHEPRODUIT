@@ -1,10 +1,8 @@
 export interface ShopSetupInput {
   url: string;
+  cms: string | null;
   brands: string[];
-  /** CMS détecté — `inconnu` / absent = pas encore enrichi par analyse. */
-  cms?: string | null;
-  /** Arbre catégories issu de l’analyse ou saisi manuellement. */
-  categoryTree?: unknown[] | null;
+  categoryTree: unknown[];
 }
 
 /**
