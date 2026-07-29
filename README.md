@@ -6,12 +6,12 @@
 
 ```md
 FICHEPRODUIT/
-├── frontend/          # React 19 + TypeScript + Vite + Tailwind
-│   └── src/
-├── backend/           # NestJS 11 + Fastify + Zod + Supabase
-│   ├── src/
-│   ├── src/main.ts    # Entrée NestJS (local + Vercel zero-config)
-│   └── vercel.json
+├── frontend/ # React 19 + TypeScript + Vite + Tailwind
+│ └── src/
+├── backend/ # NestJS 11 + Fastify + Zod + Supabase
+│ ├── src/
+│ ├── src/main.ts # Entrée NestJS (local + Vercel zero-config)
+│ └── vercel.json
 ├── .github/workflows/ # CI (lint, tests, build)
 └── README.md
 ```
@@ -67,7 +67,7 @@ Résumé :
 
 **Preview cross-origin** : si le front et le backend sont sur deux projets Vercel, désactiver **Deployment Protection** sur les previews backend et définir `VITE_API_URL` (env Preview) sur le frontend — voir [backend/DEPLOY.md](backend/DEPLOY.md).
 
-Le pipeline d’analyse s’enregistre avec `waitUntil` ([`@vercel/functions`](https://vercel.com/docs/functions/functions-api-reference/vercel-functions-package)) pour laisser le scrape et l’IA se terminer après la réponse HTTP. Régler **Max Duration** (ex. 60 s) dans **Settings → Functions** du projet Vercel backend (ne pas mettre `functions`/`maxDuration` dans `vercel.json` pour NestJS zero-config — incompatible avec le CLI actuel).
+Le pipeline d’analyse s’enregistre avec `waitUntil` ([`@vercel/functions`](https://vercel.com/docs/functions/functions-api-reference/vercel-functions-package)) pour laisser le scrape et l’IA se terminer après la réponse HTTP. **Max Duration** Vercel backend : garder le défaut du plan (ex. 300 s) ; ne pas mettre `functions`/`maxDuration` dans `vercel.json` pour NestJS zero-config (incompatible avec le CLI actuel).
 
 Checklist variables + monitoring `/health` : **[backend/DEPLOY.md](backend/DEPLOY.md)**.
 

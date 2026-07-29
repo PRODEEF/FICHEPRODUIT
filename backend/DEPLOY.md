@@ -6,31 +6,31 @@
 
 ### Backend (projet Vercel `backend/`)
 
-| Variable | Obligatoire | Valeur attendue |
-| -------- | ----------- | --------------- |
-| `NODE_ENV` | Oui | `production` (échoue au boot si `VERCEL_ENV=production` et autre valeur) |
-| `CORS_ORIGIN` | Oui | URL exacte du frontend (virgules si plusieurs). Jamais `*` |
-| `TRUST_PROXY` | Oui | `true` sur Vercel |
-| `SUPABASE_URL` | Oui | Projet Supabase prod |
-| `SUPABASE_ANON_KEY` | Oui | Clé anon prod |
-| `SUPABASE_SERVICE_ROLE_KEY` | Oui | Clé service_role prod (jamais côté front) |
-| `OPENAI_API_KEY` | Oui | Clé OpenAI |
-| `OPENAI_MODEL` | Non | Défaut `gpt-4o-mini` |
-| `TAVILY_API_KEY` | Oui | Clé Tavily |
-| `STRIPE_SECRET_KEY` | Si billing | `sk_live_...` en prod |
-| `STRIPE_WEBHOOK_SECRET` | Si billing | Secret du endpoint webhook prod |
-| `STRIPE_SUCCESS_URL` / `STRIPE_CANCEL_URL` | Si billing | URLs frontend prod |
-| `STRIPE_PRICE_PLATINUM` | Si billing | Price ID Stripe prod |
+| Variable                                   | Obligatoire | Valeur attendue                                                          |
+| ------------------------------------------ | ----------- | ------------------------------------------------------------------------ |
+| `NODE_ENV`                                 | Oui         | `production` (échoue au boot si `VERCEL_ENV=production` et autre valeur) |
+| `CORS_ORIGIN`                              | Oui         | URL exacte du frontend (virgules si plusieurs). Jamais `*`               |
+| `TRUST_PROXY`                              | Oui         | `true` sur Vercel                                                        |
+| `SUPABASE_URL`                             | Oui         | Projet Supabase prod                                                     |
+| `SUPABASE_ANON_KEY`                        | Oui         | Clé anon prod                                                            |
+| `SUPABASE_SERVICE_ROLE_KEY`                | Oui         | Clé service_role prod (jamais côté front)                                |
+| `OPENAI_API_KEY`                           | Oui         | Clé OpenAI                                                               |
+| `OPENAI_MODEL`                             | Non         | Défaut `gpt-4o-mini`                                                     |
+| `TAVILY_API_KEY`                           | Oui         | Clé Tavily                                                               |
+| `STRIPE_SECRET_KEY`                        | Si billing  | `sk_live_...` en prod                                                    |
+| `STRIPE_WEBHOOK_SECRET`                    | Si billing  | Secret du endpoint webhook prod                                          |
+| `STRIPE_SUCCESS_URL` / `STRIPE_CANCEL_URL` | Si billing  | URLs frontend prod                                                       |
+| `STRIPE_PRICE_PLATINUM`                    | Si billing  | Price ID Stripe prod                                                     |
 
 ### Frontend (projet Vercel `frontend/`)
 
-| Variable | Obligatoire | Valeur attendue |
-| -------- | ----------- | --------------- |
-| `VITE_SUPABASE_URL` | Oui | Même projet Supabase que le backend |
-| `VITE_SUPABASE_ANON_KEY` | Oui | Clé anon (publique) |
-| `VITE_API_URL` | Oui si cross-origin | URL publique du backend, sans slash final |
-| `VITE_SITE_URL` | Recommandé | URL publique du frontend (redirects auth) |
-| `VITE_CONTACT_EMAIL` | Non | Email affiché pricing / contact |
+| Variable                 | Obligatoire         | Valeur attendue                           |
+| ------------------------ | ------------------- | ----------------------------------------- |
+| `VITE_SUPABASE_URL`      | Oui                 | Même projet Supabase que le backend       |
+| `VITE_SUPABASE_ANON_KEY` | Oui                 | Clé anon (publique)                       |
+| `VITE_API_URL`           | Oui si cross-origin | URL publique du backend, sans slash final |
+| `VITE_SITE_URL`          | Recommandé          | URL publique du frontend (redirects auth) |
+| `VITE_CONTACT_EMAIL`     | Non                 | Email affiché pricing / contact           |
 
 ### Après déploiement
 
@@ -51,7 +51,7 @@ Liste complète des variables : [`.env.example`](.env.example) (backend) et [`..
 2. **Framework Preset** : **NestJS** (zero-config Vercel) — détection automatique via [`src/main.ts`](src/main.ts).
 3. **Build** : `npm run build` (`nest build`), lancé automatiquement par Vercel.
 4. **Entrée** : [`src/main.ts`](src/main.ts) doit importer `@nestjs/core` et appeler `app.listen()` (voir doc [NestJS on Vercel](https://vercel.com/docs/frameworks/backend/nestjs)).
-5. **Durée** : NestJS zero-config n’accepte pas `functions["src/main.ts"].maxDuration` dans `vercel.json` (erreur `unmatched-function-pattern`). Régler **Settings → Functions → Max Duration** (ex. 60 s) sur le projet Vercel backend, selon le plan.
+5. **Durée** : NestJS zero-config n’accepte pas `functions["src/main.ts"].maxDuration` dans `vercel.json` (erreur `unmatched-function-pattern`). Laisser **Settings → Functions → Max Duration** au défaut du plan (ex. 300 s) — suffisant pour scrape + IA.
 
 ### Deployment Protection (preview cross-origin)
 
