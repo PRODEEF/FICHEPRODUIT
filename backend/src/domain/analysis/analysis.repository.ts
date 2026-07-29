@@ -28,9 +28,9 @@ export class AnalysisRepository implements IAnalysisRepository {
 
   constructor(private readonly supabase: SupabaseService) {}
 
-  async findById(id: string, accessToken: string): Promise<Analysis | null> {
-    const { data, error } = await this.supabase
-      .forUser(accessToken)
+  async findById(id: string, _accessToken: string): Promise<Analysis | null> {
+    // Admin : ownership vérifié dans AnalysisService.getForUser
+    const { data, error } = await this.supabase.admin
       .from("analyses")
       .select("*")
       .eq("id", id)
@@ -59,9 +59,9 @@ export class AnalysisRepository implements IAnalysisRepository {
     return data ? this.toEntity(data as AnalysisRow) : null;
   }
 
-  async findAllByUser(userId: string, accessToken: string): Promise<Analysis[]> {
-    const { data, error } = await this.supabase
-      .forUser(accessToken)
+  async findAllByUser(userId: string, _accessToken: string): Promise<Analysis[]> {
+    // Admin : JwtGuard a déjà authentifié l'appelant ; le service passe l'id de l'utilisateur
+    const { data, error } = await this.supabase.admin
       .from("analyses")
       .select("*")
       .eq("user_id", userId)
@@ -74,10 +74,9 @@ export class AnalysisRepository implements IAnalysisRepository {
     return (data ?? []).map((r) => this.toEntity(r as AnalysisRow));
   }
 
-  async create(data: CreateAnalysis, accessToken: string): Promise<Analysis> {
-    const client = accessToken ? this.supabase.forUser(accessToken) : this.supabase.admin; // guest : pas de JWT
-
-    const { data: row, error } = await client
+  async create(data: CreateAnalysis, _accessToken: string): Promise<Analysis> {
+    // Admin : auth déjà appliquée par OptionalJwtGuard + AnalysisService (userId/sessionId)
+    const { data: row, error } = await this.supabase.admin
       .from("analyses")
       .insert({
         url: data.url,
@@ -116,9 +115,8 @@ export class AnalysisRepository implements IAnalysisRepository {
       );
     }
 
-    const client = accessToken ? this.supabase.forUser(accessToken) : this.supabase.admin;
-
-    let query = client
+    // Admin : pipeline déjà autorisé en amont
+    let query = this.supabase.admin
       .from("analyses")
       .update({
         status: patch.status,

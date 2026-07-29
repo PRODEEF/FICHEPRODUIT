@@ -105,7 +105,9 @@ export class AnalysisController {
   ) {
     if (user) return this.service.getForUser(id, user);
     const sessionId = readGuestSessionId(req);
-    if (!sessionId) throw new UnauthorizedException();
+    if (!sessionId) {
+      throw new UnauthorizedException("Session invitée manquante. Relance l'analyse.");
+    }
     return this.service.getForGuest(id, sessionId);
   }
 }

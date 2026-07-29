@@ -114,8 +114,11 @@ export async function apiFetch(
     const status = res.status;
 
     if (status === 401)
-      throw new ApiHttpError('Session expirée ou non autorisée. Reconnecte-toi.', 401);
-    if (status === 403) throw new ApiHttpError('Accès refusé.', 403);
+      throw new ApiHttpError(
+        extractErrorMessage(parsed, 'Session expirée ou non autorisée. Reconnecte-toi.'),
+        401,
+      );
+    if (status === 403) throw new ApiHttpError(extractErrorMessage(parsed, 'Accès refusé.'), 403);
     if (status === 404)
       throw new ApiHttpError(extractErrorMessage(parsed, 'Ressource introuvable.'), 404);
 

@@ -1,4 +1,4 @@
-import { ExecutionContext, UnauthorizedException } from "@nestjs/common";
+import { ExecutionContext } from "@nestjs/common";
 import { OptionalJwtGuard } from "./optional-jwt.guard";
 import type { SupabaseService } from "../../supabase/supabase.service";
 
@@ -36,10 +36,12 @@ describe("OptionalJwtGuard", () => {
     expect(req.user?.id).toBe("u1");
   });
 
-  it("rejette avec 401 si Bearer présent mais token invalide", async () => {
+  it("autorise en anonyme si Bearer présent mais token invalide", async () => {
     getUser.mockResolvedValue(null);
-    await expect(guard.canActivate(createContext("Bearer expired"))).rejects.toBeInstanceOf(
-      UnauthorizedException,
-    );
+    const ctx = createContext("Bearer expired");
+    const req = ctx.switchToHttp().getRequest<{ user?: unknown }>();
+
+    await expect(guard.canActivate(ctx)).resolves.toBe(true);
+    expect(req.user).toBeUndefined();
   });
 });
