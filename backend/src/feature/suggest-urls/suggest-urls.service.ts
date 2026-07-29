@@ -224,16 +224,8 @@ export class SuggestUrlsService {
   }
 
   async suggest(q: string): Promise<SuggestUrlsResponse> {
-    let urls: string[] | null;
-
-    try {
-      urls = await this.suggestWithTavilySearch(q);
-    } catch {
-      urls = null;
-    }
-    if (!urls || urls.length === 0) {
-      urls = this.heuristicUrls(q);
-    }
+    const tavilyUrls = await this.suggestWithTavilySearch(q).catch(() => null);
+    const urls = tavilyUrls && tavilyUrls.length > 0 ? tavilyUrls : this.heuristicUrls(q);
     return { urls };
   }
 }
