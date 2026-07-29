@@ -90,15 +90,21 @@ function AppShellLayout({ userEmail }: { userEmail: string | null }) {
   );
 }
 
-/** Routes auth publiques : pas de sidebar même si une session recovery existe en arrière-plan. */
-function isPasswordResetRoute(pathname: string): boolean {
-  return pathname.endsWith('/auth/reset-password');
+/** Routes auth publiques : pas de sidebar même si une session apparaît en cours de parcours. */
+function isPublicAuthRoute(pathname: string): boolean {
+  return (
+    pathname.endsWith('/auth/reset-password') ||
+    pathname === '/signup' ||
+    pathname.endsWith('/signup') ||
+    pathname === '/login' ||
+    pathname.endsWith('/login')
+  );
 }
 
 function AppShell() {
   const { userEmail } = useAuth();
   const { pathname } = useLocation();
-  const layoutUserEmail = isPasswordResetRoute(pathname) ? null : userEmail;
+  const layoutUserEmail = isPublicAuthRoute(pathname) ? null : userEmail;
   return <AppShellLayout userEmail={layoutUserEmail} />;
 }
 

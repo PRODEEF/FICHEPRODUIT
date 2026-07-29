@@ -29,8 +29,8 @@ export class AnalysisRepository implements IAnalysisRepository {
   constructor(private readonly supabase: SupabaseService) {}
 
   async findById(id: string, accessToken: string): Promise<Analysis | null> {
-    const { data, error } = await this.supabase
-      .forUser(accessToken)
+    void accessToken; // conservé pour l'interface ; lecture admin, ownership au service
+    const { data, error } = await this.supabase.admin
       .from("analyses")
       .select("*")
       .eq("id", id)
@@ -60,8 +60,8 @@ export class AnalysisRepository implements IAnalysisRepository {
   }
 
   async findAllByUser(userId: string, accessToken: string): Promise<Analysis[]> {
-    const { data, error } = await this.supabase
-      .forUser(accessToken)
+    void accessToken; // conservé pour l'interface ; filtre user_id + auth au JwtGuard
+    const { data, error } = await this.supabase.admin
       .from("analyses")
       .select("*")
       .eq("user_id", userId)
@@ -75,9 +75,8 @@ export class AnalysisRepository implements IAnalysisRepository {
   }
 
   async create(data: CreateAnalysis, accessToken: string): Promise<Analysis> {
-    const client = accessToken ? this.supabase.forUser(accessToken) : this.supabase.admin; // guest : pas de JWT
-
-    const { data: row, error } = await client
+    void accessToken; // conservé pour l'interface ; insert admin après auth Nest
+    const { data: row, error } = await this.supabase.admin
       .from("analyses")
       .insert({
         url: data.url,
@@ -116,9 +115,8 @@ export class AnalysisRepository implements IAnalysisRepository {
       );
     }
 
-    const client = accessToken ? this.supabase.forUser(accessToken) : this.supabase.admin;
-
-    let query = client
+    // Admin : pipeline déjà autorisé en amont
+    let query = this.supabase.admin
       .from("analyses")
       .update({
         status: patch.status,
