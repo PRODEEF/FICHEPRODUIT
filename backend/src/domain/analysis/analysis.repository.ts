@@ -28,8 +28,8 @@ export class AnalysisRepository implements IAnalysisRepository {
 
   constructor(private readonly supabase: SupabaseService) {}
 
-  async findById(id: string, _accessToken: string): Promise<Analysis | null> {
-    // Admin : ownership vérifié dans AnalysisService.getForUser
+  async findById(id: string, accessToken: string): Promise<Analysis | null> {
+    void accessToken; // conservé pour l'interface ; lecture admin, ownership au service
     const { data, error } = await this.supabase.admin
       .from("analyses")
       .select("*")
@@ -59,8 +59,8 @@ export class AnalysisRepository implements IAnalysisRepository {
     return data ? this.toEntity(data as AnalysisRow) : null;
   }
 
-  async findAllByUser(userId: string, _accessToken: string): Promise<Analysis[]> {
-    // Admin : JwtGuard a déjà authentifié l'appelant ; le service passe l'id de l'utilisateur
+  async findAllByUser(userId: string, accessToken: string): Promise<Analysis[]> {
+    void accessToken; // conservé pour l'interface ; filtre user_id + auth au JwtGuard
     const { data, error } = await this.supabase.admin
       .from("analyses")
       .select("*")
@@ -74,8 +74,8 @@ export class AnalysisRepository implements IAnalysisRepository {
     return (data ?? []).map((r) => this.toEntity(r as AnalysisRow));
   }
 
-  async create(data: CreateAnalysis, _accessToken: string): Promise<Analysis> {
-    // Admin : auth déjà appliquée par OptionalJwtGuard + AnalysisService (userId/sessionId)
+  async create(data: CreateAnalysis, accessToken: string): Promise<Analysis> {
+    void accessToken; // conservé pour l'interface ; insert admin après auth Nest
     const { data: row, error } = await this.supabase.admin
       .from("analyses")
       .insert({
