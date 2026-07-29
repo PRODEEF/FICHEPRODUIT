@@ -1,5 +1,50 @@
 # Déploiement
 
+## Checklist go-live (Production Vercel)
+
+À valider **avant** d’ouvrir le trafic public :
+
+### Backend (projet Vercel `backend/`)
+
+| Variable | Obligatoire | Valeur attendue |
+| -------- | ----------- | --------------- |
+| `NODE_ENV` | Oui | `production` (échoue au boot si `VERCEL_ENV=production` et autre valeur) |
+| `CORS_ORIGIN` | Oui | URL exacte du frontend (virgules si plusieurs). Jamais `*` |
+| `TRUST_PROXY` | Oui | `true` sur Vercel |
+| `SUPABASE_URL` | Oui | Projet Supabase prod |
+| `SUPABASE_ANON_KEY` | Oui | Clé anon prod |
+| `SUPABASE_SERVICE_ROLE_KEY` | Oui | Clé service_role prod (jamais côté front) |
+| `OPENAI_API_KEY` | Oui | Clé OpenAI |
+| `OPENAI_MODEL` | Non | Défaut `gpt-4o-mini` |
+| `TAVILY_API_KEY` | Oui | Clé Tavily |
+| `STRIPE_SECRET_KEY` | Si billing | `sk_live_...` en prod |
+| `STRIPE_WEBHOOK_SECRET` | Si billing | Secret du endpoint webhook prod |
+| `STRIPE_SUCCESS_URL` / `STRIPE_CANCEL_URL` | Si billing | URLs frontend prod |
+| `STRIPE_PRICE_PLATINUM` | Si billing | Price ID Stripe prod |
+
+### Frontend (projet Vercel `frontend/`)
+
+| Variable | Obligatoire | Valeur attendue |
+| -------- | ----------- | --------------- |
+| `VITE_SUPABASE_URL` | Oui | Même projet Supabase que le backend |
+| `VITE_SUPABASE_ANON_KEY` | Oui | Clé anon (publique) |
+| `VITE_API_URL` | Oui si cross-origin | URL publique du backend, sans slash final |
+| `VITE_SITE_URL` | Recommandé | URL publique du frontend (redirects auth) |
+| `VITE_CONTACT_EMAIL` | Non | Email affiché pricing / contact |
+
+### Après déploiement
+
+1. Appliquer les migrations Supabase sur la base prod (`supabase db push` ou SQL Editor).
+2. Vérifier `GET https://<backend>/health` → **200** et `"status":"ok"`.
+3. Configurer un moniteur uptime externe sur `/health` (alerte si ≠ 200).
+4. Stripe : webhook pointant vers `https://<backend>/api/billing/webhook` (ou chemin documenté), events checkout/subscription.
+5. Tester manuellement : signup, analyse, export PrestaShop, checkout billing.
+6. Confirmer le job cron `cleanup-guest-data-hourly` (migration `20240021_…`).
+
+Liste complète des variables : [`.env.example`](.env.example) (backend) et [`../frontend/.env.example`](../frontend/.env.example).
+
+---
+
 ## Backend (NestJS) sur Vercel
 
 1. Projet Vercel pointant sur le dossier **`backend/`** (racine du build = `backend`).
@@ -35,7 +80,7 @@ Reprendre la liste de [`.env.example`](.env.example). En production :
 
 - Définir **`CORS_ORIGIN`** avec l'URL exacte du frontend (ou plusieurs origines séparées par des virgules). Éviter `*` avec cookies / credentials.
 - Renseigner toutes les clés **Supabase**, **OpenAI** et **Tavily** (obligatoires au démarrage, voir `configuration.ts`).
-- **`NODE_ENV`** = `production` sur Vercel (désactive Swagger, restreint les logs).
+- **`NODE_ENV`** = `production` sur Vercel (désactive Swagger, restreint les logs). Si `VERCEL_ENV=production` sans `NODE_ENV=production`, le boot échoue volontairement.
 - **`TRUST_PROXY=true`** sur Vercel (ou derrière nginx) pour que le rate-limit utilise `X-Forwarded-For` ; sinon seule l’IP socket est prise en compte.
 
 **CORS en preview** : Vercel expose `VERCEL_ENV=preview`. Le backend autorise alors automatiquement les origines `*.vercel.app` et `localhost` en plus de `CORS_ORIGIN` (voir [`cors-origin.ts`](src/core/http/cors-origin.ts)).
@@ -55,6 +100,48 @@ Sur le projet **frontend**, définir **`VITE_API_URL`** pour l’environnement *
 
 Sans `VITE_API_URL`, le front tente des URLs relatives `/api/...` (même origine) — cela ne fonctionne pas quand l’API est sur un autre projet Vercel.
 
+## Observabilité
+
+### Health check
+
+- Endpoint : `GET /health`
+- **200** + `"status":"ok"` si la DB répond
+- **503** + `"status":"degraded"` si Supabase est indisponible
+
+Configurer un moniteur uptime (Better Stack, Checkly, UptimeRobot, Vercel Monitoring, etc.) :
+
+1. URL : `https://<backend-prod>/health`
+2. Intervalle : 1–5 minutes
+3. Alerte si status HTTP ≠ 200 ou timeout
+4. Canal : email / Slack de l’équipe
+
+### Logs
+
+- En production NestJS n’émet que `error` et `warn` (voir `main.ts`).
+- Les tâches background (analyse IA) loguent un `warn` en cas d’échec (`scheduleBackgroundWork`).
+- Les logs Vercel (Runtime Logs) suffisent pour démarrer ; intégrer Sentry (ou équivalent) quand le volume d’incidents le justifie :
+
+```bash
+# Backend (exemple)
+# npm install @sentry/node
+# Définir SENTRY_DSN dans les variables Vercel, initialiser dans main.ts / create-nest-app.ts
+```
+
+Tant que Sentry n’est pas branché : s’appuyer sur le moniteur `/health` + alertes Vercel (failed deployments, function errors).
+
+## Migrations Supabase
+
+Les SQL versionnés sont dans [`../supabase/migrations/`](../supabase/migrations/).
+
+```bash
+# Depuis la racine du dépôt, avec le CLI Supabase lié au projet prod
+supabase db push
+```
+
+Ou coller les fichiers non appliqués dans le **SQL Editor** du dashboard Supabase (dans l’ordre chronologique des préfixes `202400…`).
+
+La migration `20240021_schedule_guest_cleanup_cron.sql` active **pg_cron** pour appeler `cleanup_guest_data_older_than(24)` chaque heure.
+
 ## CI
 
-Le dépôt inclut [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) pour valider lint, tests et builds sur chaque PR.
+Le dépôt inclut [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) pour valider lint, format, tests unitaires, e2e backend, audit npm (non bloquant si vulnérabilités déjà connues — Dependabot) et builds sur chaque PR.

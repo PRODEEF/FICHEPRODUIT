@@ -40,22 +40,10 @@ export function CategoryDeleteModal({
         ) : null}
       </p>
       <div className="mt-6 flex justify-end gap-2">
-        <Button
-          type="button"
-          variant="neutral-outline"
-          size="sm"
-          disabled={busy}
-          onClick={onClose}
-        >
+        <Button type="button" variant="neutral-outline" size="sm" disabled={busy} onClick={onClose}>
           Annuler
         </Button>
-        <Button
-          type="button"
-          variant="primary"
-          size="sm"
-          disabled={busy}
-          onClick={onConfirm}
-        >
+        <Button type="button" variant="primary" size="sm" disabled={busy} onClick={onConfirm}>
           {busy ? 'Suppression\u2026' : 'Supprimer'}
         </Button>
       </div>

@@ -10,6 +10,15 @@ export default () => {
   const optional = (key: string, fallback: string): string => process.env[key]?.trim() || fallback;
 
   const nodeEnv = optional("NODE_ENV", "preview");
+  const vercelEnv = process.env["VERCEL_ENV"]?.trim() || undefined;
+
+  // Sur Vercel Production, NODE_ENV=production est obligatoire (CORS strict, Swagger off).
+  if (vercelEnv === "production" && nodeEnv !== "production") {
+    throw new Error(
+      'NODE_ENV doit être "production" lorsque VERCEL_ENV=production.',
+    );
+  }
+
   const corsOriginRaw = process.env["CORS_ORIGIN"]?.trim();
   let corsOrigin: string;
   if (nodeEnv === "production") {
@@ -20,8 +29,6 @@ export default () => {
   } else {
     corsOrigin = corsOriginRaw || "*";
   }
-
-  const vercelEnv = process.env["VERCEL_ENV"]?.trim() || undefined;
 
   return {
     port: parseInt(optional("PORT", "3000"), 10),

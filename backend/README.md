@@ -73,4 +73,11 @@ Fonction SQL `public.cleanup_guest_data_older_than(p_hours integer default 24)` 
 select * from public.cleanup_guest_data_older_than(24);
 ```
 
-À planifier via Supabase Cron ou job externe.
+Planifiée automatiquement chaque heure via **pg_cron** (migration `supabase/migrations/20240021_schedule_guest_cleanup_cron.sql`, job `cleanup-guest-data-hourly`).
+
+Vérification dans le SQL Editor Supabase :
+
+```sql
+select jobid, jobname, schedule, command from cron.job
+where jobname = 'cleanup-guest-data-hourly';
+```
