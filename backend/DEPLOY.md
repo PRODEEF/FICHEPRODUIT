@@ -51,7 +51,7 @@ Liste complète des variables : [`.env.example`](.env.example) (backend) et [`..
 2. **Framework Preset** : **NestJS** (zero-config Vercel) — détection automatique via [`src/main.ts`](src/main.ts).
 3. **Build** : `npm run build` (`nest build`), lancé automatiquement par Vercel.
 4. **Entrée** : [`src/main.ts`](src/main.ts) doit importer `@nestjs/core` et appeler `app.listen()` (voir doc [NestJS on Vercel](https://vercel.com/docs/frameworks/backend/nestjs)).
-5. **Durée** : [`vercel.json`](vercel.json) définit `maxDuration` (60 s) sur la function générée depuis `src/main.ts`.
+5. **Durée** : NestJS zero-config n’accepte pas `functions["src/main.ts"].maxDuration` dans `vercel.json` (erreur `unmatched-function-pattern`). Régler **Settings → Functions → Max Duration** (ex. 60 s) sur le projet Vercel backend, selon le plan.
 
 ### Deployment Protection (preview cross-origin)
 

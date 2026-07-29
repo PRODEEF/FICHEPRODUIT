@@ -67,7 +67,7 @@ Résumé :
 
 **Preview cross-origin** : si le front et le backend sont sur deux projets Vercel, désactiver **Deployment Protection** sur les previews backend et définir `VITE_API_URL` (env Preview) sur le frontend — voir [backend/DEPLOY.md](backend/DEPLOY.md).
 
-Le pipeline d’analyse s’enregistre avec `waitUntil` ([`@vercel/functions`](https://vercel.com/docs/functions/functions-api-reference/vercel-functions-package)) pour laisser le scrape et l’IA se terminer après la réponse HTTP. `maxDuration` est à **60** secondes dans [`backend/vercel.json`](backend/vercel.json) (ajuster selon le plan Vercel).
+Le pipeline d’analyse s’enregistre avec `waitUntil` ([`@vercel/functions`](https://vercel.com/docs/functions/functions-api-reference/vercel-functions-package)) pour laisser le scrape et l’IA se terminer après la réponse HTTP. Régler **Max Duration** (ex. 60 s) dans **Settings → Functions** du projet Vercel backend (ne pas mettre `functions`/`maxDuration` dans `vercel.json` pour NestJS zero-config — incompatible avec le CLI actuel).
 
 Checklist variables + monitoring `/health` : **[backend/DEPLOY.md](backend/DEPLOY.md)**.
 
