@@ -66,7 +66,7 @@ export function buildCorsOptions(config: CorsConfigInput): FastifyCorsOptions {
       origin: true,
       credentials: true,
       methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-      allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
+      allowedHeaders: ["Content-Type", "Authorization", "Cookie", "x-session-id"],
       preflightContinue: false,
       optionsSuccessStatus: 204,
     };
@@ -86,7 +86,7 @@ export function buildCorsOptions(config: CorsConfigInput): FastifyCorsOptions {
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
+    allowedHeaders: ["Content-Type", "Authorization", "Cookie", "x-session-id"],
     preflightContinue: false,
     optionsSuccessStatus: 204,
   };

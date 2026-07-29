@@ -2,12 +2,13 @@
  * Helpers pour construire les headers HTTP vers le backend NestJS.
  *
  * - Authentifié : `Authorization: Bearer <supabase_access_token>`
- * - Invité      : cookie httpOnly `ficheproduct_guest_session` posé par `POST /api/analyses`.
- *                 L'en-tête `x-session-id` est ignoré par le backend — ne plus l'envoyer.
+ * - Invité      : cookie httpOnly `ficheproduct_guest_session` + en-tête `x-session-id`
+ *                 (secours cross-origin lorsque le cookie n'est pas renvoyé).
  *
  * Tous les appels API utilisent `credentials: 'include'` (voir `apiFetch`).
  */
 
+import { getOrCreateGuestSessionId } from '@lib/analysis/guestSessionStorage';
 import { getSupabaseClient } from '@shared/supabase';
 
 type ApiHeaders = Record<string, string>;
@@ -49,10 +50,13 @@ export async function authHeaders(accessTokenOverride?: string): Promise<ApiHead
 
 /**
  * Headers pour les routes à auth optionnelle (analyses, catalogue, etc.) :
- * Bearer si session Supabase, sinon uniquement JSON (cookie invité côté navigateur).
+ * Bearer si session Supabase + toujours `x-session-id` (JWT prioritaire côté backend ;
+ * si le token est ignoré, le parcours invité reste cohérent entre POST et poll).
  */
 export async function guestOrAuthHeaders(): Promise<ApiHeaders> {
-  return authHeaders();
+  const headers = await authHeaders();
+  headers['x-session-id'] = getOrCreateGuestSessionId();
+  return headers;
 }
 
 /**
