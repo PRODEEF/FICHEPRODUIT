@@ -25,6 +25,25 @@ describe('guestSessionStorage', () => {
     vi.resetModules();
   });
 
+  it('getOrCreateGuestSessionId réutilise la valeur stockée', async () => {
+    const store = mockSessionStorage();
+    store.set(STORAGE_KEY, GUEST_SESSION_ID);
+
+    const { getOrCreateGuestSessionId } = await import('./guestSessionStorage');
+    expect(getOrCreateGuestSessionId()).toBe(GUEST_SESSION_ID);
+  });
+
+  it('getOrCreateGuestSessionId crée un UUID si absent', async () => {
+    mockSessionStorage();
+    vi.stubGlobal('crypto', {
+      randomUUID: () => GUEST_SESSION_ID,
+    });
+
+    const { getOrCreateGuestSessionId, readGuestSessionId } = await import('./guestSessionStorage');
+    expect(getOrCreateGuestSessionId()).toBe(GUEST_SESSION_ID);
+    expect(readGuestSessionId()).toBe(GUEST_SESSION_ID);
+  });
+
   it('clearGuestSessionId retire la clé sessionStorage', async () => {
     const store = mockSessionStorage();
     store.set(STORAGE_KEY, GUEST_SESSION_ID);

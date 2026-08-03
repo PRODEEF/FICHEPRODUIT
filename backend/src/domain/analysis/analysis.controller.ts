@@ -46,7 +46,7 @@ export class AnalysisController {
   @ApiOperation({
     summary: "Lancer une analyse de site",
     description:
-      "Avec JWT : l'analyse est rattachée à l'utilisateur. Sans JWT : parcours invité ; cookie `ficheproduct_guest_session` posé en httpOnly.",
+      "Avec JWT : l'analyse est rattachée à l'utilisateur. Sans JWT : parcours invité ; cookie `ficheproduct_guest_session` + en-tête `x-session-id` (secours cross-origin).",
   })
   @ApiCreatedResponse({
     description: "Analyse créée (statut initial pending)",
@@ -89,7 +89,7 @@ export class AnalysisController {
   @ApiOperation({
     summary: "Récupérer une analyse par identifiant",
     description:
-      "Avec JWT : accès si l'analyse appartient à l'utilisateur. Sans JWT : cookie invité `ficheproduct_guest_session` aligné sur `analyses.session_id`.",
+      "Avec JWT : accès si l'analyse appartient à l'utilisateur. Sans JWT : cookie ou en-tête `x-session-id` aligné sur `analyses.session_id`.",
   })
   @ApiParam({ name: "id", description: "UUID de l'analyse", format: "uuid" })
   @ApiOkResponse({ description: "Analyse trouvée", type: AnalysisResponseDto })
@@ -105,7 +105,9 @@ export class AnalysisController {
   ) {
     if (user) return this.service.getForUser(id, user);
     const sessionId = readGuestSessionId(req);
-    if (!sessionId) throw new UnauthorizedException();
+    if (!sessionId) {
+      throw new UnauthorizedException("Session invitée manquante. Relance l'analyse.");
+    }
     return this.service.getForGuest(id, sessionId);
   }
 }

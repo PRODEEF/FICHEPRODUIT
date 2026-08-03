@@ -264,8 +264,7 @@ export function Signup() {
                 ))}
               </SelectField>
               <p className="m-0 text-xs text-text-secondary">
-                Ce choix définit votre univers produit et les tarifs associés. Il ne pourra plus
-                être modifié par la suite.
+                Ce choix définit votre secteur. Il ne pourra plus être modifié par la suite.
               </p>
             </div>
             <InputField

@@ -14,6 +14,7 @@ type InputFieldProps = {
   label: string;
   error?: string | undefined;
   errorId?: string | undefined;
+  showErrorMessage?: boolean | undefined;
   containerClassName?: string | undefined;
   labelClassName?: string | undefined;
   inputClassName?: string | undefined;
@@ -43,6 +44,7 @@ export function InputField({
   label,
   error,
   errorId,
+  showErrorMessage = true,
   containerClassName,
   labelClassName,
   inputClassName,
@@ -118,7 +120,7 @@ export function InputField({
         defaultValue={defaultValue}
         {...restInputProps}
       />
-      {error ? (
+      {error && showErrorMessage ? (
         <p id={errorId} className="m-0 text-sm text-red-500" role="alert">
           {error}
         </p>

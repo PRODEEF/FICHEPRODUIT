@@ -7,10 +7,10 @@ import { Button } from '@shared/ui';
 const steps = [
   {
     title: 'Collez votre URL',
-    description: 'ficheproduct analyse votre catalogue en quelques secondes',
+    description: 'Fiche Produit analyse votre catalogue en quelques secondes',
   },
   {
-    title: 'Nous détectons votre univers',
+    title: 'Nous détectons votre secteur',
     description: 'Surf, vélo, mode… la rédaction est adaptée à votre secteur',
   },
   {

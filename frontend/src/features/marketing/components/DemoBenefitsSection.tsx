@@ -12,7 +12,7 @@ const benefits = [
     icon: Sparkles,
     title: 'Démo adaptée à votre secteur',
     description:
-      'Nous vous montrons comment ficheproduct rédige pour votre niche — pas une IA générique, un vrai ton marchand.',
+      'Nous vous montrons comment Fiche Produit rédige pour votre niche — pas une IA générique, un vrai ton marchand.',
   },
   {
     icon: Download,

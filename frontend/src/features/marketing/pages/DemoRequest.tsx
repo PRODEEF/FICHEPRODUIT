@@ -13,8 +13,8 @@ export function DemoRequest() {
     <div className="relative z-[1] flex-1">
       <MarketingPageHero
         badge="✦ Démo personnalisée en 15 minutes"
-        title="Découvrez ficheproduct"
-        titleHighlight="adapté à votre univers"
+        title="Découvrez Fiche Produit"
+        titleHighlight="adapté à votre secteur"
         subtitle="Planifiez une démonstration guidée : nous vous montrons comment transformer votre catalogue en fiches produits optimisées SEO, prêtes pour PrestaShop ou Shopify."
       />
       <DemoBenefitsSection />

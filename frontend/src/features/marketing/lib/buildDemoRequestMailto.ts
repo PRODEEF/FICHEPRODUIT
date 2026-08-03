@@ -1,4 +1,4 @@
-import type { DemoRequestPayload } from './marketingSchemas';
+﻿import type { DemoRequestPayload } from './marketingSchemas';
 import { getContactEmail } from './pricingConstants';
 
 /** Construit un lien mailto prérempli pour une demande de démo commerciale. */
@@ -8,7 +8,7 @@ export function buildDemoRequestMailto(payload: DemoRequestPayload): string {
   const lines = [
     'Bonjour,',
     '',
-    'Je souhaite planifier une démo de ficheproduct.',
+    'Je souhaite planifier une démo de Fiche Produit.',
     '',
     `Nom : ${payload.fullName}`,
     `E-mail : ${payload.email}`,

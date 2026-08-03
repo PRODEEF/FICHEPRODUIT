@@ -7,7 +7,7 @@ import { PricingFaq } from '../components/PricingFaq';
 import { PricingHero } from '../components/PricingHero';
 import { PricingPlansGrid } from '../components/PricingPlansGrid';
 import { SavingsSimulator } from '../components/SavingsSimulator';
-import { UniverseSelector } from '../components/UniverseSelector';
+import { SectorSelector } from '../components/SectorSelector';
 import { usePlanCheckout } from '../hooks/usePlanCheckout';
 import { usePricingPage } from '../hooks/usePricingPage';
 
@@ -46,7 +46,7 @@ export function Pricing() {
   return (
     <div className="relative z-[1] flex-1">
       <PricingHero variant={isAuthenticated ? 'authenticated' : 'visitor'} />
-      <UniverseSelector
+      <SectorSelector
         sector={sector}
         onSelectSector={selectSector}
         readOnly={isAuthenticated}

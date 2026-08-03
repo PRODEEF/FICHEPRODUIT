@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { animate, motion, useInView, useMotionValue, useTransform } from 'motion/react';
 
 import { fadeIn } from '@lib/motionVariants';
-import { universes } from '@shared/lib/universes';
+import { shopSectorUiList } from '@shared/lib/shopSectorUi';
 
 function AnimatedCounter({ target }: { target: number }) {
   const ref = useRef<HTMLSpanElement>(null);
@@ -43,27 +43,27 @@ export function SocialProofBar() {
       viewport={{ once: true, amount: 0.2 }}
     >
       <p className="text-sm text-purple-700 font-medium mb-3">
-        Déjà utilisé par des marchands dans ces univers
+        Déjà utilisé par des marchands dans ces secteurs
       </p>
 
       <div className="relative w-full overflow-hidden">
         <div className="animate-marquee flex min-w-max gap-8">
-          {universes.map((u) => (
+          {shopSectorUiList.map((sector) => (
             <span
-              key={`${u.label}-a`}
+              key={`${sector.label}-a`}
               className="inline-flex items-center gap-2 bg-white border border-purple-200 text-purple-700 text-sm font-medium px-4 py-2 rounded-full flex-shrink-0"
             >
-              <u.icon size={14} className="text-purple-700" strokeWidth={2} />
-              {u.label}
+              <sector.icon size={14} className="text-purple-700" strokeWidth={2} />
+              {sector.label}
             </span>
           ))}
-          {universes.map((u) => (
+          {shopSectorUiList.map((sector) => (
             <span
-              key={`${u.label}-b`}
+              key={`${sector.label}-b`}
               className="inline-flex items-center gap-2 bg-white border border-purple-200 text-purple-700 text-sm font-medium px-4 py-2 rounded-full flex-shrink-0"
             >
-              <u.icon size={14} className="text-purple-700" strokeWidth={2} />
-              {u.label}
+              <sector.icon size={14} className="text-purple-700" strokeWidth={2} />
+              {sector.label}
             </span>
           ))}
         </div>

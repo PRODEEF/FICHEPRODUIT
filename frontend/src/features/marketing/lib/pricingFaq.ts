@@ -21,7 +21,7 @@ export const PRICING_FAQ_ITEMS: PricingFaqItem[] = [
     id: 'sector-pricing',
     question: 'Pourquoi le tarif change selon mon secteur ?',
     answer:
-      'La rédaction technique varie selon votre univers produit (vocabulaire, niveau de détail, conformité). ficheproduct adapte le tarif pour refléter cette complexité et vous proposer un prix juste.',
+      'La rédaction technique varie selon votre secteur produit (vocabulaire, niveau de détail, conformité). Fiche Produit adapte le tarif pour refléter cette complexité et vous proposer un prix juste.',
   },
   {
     id: 'sector-not-found',
