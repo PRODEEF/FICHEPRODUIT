@@ -7,14 +7,82 @@ import {
 } from "@nestjs/common";
 import type { CmsType } from "../../core/scraper/scraper.types";
 import type { AuthenticatedUser } from "../../core/auth/types/jwt-payload.types";
+import { mergeShopBrands, mergeShopCategoryTrees } from "./shop-catalog-merge";
 import { SHOP_REPOSITORY, type IShopRepository } from "./shop.repository.interface";
-import type { Shop, ShopCms } from "./types/shop.types";
+import type { Shop, ShopCms, UpdateShop } from "./types/shop.types";
 import type { ShopCategoryNode } from "./types/shop-category.types";
 
-function shopDisplayNameFromUrl(url: string): string {
+/** TLD courants pour extraire le label principal du hostname. */
+const COMMON_TLDS = new Set([
+  "com",
+  "fr",
+  "net",
+  "org",
+  "io",
+  "co",
+  "eu",
+  "be",
+  "ch",
+  "uk",
+  "de",
+  "es",
+  "it",
+  "nl",
+  "pt",
+  "shop",
+  "store",
+]);
+
+/**
+ * Normalise une URL boutique pour comparaison (protocole https, hostname sans www, sans slash final).
+ */
+export function normalizeShopUrlForComparison(url: string): string {
+  const trimmed = url.trim();
+  if (!trimmed) return "";
   try {
-    const host = new URL(url).hostname.replace(/^www\./i, "");
-    return host.length > 0 ? host : url;
+    const withProto = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+    const u = new URL(withProto);
+    const host = u.hostname.replace(/^www\./i, "").toLowerCase();
+    const path = u.pathname.replace(/\/+$/, "");
+    return `${u.protocol}//${host}${path === "/" ? "" : path}`;
+  } catch {
+    return trimmed.toLowerCase().replace(/\/+$/, "");
+  }
+}
+
+export function shopUrlsEquivalent(a: string, b: string): boolean {
+  const left = normalizeShopUrlForComparison(a);
+  const right = normalizeShopUrlForComparison(b);
+  if (!left || !right) return false;
+  return left === right;
+}
+
+/**
+ * Dérive un nom d’affichage depuis l’URL : `glissup.fr` → `Glissup`, `shop.exemple.com` → `Exemple`.
+ */
+export function shopDisplayNameFromUrl(url: string): string {
+  try {
+    const host = new URL(url).hostname.replace(/^www\./i, "").toLowerCase();
+    if (!host) return url;
+
+    const parts = host.split(".").filter(Boolean);
+    if (parts.length === 0) return url;
+
+    let label = parts[0] ?? host;
+    if (parts.length >= 2) {
+      const last = parts[parts.length - 1] ?? "";
+      const secondLast = parts[parts.length - 2] ?? "";
+      // ex. exemple.co.uk → Exemple ; shop.glissup.fr → Glissup
+      if (COMMON_TLDS.has(last) && parts.length >= 2) {
+        label =
+          parts.length >= 3 && COMMON_TLDS.has(secondLast) ? parts[parts.length - 3]! : secondLast;
+      } else {
+        label = parts[parts.length - 2] ?? parts[0]!;
+      }
+    }
+
+    if (!label) return url;
+    return label.charAt(0).toUpperCase() + label.slice(1);
   } catch {
     return url;
   }
@@ -34,6 +102,33 @@ function mapScraperCmsToShopCms(cms: CmsType): ShopCms {
 
 const DEFAULT_SHOP_NAME = "Mon magasin";
 
+/**
+ * Conserve marques/catégories si l’URL existante est non vide et équivalente à la nouvelle.
+ * Première analyse (URL vide) ou changement d’URL → écrasement.
+ */
+function shouldPreserveCatalogData(existingUrl: string, nextUrl: string): boolean {
+  return Boolean(existingUrl.trim()) && shopUrlsEquivalent(existingUrl, nextUrl);
+}
+
+/**
+ * Garde un nom personnalisé lors d’une ré-analyse (même URL) ;
+ * sinon applique le nom dérivé de l’URL.
+ */
+function resolveShopNameFromAnalysis(existing: Shop, nextUrl: string, preserve: boolean): string {
+  const generatedFromNext = shopDisplayNameFromUrl(nextUrl);
+  if (!preserve) return generatedFromNext;
+
+  const current = existing.name.trim();
+  if (!current || current === DEFAULT_SHOP_NAME) return generatedFromNext;
+
+  const generatedFromExisting = existing.url.trim() ? shopDisplayNameFromUrl(existing.url) : "";
+  if (generatedFromExisting && current === generatedFromExisting) {
+    return generatedFromNext;
+  }
+
+  return current;
+}
+
 @Injectable()
 export class ShopService {
   constructor(
@@ -45,6 +140,8 @@ export class ShopService {
    * Création ou mise à jour depuis le pipeline d’analyse.
    * - connecté : met à jour le magasin principal du compte (évite un 2ᵉ shop)
    * - invité : upsert via sessionId + URL
+   * - même URL : fusionne marques et catégories détectées avec l’existant
+   * - URL différente : remplace marques et catégories
    */
   async createOrUpdateFromAnalysis(
     input: {
@@ -58,28 +155,31 @@ export class ShopService {
     },
     accessToken: string,
   ): Promise<Shop> {
-    const name = shopDisplayNameFromUrl(input.url);
     const cms = mapScraperCmsToShopCms(input.cms);
 
     if (input.ownerId) {
       const shops = await this.shopRepo.findAllByOwner(input.ownerId, accessToken);
       const primary = this.pickPrimaryShop(shops);
       if (primary) {
-        return this.shopRepo.update(
-          primary.id,
-          {
-            name,
-            url: input.url,
-            cms,
-            brands: input.brands,
-            categoryTree: input.categoryTree,
-            ...(primary.sector?.trim() ? {} : { sector: input.sector }),
-          },
-          accessToken,
-        );
+        const preserve = shouldPreserveCatalogData(primary.url, input.url);
+        const name = resolveShopNameFromAnalysis(primary, input.url, preserve);
+
+        const patch: UpdateShop = {
+          name,
+          url: input.url,
+          cms,
+          ...(primary.sector?.trim() ? {} : input.sector?.trim() ? { sector: input.sector } : {}),
+          brands: preserve ? mergeShopBrands(primary.brands, input.brands) : input.brands,
+          categoryTree: preserve
+            ? mergeShopCategoryTrees(primary.categoryTree, input.categoryTree)
+            : input.categoryTree,
+        };
+
+        return this.shopRepo.update(primary.id, patch, accessToken);
       }
     }
 
+    const name = shopDisplayNameFromUrl(input.url);
     return this.shopRepo.upsertFromAnalysis(
       {
         name,

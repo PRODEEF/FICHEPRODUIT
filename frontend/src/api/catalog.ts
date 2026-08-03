@@ -99,3 +99,20 @@ export async function searchCatalogProducts(
 
   return parseCatalogProductArray(parsed);
 }
+
+/**
+ * Récupère jusqu'à 50 noms de marques présentes dans le catalogue pour un secteur donné.
+ */
+export async function fetchBrandsBySector(sector: string): Promise<string[]> {
+  const { parsed } = await apiFetch(
+    `${getApiBaseUrl()}/api/catalog/products/brands-by-sector/${encodeURIComponent(sector)}`,
+    {
+      method: 'GET',
+      headers: await guestOrAuthHeadersNoBody(),
+    },
+  );
+  if (!Array.isArray(parsed)) {
+    throw new Error('Réponse serveur invalide : liste de marques attendue.');
+  }
+  return (parsed as unknown[]).filter((item): item is string => typeof item === 'string');
+}

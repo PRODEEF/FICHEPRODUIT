@@ -148,4 +148,27 @@ describe("SiteCategoryExtractorService", () => {
 
     expect(tree.map((n) => n.name).sort()).toEqual(["Accessoires", "Vêtements"]);
   });
+
+  it("filtre wishlist/comparer et nettoie icônes + compteurs (Glissup-like)", async () => {
+    const html = `
+      <html><body>
+        <div id="_desktop_top_menu">
+          <ul id="top-menu">
+            <li><a href="/categorie/glisse">Glisse</a></li>
+            <li><a href="/module/blockwishlist/view">\uE07Dliste de souhaits(0 )</a></li>
+            <li><a href="/products-comparison">\uE043 comparer (0)</a></li>
+            <li><a href="/module/ps_emailsubscription/subscription">Newsletter</a></li>
+          </ul>
+        </div>
+      </body></html>
+    `;
+
+    const tree = await service.extract({
+      html,
+      cms: "prestashop",
+      baseUrl: "https://glissup.fr",
+    });
+
+    expect(tree.map((n) => n.name)).toEqual(["Glisse"]);
+  });
 });

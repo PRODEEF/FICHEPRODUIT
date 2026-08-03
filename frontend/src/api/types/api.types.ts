@@ -79,7 +79,7 @@ export interface Shop {
   name: string;
   url: string;
   cms: CmsType;
-  sector: string | null;
+  sector: string;
   brands: string[];
   categoryTree: ShopCategoryNode[];
   ownerId: string;

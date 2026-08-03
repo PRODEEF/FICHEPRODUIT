@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { needsShopSetup } from '@shared/lib/needsShopSetup';
+import type { Shop } from '@types-api';
 
-import type { Shop } from '../types';
+import { needsShopSetup } from './needsShopSetup';
 
 function makeShop(overrides: Partial<Shop> = {}): Shop {
   return {
@@ -10,7 +10,7 @@ function makeShop(overrides: Partial<Shop> = {}): Shop {
     name: 'Ma boutique',
     url: '',
     cms: 'inconnu',
-    sector: null,
+    sector: 'Autres',
     brands: [],
     categoryTree: [],
     ownerId: 'user-1',

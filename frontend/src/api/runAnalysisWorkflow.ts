@@ -7,6 +7,7 @@
  * Remplace `runSiteAnalysisWorkflow.ts` (ancien backend).
  */
 
+import { toUserFacingAnalysisError } from '@shared/lib/analysisErrorMessage';
 import { sleep } from '@shared/lib/sleep';
 
 import type { Analysis } from './types/api.types';
@@ -48,35 +49,32 @@ export async function runAnalysisWorkflow(
     while (current.status !== 'done' && current.status !== 'failed') {
       await sleep(POLL_INTERVAL_MS);
       current = await getAnalysis(current.id);
-      options?.onProgress?.({ ...current });
+      options?.onProgress?.(withUserFacingError(current));
     }
   } catch (e) {
     return {
       ok: false,
       error: e instanceof Error ? e.message : "Erreur lors du suivi de l'analyse.",
-      partial: current,
+      partial: withUserFacingError(current),
     };
   }
 
   if (current.status === 'failed') {
+    const failed = withUserFacingError(current);
     const message =
-      typeof current.errorMessage === 'string' && current.errorMessage.trim()
-        ? current.errorMessage
-        : errorCodeToMessage(current.errorCode);
-    return { ok: false, error: message, partial: current };
+      typeof failed.errorMessage === 'string' && failed.errorMessage.trim()
+        ? failed.errorMessage
+        : toUserFacingAnalysisError(failed.errorCode, null);
+    return { ok: false, error: message, partial: failed };
   }
 
   return { ok: true, analysis: current };
 }
 
-function errorCodeToMessage(code: Analysis['errorCode']): string {
-  switch (code) {
-    case 'SITE_UNREACHABLE':
-      return 'Le site est inaccessible ou introuvable.';
-    case 'UNANALYZABLE':
-      return "Le site n'a pas pu être analysé (structure non reconnue).";
-    case 'INTERNAL_ERROR':
-    default:
-      return 'Analyse terminée avec erreur inconnue.';
-  }
+function withUserFacingError(analysis: Analysis): Analysis {
+  if (analysis.status !== 'failed') return analysis;
+  return {
+    ...analysis,
+    errorMessage: toUserFacingAnalysisError(analysis.errorCode, analysis.errorMessage),
+  };
 }

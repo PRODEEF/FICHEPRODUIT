@@ -10,6 +10,8 @@ import type { CatalogProduct } from "./types/catalog.types";
 
 /** Upper bound aligned with {@link CatalogRepository} MAX_LIMIT for shop-brand listings. */
 const SHOP_BRANDS_CATALOG_LIMIT = 1000;
+/** Plafond de suggestions de marques par secteur. */
+const BRANDS_BY_SECTOR_LIMIT = 50;
 
 /**
  * Couche applicative catalogue : lecture des produits fabricants via Supabase (RLS).
@@ -87,5 +89,14 @@ export class CatalogService {
       brands: shop.brands,
       limit: SHOP_BRANDS_CATALOG_LIMIT,
     });
+  }
+
+  /**
+   * Marques catalogue distinctes pour un secteur (suggestions magasin).
+   */
+  async listBrandsBySector(sector: string): Promise<string[]> {
+    const trimmed = sector.trim();
+    if (!trimmed) return [];
+    return this.catalogRepo.listDistinctBrandsBySector(trimmed, BRANDS_BY_SECTOR_LIMIT);
   }
 }

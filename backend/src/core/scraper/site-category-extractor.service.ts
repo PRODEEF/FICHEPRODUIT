@@ -33,6 +33,9 @@ const NAV_DENYLIST = [
   "faq",
   "wishlist",
   "favoris",
+  "liste de souhaits",
+  "comparer",
+  "compare",
   "recherche",
   "search",
   "blog",
@@ -252,7 +255,11 @@ export class SiteCategoryExtractorService {
 
       // Accepter les chemins catégorie ou tout chemin interne non-utilitaire
       if (CATEGORY_URL_HINTS.some((h) => path.includes(h))) return true;
-      if (/\/(account|cart|checkout|login|register|contact|blog|search)/i.test(path)) {
+      if (
+        /\/(account|cart|checkout|login|register|contact|blog|search|compare|wishlist|module)\b/i.test(
+          path,
+        )
+      ) {
         return false;
       }
       return true;
@@ -323,7 +330,12 @@ export class SiteCategoryExtractorService {
 }
 
 function normalizeLabel(raw: string): string {
-  return raw.replace(/\s+/g, " ").trim().slice(0, SHOP_CATEGORY_NAME_MAX_LENGTH);
+  return raw
+    .replace(/[\uE000-\uF8FF]/g, "")
+    .replace(/\(\s*\d+\s*\)\s*$/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, SHOP_CATEGORY_NAME_MAX_LENGTH);
 }
 
 function rawToNode(item: RawNavItem): ShopCategoryNode {

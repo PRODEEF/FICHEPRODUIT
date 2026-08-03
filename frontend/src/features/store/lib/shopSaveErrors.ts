@@ -2,7 +2,7 @@ import { ApiHttpError } from '@api/apiAuth';
 
 import { SHOP_URL_INVALID_MESSAGE } from './shopSchemas';
 
-export type ShopInfoRowKey = 'name' | 'url' | 'cms' | 'sector';
+export type ShopInfoRowKey = 'name' | 'url';
 
 /**
  * Message utilisateur pour une erreur d’enregistrement d’un champ boutique.

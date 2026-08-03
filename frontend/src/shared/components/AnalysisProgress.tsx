@@ -1,5 +1,6 @@
 import { CircleCheck, CircleX } from 'lucide-react';
 
+import { toUserFacingAnalysisError } from '@shared/lib/analysisErrorMessage';
 import { Button, Modal } from '@shared/ui';
 import type { Analysis } from '@types-api';
 
@@ -36,10 +37,12 @@ function deriveStepFromStatus(status: Analysis['status']): number {
 }
 
 export function AnalysisProgress({ analysis, onDismiss }: AnalysisProgressProps) {
-  const { status, url, errorMessage } = analysis;
+  const { status, url, errorCode, errorMessage } = analysis;
   const currentStep = clampStep(analysis.currentStep ?? deriveStepFromStatus(status));
   const isFailed = status === 'failed';
   const isDone = status === 'done';
+  const displayError =
+    isFailed && errorMessage ? toUserFacingAnalysisError(errorCode, errorMessage) : null;
 
   return (
     <Modal
@@ -91,9 +94,9 @@ export function AnalysisProgress({ analysis, onDismiss }: AnalysisProgressProps)
           {url}
         </p>
 
-        {isFailed && errorMessage ? (
+        {displayError ? (
           <div className="mb-4 rounded-xl bg-red-50 px-4 py-3 text-center text-sm text-red-800">
-            <p>{errorMessage}</p>
+            <p>{displayError}</p>
           </div>
         ) : null}
 
