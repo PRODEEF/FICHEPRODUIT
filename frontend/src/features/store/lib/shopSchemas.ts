@@ -14,27 +14,21 @@ export const shopTagSchema = z
   .min(1, 'Ce champ ne peut pas être vide.')
   .max(SHOP_TAG_MAX_LENGTH, `Maximum ${SHOP_TAG_MAX_LENGTH} caractères.`);
 
-export const shopUrlSchema = z
-  .string()
-  .transform((v) => v.trim())
-  .refine((v) => v === '' || parseAsFullSiteUrl(v) !== null, SHOP_URL_INVALID_MESSAGE)
-  .transform((v) => {
-    if (v === '') return '';
-    const parsed = parseAsFullSiteUrl(v);
-    if (parsed === null) {
-      throw new Error('Invariant Zod : URL invalide après refine.');
-    }
-    return parsed;
-  });
+/** Chaîne vide acceptée, sinon URL http(s) complète (schéma obligatoire). */
+export const shopUrlSchema = z.string().transform((raw, ctx) => {
+  const v = raw.trim();
+  if (v === '') return '';
+  const parsed = parseAsFullSiteUrl(v);
+  if (parsed === null) {
+    ctx.addIssue({ code: 'custom', message: SHOP_URL_INVALID_MESSAGE });
+    return z.NEVER;
+  }
+  return parsed;
+});
 
 export const shopSectorSchema = z
   .union([z.enum(SHOP_SECTOR_LABELS), z.literal('')])
   .transform((v) => (v === '' ? null : v));
-
-/** Secteur obligatoire à la première saisie (comptes existants sans secteur). */
-export const shopSectorRequiredSchema = z.enum(SHOP_SECTOR_LABELS, {
-  message: 'Veuillez choisir un secteur dans la liste.',
-});
 
 export type ShopTagValue = z.output<typeof shopTagSchema>;
 export type ShopUrlValue = z.output<typeof shopUrlSchema>;

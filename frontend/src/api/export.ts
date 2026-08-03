@@ -15,11 +15,12 @@ import type {
   CategoryExportPreviewParams,
   CategoryExportPreviewResponse,
   PrestashopExportParams,
-} from './types/api.types';
+} from '@types-api';
+
 import { getApiBaseUrl } from './apiBase';
 import { authHeaders, extractErrorMessage } from './apiAuth';
-import { getSupabaseSessionAuthHeaders, requestNestJson } from './nestHttpClient';
 import { formatExportClientError } from './exportLimits';
+import { getSupabaseSessionAuthHeaders, requestNestJson } from './nestHttpClient';
 
 /**
  * Prévisualise le matching catégories fabricant → arbre magasin.
@@ -46,6 +47,7 @@ export async function fetchCategoryExportPreview(
 
 /**
  * Télécharge un CSV PrestaShop (`products.csv` ou `combinations.csv`).
+ * Utilise `fetch` (et non `requestNestJson`) car la réponse est un blob, pas du JSON.
  *
  * @param params - type, shopId, productIds, categoryOverrides optionnels.
  * @throws {Error} 401 ou autre erreur HTTP / réseau.
@@ -61,44 +63,24 @@ export async function downloadPrestashopExportCsv(params: PrestashopExportParams
   };
 
   try {
-    const headers = await authHeaders();
     const res = await fetch(`${getApiBaseUrl()}/api/export/prestashop`, {
       method: 'POST',
-      headers,
+      headers: await authHeaders(),
       credentials: 'include',
       body: JSON.stringify(body),
     });
 
     if (!res.ok) {
-      let parsed: unknown = null;
-      const text = await res.text().catch(() => '');
-      if (text) {
-        try {
-          parsed = JSON.parse(text);
-        } catch {
-          /* corps non JSON */
-        }
-      }
-
-      if (res.status === 401) {
-        throw new Error('Session expirée ou non autorisée. Reconnecte-toi.');
-      }
-
-      throw new Error(
-        extractErrorMessage(parsed, `Impossible de générer l'export (${res.status}).`),
-      );
+      throw await exportHttpError(res);
     }
 
     const blob = await res.blob();
-
-    const cd = res.headers.get('Content-Disposition') ?? '';
-    const match = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/i.exec(cd);
-    const serverFilename = match?.[1]?.replace(/['"]/g, '').trim();
     const defaultName = params.type === 'products' ? 'products.csv' : 'combinations.csv';
-    const finalFilename =
-      serverFilename !== undefined && serverFilename.length > 0 ? serverFilename : defaultName;
-
-    triggerDownload(blob, finalFilename);
+    const filename = filenameFromContentDisposition(
+      res.headers.get('Content-Disposition'),
+      defaultName,
+    );
+    triggerDownload(blob, filename);
   } catch (err) {
     throw new Error(formatExportClientError(err, 'Impossible de générer l’export.'), {
       cause: err,
@@ -108,6 +90,32 @@ export async function downloadPrestashopExportCsv(params: PrestashopExportParams
 
 export function serializeCategoryOverrides(overrides: CategoryExportOverride[]): string {
   return JSON.stringify(overrides);
+}
+
+async function exportHttpError(res: Response): Promise<Error> {
+  let parsed: unknown = null;
+  const text = await res.text().catch(() => '');
+  if (text) {
+    try {
+      parsed = JSON.parse(text) as unknown;
+    } catch {
+      // Corps non JSON — on garde le fallback ci-dessous.
+    }
+  }
+
+  if (res.status === 401) {
+    return new Error('Session expirée ou non autorisée. Reconnecte-toi.');
+  }
+
+  return new Error(extractErrorMessage(parsed, `Impossible de générer l'export (${res.status}).`));
+}
+
+/** Extrait le nom de fichier depuis `Content-Disposition`, sinon `fallback`. */
+export function filenameFromContentDisposition(header: string | null, fallback: string): string {
+  if (!header) return fallback;
+  const match = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/i.exec(header);
+  const serverFilename = match?.[1]?.replace(/['"]/g, '').trim();
+  return serverFilename && serverFilename.length > 0 ? serverFilename : fallback;
 }
 
 /** Crée un lien temporaire et clique dessus pour déclencher le téléchargement. */

@@ -90,6 +90,38 @@ export class CatalogRepository implements ICatalogRepository {
   }
 
   /**
+   * Retourne les marques distinctes d’un secteur (dédoublonnage insensible à la casse).
+   */
+  async listDistinctBrandsBySector(sector: string, limit: number): Promise<string[]> {
+    const normalizedSector = this.normalizeText(sector);
+    if (!normalizedSector) return [];
+
+    const fetchLimit = Math.max(1, Math.min(CatalogRepository.MAX_LIMIT, Math.trunc(limit) * 20));
+    const { data, error } = await this.supabase.anon
+      .from("catalog_products")
+      .select("brand")
+      .eq("sector", normalizedSector)
+      .limit(fetchLimit);
+
+    if (error) {
+      this.logger.error(`listDistinctBrandsBySector(${normalizedSector}) failed`, error);
+      throw new InternalServerErrorException("Échec de la récupération des marques par secteur");
+    }
+
+    const byLower = new Map<string, string>();
+    for (const row of (data ?? []) as Pick<CatalogProductRow, "brand">[]) {
+      const brand = typeof row.brand === "string" ? row.brand.trim() : "";
+      if (!brand) continue;
+      const key = brand.toLowerCase();
+      if (!byLower.has(key)) byLower.set(key, brand);
+    }
+
+    return [...byLower.values()]
+      .sort((a, b) => a.localeCompare(b, "fr", { sensitivity: "base" }))
+      .slice(0, Math.max(1, Math.min(CatalogRepository.MAX_LIMIT, Math.trunc(limit))));
+  }
+
+  /**
    * Applies sector, category, price, etc. — everything except the `brands` array
    * (brand matching is done separately via `.ilike` per brand for case-insensitive exact match).
    */

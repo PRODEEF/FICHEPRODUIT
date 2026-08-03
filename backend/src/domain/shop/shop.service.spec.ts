@@ -150,7 +150,7 @@ describe("ShopService", () => {
     expect(repo.update).not.toHaveBeenCalled();
   });
 
-  it("createOrUpdateFromAnalysis met à jour le magasin principal connecté", async () => {
+  it("createOrUpdateFromAnalysis met à jour le magasin principal connecté (URL vide → écrit marques)", async () => {
     const emptyPrimary: Shop = {
       ...sampleShop,
       id: "shop-primary",
@@ -162,7 +162,7 @@ describe("ShopService", () => {
     };
     const updated: Shop = {
       ...emptyPrimary,
-      name: "exemple.fr",
+      name: "Exemple",
       url: "https://exemple.fr",
       cms: "prestashop",
       brands: ["Nike"],
@@ -188,12 +188,95 @@ describe("ShopService", () => {
     expect(repo.update).toHaveBeenCalledWith(
       "shop-primary",
       expect.objectContaining({
+        name: "Exemple",
         url: "https://exemple.fr",
         cms: "prestashop",
         brands: ["Nike"],
+        categoryTree: [{ id: "c1", name: "Chaussures", children: [] }],
       }),
       "tok",
     );
     expect(repo.upsertFromAnalysis).not.toHaveBeenCalled();
+  });
+
+  it("createOrUpdateFromAnalysis fusionne marques/catégories si même URL", async () => {
+    const primary: Shop = {
+      ...sampleShop,
+      id: "shop-primary",
+      name: "Ma boutique",
+      url: "https://www.exemple.fr/",
+      cms: "prestashop",
+      brands: ["Nike"],
+      categoryTree: [{ id: "c1", name: "Chaussures", children: [] }],
+    };
+    repo.findAllByOwner.mockResolvedValue([primary]);
+    repo.update.mockResolvedValue(primary);
+
+    await service.createOrUpdateFromAnalysis(
+      {
+        url: "https://exemple.fr",
+        cms: "shopify",
+        sector: null,
+        brands: ["Adidas"],
+        categoryTree: [{ id: "c2", name: "Autre", children: [] }],
+        ownerId: "user-1",
+        sessionId: null,
+      },
+      "tok",
+    );
+
+    expect(repo.update).toHaveBeenCalledWith(
+      "shop-primary",
+      expect.objectContaining({
+        name: "Ma boutique",
+        url: "https://exemple.fr",
+        cms: "shopify",
+        brands: ["Nike", "Adidas"],
+        categoryTree: [
+          { id: "c1", name: "Chaussures", children: [] },
+          expect.objectContaining({ name: "Autre", children: [] }),
+        ],
+      }),
+      "tok",
+    );
+  });
+
+  it("createOrUpdateFromAnalysis remplace marques/catégories si URL différente", async () => {
+    const primary: Shop = {
+      ...sampleShop,
+      id: "shop-primary",
+      name: "Ancien",
+      url: "https://ancien.fr",
+      cms: "prestashop",
+      brands: ["Nike"],
+      categoryTree: [{ id: "c1", name: "Chaussures", children: [] }],
+    };
+    repo.findAllByOwner.mockResolvedValue([primary]);
+    repo.update.mockResolvedValue(primary);
+
+    await service.createOrUpdateFromAnalysis(
+      {
+        url: "https://nouveau.fr",
+        cms: "shopify",
+        sector: null,
+        brands: ["Adidas"],
+        categoryTree: [{ id: "c2", name: "Autre", children: [] }],
+        ownerId: "user-1",
+        sessionId: null,
+      },
+      "tok",
+    );
+
+    expect(repo.update).toHaveBeenCalledWith(
+      "shop-primary",
+      expect.objectContaining({
+        name: "Nouveau",
+        url: "https://nouveau.fr",
+        cms: "shopify",
+        brands: ["Adidas"],
+        categoryTree: [{ id: "c2", name: "Autre", children: [] }],
+      }),
+      "tok",
+    );
   });
 });

@@ -68,7 +68,7 @@ export function ShopSummarySection({ shop, activeBrand, onBrandClick }: ShopSumm
             {shop.brands.length} marque{shop.brands.length > 1 ? 's' : ''}
           </span>
         </p>
-        {shop.sector?.trim() ? (
+        {shop.sector.trim() ? (
           <p className="text-xs text-gray-500">Votre secteur&nbsp;: {shop.sector.trim()}.</p>
         ) : null}
       </div>

@@ -38,15 +38,11 @@ export function useSiteAnalysis(options: UseSiteAnalysisOptions = {}) {
 
         setAnalysisOpen(true);
         const p = result.partial;
-        if (p.status === 'failed') {
-          setSiteAnalysis(p);
-        } else {
-          setSiteAnalysis({
-            ...p,
-            status: 'failed',
-            errorMessage: result.error,
-          });
-        }
+        setSiteAnalysis({
+          ...p,
+          status: 'failed',
+          errorMessage: result.error,
+        });
         return 'error_modal';
       }
 

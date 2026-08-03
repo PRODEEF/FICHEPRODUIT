@@ -21,7 +21,8 @@ import type {
   BillingSummary,
   CheckoutResponse,
   CreateCheckoutBody,
-} from './types/api.types';
+} from '@types-api';
+
 import { getSupabaseSessionAuthHeaders, requestNestJson } from './nestHttpClient';
 
 export type {
@@ -36,7 +37,7 @@ export type {
   CheckoutResponse,
   CreateCheckoutBody,
   PublicPricingPlan,
-} from './types/api.types';
+} from '@types-api';
 
 function parseApiResponse<S extends z.ZodType>(
   schema: S,

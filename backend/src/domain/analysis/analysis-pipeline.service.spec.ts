@@ -134,10 +134,10 @@ describe("AnalysisPipelineService", () => {
     );
   });
 
-  it("marque SITE_UNREACHABLE quand le scrape échoue", async () => {
+  it("marque SITE_UNREACHABLE avec un message utilisateur quand le scrape échoue", async () => {
     scraperMock.fetchPage.mockResolvedValue({
       ok: false,
-      error: "Timeout",
+      error: "DNS: getaddrinfo ENOTFOUND www.glisstestk.fr",
     });
 
     await run(guestAnalysis, "");
@@ -150,7 +150,7 @@ describe("AnalysisPipelineService", () => {
       expect.objectContaining({
         status: "failed",
         errorCode: "SITE_UNREACHABLE",
-        errorMessage: "Timeout",
+        errorMessage: "Impossible de joindre ce site : l’adresse n’existe pas ou est incorrecte.",
       }),
       "",
       "session-1",

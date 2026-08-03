@@ -61,6 +61,27 @@ describe('shopUrlSchema', () => {
   it('rejette un domaine sans schéma', () => {
     const r = shopUrlSchema.safeParse('monsite.fr');
     expect(r.success).toBe(false);
+    if (!r.success) {
+      expect(r.error.issues[0]?.message).toContain('URL invalide');
+    }
+  });
+
+  it('rejette un texte qui n’est pas un lien', () => {
+    const r = shopUrlSchema.safeParse('pas un lien');
+    expect(r.success).toBe(false);
+  });
+
+  it('rejette un schéma non http(s)', () => {
+    const r = shopUrlSchema.safeParse('ftp://monsite.fr');
+    expect(r.success).toBe(false);
+  });
+
+  it('rejette www sans TLD', () => {
+    const r = shopUrlSchema.safeParse('https://www.glisstestk');
+    expect(r.success).toBe(false);
+    if (!r.success) {
+      expect(r.error.issues[0]?.message).toContain('URL invalide');
+    }
   });
 });
 

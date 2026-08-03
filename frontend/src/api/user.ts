@@ -11,7 +11,8 @@
  *      atomiquement les analyses + shop guest vers l'userId, puis efface le cookie.
  */
 
-import type { ClaimGuestSessionOptions } from './types/api.types';
+import type { ClaimGuestSessionOptions } from '@types-api';
+
 import { getApiBaseUrl } from './apiBase';
 import { apiFetch, ApiHttpError, authHeaders } from './apiAuth';
 

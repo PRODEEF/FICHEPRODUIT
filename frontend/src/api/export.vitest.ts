@@ -29,7 +29,24 @@ vi.mock('./nestHttpClient', () => ({
   getSupabaseSessionAuthHeaders: vi.fn(),
 }));
 
-import { downloadPrestashopExportCsv, fetchCategoryExportPreview } from './export';
+import {
+  downloadPrestashopExportCsv,
+  fetchCategoryExportPreview,
+  filenameFromContentDisposition,
+} from './export';
+
+describe('filenameFromContentDisposition', () => {
+  it('extrait le nom de fichier du header', () => {
+    expect(
+      filenameFromContentDisposition('attachment; filename="products.csv"', 'fallback.csv'),
+    ).toBe('products.csv');
+  });
+
+  it('retourne le fallback si header absent ou invalide', () => {
+    expect(filenameFromContentDisposition(null, 'fallback.csv')).toBe('fallback.csv');
+    expect(filenameFromContentDisposition('inline', 'fallback.csv')).toBe('fallback.csv');
+  });
+});
 
 describe('fetchCategoryExportPreview', () => {
   const shopId = '550e8400-e29b-41d4-a716-446655440003';

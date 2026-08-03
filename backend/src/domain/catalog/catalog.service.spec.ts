@@ -26,11 +26,12 @@ describe("CatalogService", () => {
   });
 
   const catalogRepoMock: jest.Mocked<
-    Pick<ICatalogRepository, "search" | "findById" | "findByIds">
+    Pick<ICatalogRepository, "search" | "findById" | "findByIds" | "listDistinctBrandsBySector">
   > = {
     search: jest.fn(),
     findById: jest.fn(),
     findByIds: jest.fn(),
+    listDistinctBrandsBySector: jest.fn(),
   };
 
   const shopServiceMock = {
@@ -104,5 +105,20 @@ describe("CatalogService", () => {
       brands: ["G"],
       limit: 1000,
     });
+  });
+
+  it("listBrandsBySector délègue au repository avec plafond 50", async () => {
+    catalogRepoMock.listDistinctBrandsBySector.mockResolvedValue(["A", "B"]);
+
+    const out = await service.listBrandsBySector(" Glisse ");
+
+    expect(out).toEqual(["A", "B"]);
+    expect(catalogRepoMock.listDistinctBrandsBySector).toHaveBeenCalledWith("Glisse", 50);
+  });
+
+  it("listBrandsBySector retourne [] si secteur vide", async () => {
+    const out = await service.listBrandsBySector("   ");
+    expect(out).toEqual([]);
+    expect(catalogRepoMock.listDistinctBrandsBySector).not.toHaveBeenCalled();
   });
 });
