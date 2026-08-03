@@ -1,7 +1,8 @@
 import type { CatalogProduct } from '@types-api';
+import { catalogSectorsMatch } from '@shared/lib/shopSectors';
 
 import type { ProductFilter } from '../types';
-import { uniqueSorted } from './productUtils';
+import { uniqueSorted, uniqueSortedCaseInsensitive } from './productUtils';
 
 export type CatalogFilterOptionTarget = 'category' | 'subCategory' | 'brand' | 'year';
 
@@ -9,10 +10,6 @@ export type CatalogFilterParentFilters = Pick<
   ProductFilter,
   'sector' | 'category' | 'subCategory' | 'brand'
 >;
-
-function matchesSector(product: CatalogProduct, sector: string): boolean {
-  return product.sector.trim().toLowerCase() === sector.trim().toLowerCase();
-}
 
 function matchesBrand(product: CatalogProduct, brand: string): boolean {
   return product.brand.toLowerCase() === brand.toLowerCase();
@@ -42,7 +39,7 @@ export function getProductsForFilterScope(
   let scoped = products;
 
   if (filters.sector.trim()) {
-    scoped = scoped.filter((p) => matchesSector(p, filters.sector));
+    scoped = scoped.filter((p) => catalogSectorsMatch(p.sector, filters.sector));
   }
 
   if (target === 'category') {
@@ -95,7 +92,7 @@ export function buildBrandOptions(
   filters: CatalogFilterParentFilters,
 ): string[] {
   const scoped = getProductsForFilterScope(products, filters, 'brand');
-  return uniqueSorted(scoped.map((p) => p.brand).filter(Boolean));
+  return uniqueSortedCaseInsensitive(scoped.map((p) => p.brand).filter(Boolean));
 }
 
 export function buildYearOptions(

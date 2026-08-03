@@ -94,7 +94,7 @@ export class StripeService {
                   unit_amount: params.amountCents,
                   recurring: { interval: "month" },
                   product_data: {
-                    name: `FicheProduct — ${params.planName} (${params.sector})`,
+                    name: `Fiche Produit — ${params.planName} (${params.sector})`,
                   },
                 },
                 quantity: 1,
@@ -104,7 +104,7 @@ export class StripeService {
                 currency: "eur",
                 unit_amount: params.amountCents,
                 product_data: {
-                  name: `FicheProduct — ${params.planName} (${params.sector})`,
+                  name: `Fiche Produit — ${params.planName} (${params.sector})`,
                   description:
                     params.creditsAmount !== null
                       ? `${params.creditsAmount} crédit${params.creditsAmount > 1 ? "s" : ""}`

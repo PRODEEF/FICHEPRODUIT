@@ -1,9 +1,10 @@
 import { ChevronDown, TableOfContents } from 'lucide-react';
-import { NavLink } from 'react-router';
+import { NavLink, useNavigate } from 'react-router';
 import type { ReactNode } from 'react';
 
 // Crédits temporairement désactivés
 // import { CreditBalanceBadge } from '../../features/billing/components/CreditBalanceBadge';
+import { LEGAL_LINKS } from '@lib/legalLinks';
 import { cn } from '@shared/lib/cn';
 import {
   Badge,
@@ -36,6 +37,7 @@ export function Navbar({
   onLogout,
   center,
 }: NavbarProps) {
+  const navigate = useNavigate();
   const authed = Boolean(userEmail);
   const navTitle = userLabel ?? userEmail ?? undefined;
   const drawerId = 'nav-user-drawer';
@@ -70,10 +72,10 @@ export function Navbar({
           ) : null}
 
           {authed ? (
-            <span className={logoClassName}>FicheProduct</span>
+            <span className={logoClassName}>Fiche Produit</span>
           ) : (
             <NavLink to="/" className={cn(logoClassName, 'no-underline hover:opacity-90')}>
-              FicheProduct
+              Fiche Produit
             </NavLink>
           )}
           <Badge className="ml-2 shrink-0">BETA</Badge>
@@ -103,6 +105,17 @@ export function Navbar({
                 <ChevronDown aria-hidden className="size-4 shrink-0" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                {LEGAL_LINKS.map((link) => (
+                  <DropdownMenuItem
+                    key={link.href}
+                    onClick={() => {
+                      void navigate(link.href);
+                    }}
+                  >
+                    {link.label}
+                  </DropdownMenuItem>
+                ))}
+                <div className="my-1 border-t border-soft" role="separator" />
                 <DropdownMenuItem onClick={() => void onLogout()}>Se déconnecter</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

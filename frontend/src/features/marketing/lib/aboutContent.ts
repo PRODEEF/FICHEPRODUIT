@@ -1,4 +1,4 @@
-export interface AboutValueItem {
+﻿export interface AboutValueItem {
   id: string;
   title: string;
   description: string;
@@ -23,14 +23,14 @@ export const ABOUT_HERO = {
   title: 'Nous aidons les e-commerçants',
   titleHighlight: 'à scaler leur catalogue',
   subtitle:
-    'ficheproduct génère des fiches produits spécialisées par univers, optimisées SEO et exportables en un clic vers votre boutique en ligne.',
+    'Fiche Produit génère des fiches produits spécialisées par secteur, optimisées SEO et exportables en un clic vers votre boutique en ligne.',
 } as const;
 
 export const ABOUT_MISSION = {
   title: 'Notre mission',
   paragraphs: [
     'Rédiger des centaines de fiches produits à la main, c’est des semaines de travail répétitif — et des descriptions souvent génériques qui ne convertissent pas.',
-    'Nous avons créé ficheproduct pour que les marchands PrestaShop et Shopify gagnent ce temps sans sacrifier la qualité : un outil métier qui connaît votre univers produit, pas une IA générique.',
+    'Nous avons créé Fiche Produit pour que les marchands PrestaShop et Shopify gagnent ce temps sans sacrifier la qualité : un outil métier qui connaît votre secteur produit, pas une IA générique.',
     'En version BETA, nous affinons chaque jour le moteur de rédaction et les exports pour coller au terrain des e-commerçants.',
   ],
 } as const;
@@ -58,9 +58,9 @@ export const ABOUT_VALUES: AboutValueItem[] = [
 
 export const ABOUT_DIFFERENTIATORS: AboutDifferentiatorItem[] = [
   {
-    id: 'adapted-universe',
+    id: 'adapted-sector',
     badge: 'Positionnement',
-    title: 'Adapté à votre univers',
+    title: 'Adapté à votre secteur',
     description:
       'Pas une IA générique — les descriptions sonnent comme un vrai rédacteur de votre niche, avec le bon vocabulaire et les bons arguments.',
   },

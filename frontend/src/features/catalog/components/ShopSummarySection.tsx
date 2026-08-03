@@ -69,7 +69,7 @@ export function ShopSummarySection({ shop, activeBrand, onBrandClick }: ShopSumm
           </span>
         </p>
         {shop.sector?.trim() ? (
-          <p className="text-xs text-gray-500">Votre univers&nbsp;: {shop.sector.trim()}.</p>
+          <p className="text-xs text-gray-500">Votre secteur&nbsp;: {shop.sector.trim()}.</p>
         ) : null}
       </div>
 

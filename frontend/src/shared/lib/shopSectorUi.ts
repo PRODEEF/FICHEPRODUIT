@@ -21,14 +21,18 @@ import type { LucideIcon } from 'lucide-react';
 
 import { SHOP_SECTOR_LABELS, type ShopSectorLabel } from '@shared/lib/shopSectors';
 
-export interface Universe {
+/** Métadonnées d’affichage d’un secteur boutique (icône, couleur, exemple). */
+export interface ShopSectorUi {
   label: ShopSectorLabel;
   icon: LucideIcon;
   color: string;
   example: string;
 }
 
-const UNIVERSE_META: Record<ShopSectorLabel, Pick<Universe, 'icon' | 'color' | 'example'>> = {
+const SHOP_SECTOR_UI_META: Record<
+  ShopSectorLabel,
+  Pick<ShopSectorUi, 'icon' | 'color' | 'example'>
+> = {
   Nautisme: {
     icon: Waves,
     color: 'text-cyan-400',
@@ -107,7 +111,7 @@ const UNIVERSE_META: Record<ShopSectorLabel, Pick<Universe, 'icon' | 'color' | '
   Gaming: {
     icon: Gamepad2,
     color: 'text-indigo-400',
-    example: 'Consoles, accessoires, univers joueurs',
+    example: 'Consoles, accessoires, équipements gaming',
   },
   Autres: {
     icon: LayoutGrid,
@@ -116,7 +120,7 @@ const UNIVERSE_META: Record<ShopSectorLabel, Pick<Universe, 'icon' | 'color' | '
   },
 };
 
-export const universes: Universe[] = SHOP_SECTOR_LABELS.map((label) => ({
+export const shopSectorUiList: ShopSectorUi[] = SHOP_SECTOR_LABELS.map((label) => ({
   label,
-  ...UNIVERSE_META[label],
+  ...SHOP_SECTOR_UI_META[label],
 }));

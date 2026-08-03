@@ -26,7 +26,7 @@ export function PricingHero({ variant = 'visitor' }: PricingHeroProps) {
         animate="visible"
         className="mb-8 inline-flex items-center gap-2 rounded-full border border-border-purple bg-purple-50 px-4 py-2 text-sm text-purple-600"
       >
-        ✦ Tarif adapté à votre univers produit
+        ✦ Tarif adapté à votre secteur produit
       </motion.div>
       <motion.h1
         variants={titleReveal}
@@ -51,8 +51,8 @@ export function PricingHero({ variant = 'visitor' }: PricingHeroProps) {
         }}
       >
         {variant === 'authenticated'
-          ? 'Tarifs calculés pour votre univers produit.'
-          : 'FicheProduct adapte son tarif à votre univers produit. Sélectionnez votre secteur pour voir le pricing qui vous correspond.'}
+          ? 'Tarifs calculés pour votre secteur produit.'
+          : 'Fiche Produit adapte son tarif à votre secteur. Sélectionnez-le pour voir le pricing qui vous correspond.'}
       </motion.p>
     </section>
   );

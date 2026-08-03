@@ -15,3 +15,21 @@ export function uniqueSorted(values: Iterable<string>): string[] {
   }
   return [...seen].sort((a, b) => a.localeCompare(b, 'fr'));
 }
+
+/**
+ * Déduplique sans tenir compte de la casse (conserve la première occurrence),
+ * puis trie avec `localeCompare` fr (insensible à la casse).
+ */
+export function uniqueSortedCaseInsensitive(values: Iterable<string>): string[] {
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const v of values) {
+    const t = v.trim();
+    if (!t) continue;
+    const key = t.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    result.push(t);
+  }
+  return result.sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' }));
+}

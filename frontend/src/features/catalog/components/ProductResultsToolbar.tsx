@@ -3,6 +3,8 @@ import { Button } from '@shared/ui';
 interface ProductResultsToolbarProps {
   isConnected: boolean;
   totalCount: number;
+  /** Nombre de fiches chargées (marques boutique) avant filtres UI. */
+  loadedCount?: number | undefined;
   selectedCount: number;
   onDelete: () => void;
   onExport?: () => void;
@@ -19,6 +21,7 @@ function buildExportTooltip(isConnected: boolean, hasSelection: boolean): string
 export function ProductResultsToolbar({
   isConnected,
   totalCount,
+  loadedCount,
   selectedCount,
   onDelete,
   onExport,
@@ -26,12 +29,19 @@ export function ProductResultsToolbar({
   const hasSelection = selectedCount > 0;
   const exportDisabled = !isConnected || !hasSelection;
   const exportTooltip = buildExportTooltip(isConnected, hasSelection);
+  const showLoadedHint = typeof loadedCount === 'number' && loadedCount > totalCount;
 
   return (
     <div className="flex items-center justify-between gap-4 py-2">
       <p className="text-sm text-gray-600">
         <span className="font-semibold text-gray-900">{totalCount}</span> fiche
         {totalCount !== 1 ? 's' : ''} produit{totalCount !== 1 ? 's' : ''}
+        {showLoadedHint ? (
+          <span className="text-text-secondary">
+            {' '}
+            sur {loadedCount} correspondant à vos marques
+          </span>
+        ) : null}
         {hasSelection ? (
           <>
             {' — '}

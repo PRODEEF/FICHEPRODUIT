@@ -1,8 +1,8 @@
-import { motion } from 'motion/react';
+﻿import { motion } from 'motion/react';
 
 import { cardReveal, staggerContainer, titleReveal } from '@lib/motionVariants';
 import { useScrollReveal } from '@shared/hooks/useScrollReveal';
-import { universes } from '@shared/lib/universes';
+import { shopSectorUiList } from '@shared/lib/shopSectorUi';
 
 export function ExpertiseGrid() {
   const { ref: titleRef, inView: titleInView } = useScrollReveal<HTMLHeadingElement>(0.5);
@@ -23,7 +23,7 @@ export function ExpertiseGrid() {
         animate={titleInView ? 'visible' : 'hidden'}
         className="text-3xl font-extrabold text-gray-900 mb-4 text-center"
       >
-        ficheproduct connaît votre univers
+        Fiche Produit connaît votre secteur
       </motion.h2>
       <motion.p
         className="text-gray-500 mb-12 text-center"
@@ -40,7 +40,7 @@ export function ExpertiseGrid() {
         animate={inView ? 'visible' : 'hidden'}
         className="grid grid-cols-2 md:grid-cols-3 gap-4"
       >
-        {universes.slice(0, 6).map((item) => (
+        {shopSectorUiList.slice(0, 6).map((item) => (
           <motion.article
             key={item.label}
             variants={cardReveal}

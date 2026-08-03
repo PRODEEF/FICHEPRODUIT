@@ -132,7 +132,7 @@ export function SavingsSimulator({
                 value={formatPriceEur(savings.manualCostEur, { decimals: 0 })}
               />
               <SavingsResultCard
-                label="Coût ficheproduct (HT)"
+                label="Coût Fiche Produit (HT)"
                 value={formatPriceEurExclTax(savings.ficheproductCostEur, { decimals: 0 })}
                 valueClassName="text-2xl font-extrabold text-purple-600"
               />

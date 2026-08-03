@@ -1,4 +1,4 @@
-import { motion } from 'motion/react';
+﻿import { motion } from 'motion/react';
 import { Download, Sparkles, Target } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -9,7 +9,7 @@ import { useScrollReveal } from '@shared/hooks/useScrollReveal';
 import { ABOUT_DIFFERENTIATORS } from '../lib/aboutContent';
 
 const differentiatorIcons: Record<string, LucideIcon> = {
-  'adapted-universe': Sparkles,
+  'adapted-sector': Sparkles,
   'seo-ready': Target,
   'direct-export': Download,
 };
@@ -33,7 +33,7 @@ export function AboutDifferentiatorsSection() {
         animate={titleInView ? 'visible' : 'hidden'}
         className="mb-4 text-center text-3xl font-extrabold text-text-primary"
       >
-        Pourquoi ficheproduct fait la différence
+        Pourquoi Fiche Produit fait la différence
       </motion.h2>
       <motion.p
         variants={titleReveal}

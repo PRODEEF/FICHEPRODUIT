@@ -102,6 +102,7 @@ export function TagListEditor({
             showCharacterCount
             error={error ?? undefined}
             errorId={`${inputId}-error`}
+            showErrorMessage={false}
           />
         </div>
         <Button
@@ -116,6 +117,11 @@ export function TagListEditor({
         </Button>
         {trailingActions}
       </div>
+      {error ? (
+        <p id={`${inputId}-error`} className="m-0 mt-1.5 text-sm text-red-500" role="alert">
+          {error}
+        </p>
+      ) : null}
 
       {tags.length > 0 ? (
         <div className="mt-4 flex flex-wrap items-center gap-2">
