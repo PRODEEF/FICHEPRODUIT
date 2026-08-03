@@ -12,7 +12,7 @@ interface SuggestBrandsProps {
 }
 
 /**
- * Bouton « Suggérer » 
+ * Bouton « Suggérer »
  * Ouvre une modale listant les marques du catalogue pour ce secteur.
  */
 export function SuggestBrands({
@@ -22,7 +22,7 @@ export function SuggestBrands({
   onAddBrands,
 }: SuggestBrandsProps) {
   const [open, setOpen] = useState(false);
-  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [selected, setSelected] = useState(() => new Set<string>());
   const [busy, setBusy] = useState(false);
 
   const { suggestions, loading, load } = useSuggestSectorBrands({ sector, existingBrands });

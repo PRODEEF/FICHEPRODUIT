@@ -27,8 +27,7 @@ export function ReanalysisConfirmModal({
     >
       <h2 className="m-0 text-lg font-semibold text-text-primary">Relancer l&apos;analyse ?</h2>
       <p className="mt-2 text-sm text-text-secondary">
-        L&apos;URL a changé. Relancer l&apos;analyse remplacera vos marques et catégories
-        actuelles.
+        L&apos;URL a changé. Relancer l&apos;analyse remplacera vos marques et catégories actuelles.
       </p>
       <div className="mt-6 flex justify-end gap-2">
         <Button type="button" variant="neutral-outline" size="sm" disabled={busy} onClick={onClose}>

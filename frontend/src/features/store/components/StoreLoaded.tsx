@@ -69,7 +69,7 @@ export function StoreLoaded({
         trailingActions={
           <>
             <SuggestBrands
-              sector={shop.sector ?? ''}
+              sector={shop.sector}
               existingBrands={shop.brands}
               disabled={patching}
               onAddBrands={handleAddBrands}

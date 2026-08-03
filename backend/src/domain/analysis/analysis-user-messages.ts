@@ -1,6 +1,5 @@
 /** Message générique quand le site ne répond pas ou est introuvable. */
-export const ANALYSIS_SITE_UNREACHABLE_MESSAGE =
-  "Le site est inaccessible ou introuvable.";
+export const ANALYSIS_SITE_UNREACHABLE_MESSAGE = "Le site est inaccessible ou introuvable.";
 
 /** Message quand le nom de domaine ne résout pas (URL inexistante / faute de frappe). */
 export const ANALYSIS_DNS_NOT_FOUND_MESSAGE =
@@ -11,8 +10,7 @@ export const ANALYSIS_SITE_TIMEOUT_MESSAGE =
   "Le site met trop de temps à répondre. Réessayez plus tard.";
 
 /** Message quand la connexion TCP est refusée / coupée. */
-export const ANALYSIS_SITE_CONNECTION_MESSAGE =
-  "Impossible de se connecter au site.";
+export const ANALYSIS_SITE_CONNECTION_MESSAGE = "Impossible de se connecter au site.";
 
 /** Message pour une URL mal formée ou un protocole non supporté. */
 export const ANALYSIS_URL_INVALID_MESSAGE = "L’URL du site est invalide.";

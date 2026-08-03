@@ -10,10 +10,7 @@ import {
 describe('toUserFacingAnalysisError', () => {
   it('masque une erreur DNS technique derrière un message clair', () => {
     expect(
-      toUserFacingAnalysisError(
-        'SITE_UNREACHABLE',
-        'DNS: getaddrinfo ENOTFOUND www.glisstestk.fr',
-      ),
+      toUserFacingAnalysisError('SITE_UNREACHABLE', 'DNS: getaddrinfo ENOTFOUND www.glisstestk.fr'),
     ).toBe(ANALYSIS_DNS_NOT_FOUND_MESSAGE);
   });
 

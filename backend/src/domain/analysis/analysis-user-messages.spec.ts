@@ -9,9 +9,9 @@ import {
 
 describe("toUserFacingSiteUnreachableMessage", () => {
   it("traduit une erreur DNS ENOTFOUND en message clair", () => {
-    expect(
-      toUserFacingSiteUnreachableMessage("DNS: getaddrinfo ENOTFOUND www.glisstestk.fr"),
-    ).toBe(ANALYSIS_DNS_NOT_FOUND_MESSAGE);
+    expect(toUserFacingSiteUnreachableMessage("DNS: getaddrinfo ENOTFOUND www.glisstestk.fr")).toBe(
+      ANALYSIS_DNS_NOT_FOUND_MESSAGE,
+    );
   });
 
   it("traduit une résolution DNS vide", () => {

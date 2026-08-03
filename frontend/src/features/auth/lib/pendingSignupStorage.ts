@@ -49,7 +49,7 @@ export async function applyPendingShopSectorFromStorage(user: User): Promise<boo
 
   try {
     const shop = await getMyShop();
-    if (shop?.sector?.trim()) {
+    if (shop.sector.trim()) {
       return false;
     }
     await patchMyShop({ sector: pending.sector });

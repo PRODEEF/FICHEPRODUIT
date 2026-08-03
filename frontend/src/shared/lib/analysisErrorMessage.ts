@@ -1,12 +1,11 @@
 import type { AnalysisErrorCode } from '@types-api';
 
 /** Message générique quand le site ne répond pas ou est introuvable. */
-export const ANALYSIS_SITE_UNREACHABLE_MESSAGE =
-  'Le site est inaccessible ou introuvable.';
+export const ANALYSIS_SITE_UNREACHABLE_MESSAGE = 'Le site est inaccessible ou introuvable.';
 
 /** Message quand le nom de domaine ne résout pas (URL inexistante / faute de frappe). */
 export const ANALYSIS_DNS_NOT_FOUND_MESSAGE =
-  "Impossible de joindre ce site : l’adresse n’existe pas ou est incorrecte.";
+  'Impossible de joindre ce site : l’adresse n’existe pas ou est incorrecte.';
 
 /** Message quand le site met trop de temps à répondre. */
 export const ANALYSIS_SITE_TIMEOUT_MESSAGE =
@@ -86,7 +85,7 @@ function sanitizeTechnicalAnalysisError(raw: string): string {
   }
 
   if (/^HTTP \d{3}/i.test(raw)) {
-    return "Le site a renvoyé une erreur et n’a pas pu être analysé.";
+    return 'Le site a renvoyé une erreur et n’a pas pu être analysé.';
   }
 
   if (/\b(E[A-Z0-9]{3,})\b/.test(raw) || /^[A-Z]{2,}:\s/.test(raw) || lower.includes('syscall')) {
