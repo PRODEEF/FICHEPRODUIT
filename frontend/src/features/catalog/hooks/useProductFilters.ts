@@ -100,6 +100,10 @@ export function useProductFilters(
   const setFilter = useCallback(
     <K extends keyof ProductFilter>(key: K, value: ProductFilter[K]) => {
       setFilters((prev) => {
+        if (prev[key] === value) {
+          return prev;
+        }
+
         const next = { ...prev, [key]: value };
 
         if (key === 'sector' && value !== prev.sector) {

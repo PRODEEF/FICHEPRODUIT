@@ -107,16 +107,19 @@ export function ProductFilters({
           type="button"
           variant="primary"
           size="sm"
-          className={cn(CATALOG_FILTER_CONTROL_HEIGHT_CLASS, 'w-10 shrink-0 p-0')}
+          className={cn(
+            CATALOG_FILTER_CONTROL_HEIGHT_CLASS,
+            'inline-flex shrink-0 items-center gap-2 px-3',
+          )}
           onClick={handleResetClick}
           disabled={!canReset}
-          tooltip="Réinitialiser les filtres"
           aria-label="Réinitialiser les filtres"
         >
           <RefreshCcw
             className={cn('h-5 w-5', isResetAnimating && 'animate-spin motion-reduce:animate-none')}
             aria-hidden
           />
+          Réinitialiser les filtres
         </Button>
       ) : null}
     </div>

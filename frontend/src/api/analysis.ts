@@ -16,67 +16,61 @@ import {
   guestOrAuthHeaders,
   guestOrAuthHeadersNoBody,
 } from './apiAuth';
+import { asRecord, readString } from './parseJsonFields';
 
 // ---------------------------------------------------------------------------
 // Normalisation JSON → Analysis
 // ---------------------------------------------------------------------------
 
 /**
- * Normalise un objet brut venant du réseau en `Analysis`.
- * Retourne null si la forme est invalide (champ id manquant, etc.).
+ * Normalise un objet brut venant du réseau en `Analysis`
+ * Retourne null si la forme est invalide (champ id/url manquant).
  */
 function normalizeAnalysis(raw: unknown): Analysis | null {
-  if (typeof raw !== 'object' || raw === null) return null;
-  const o = raw as Record<string, unknown>;
+  const o = asRecord(raw);
+  if (!o) return null;
 
-  const id = typeof o['id'] === 'string' ? o['id'] : null;
-  const url = typeof o['url'] === 'string' ? o['url'] : null;
+  const id = readString(o, 'id');
+  const url = readString(o, 'url');
   if (!id || !url) return null;
 
-  const status = normalizeStatus(o['status']);
-  const errorCode = normalizeErrorCode(o['errorCode'] ?? o['error_code']);
-  const errorMessage =
-    typeof o['errorMessage'] === 'string'
-      ? o['errorMessage']
-      : typeof o['error_message'] === 'string'
-        ? o['error_message']
-        : null;
-  const userId =
-    typeof o['userId'] === 'string'
-      ? o['userId']
-      : typeof o['user_id'] === 'string'
-        ? o['user_id']
-        : null;
-  const shopId =
-    typeof o['shopId'] === 'string'
-      ? o['shopId']
-      : typeof o['shop_id'] === 'string'
-        ? o['shop_id']
-        : null;
-  const createdAt =
-    typeof o['createdAt'] === 'string'
-      ? o['createdAt']
-      : typeof o['created_at'] === 'string'
-        ? o['created_at']
-        : new Date().toISOString();
-
-  return { id, url, status, errorCode, errorMessage, userId, shopId, createdAt };
+  return {
+    id,
+    url,
+    status: normalizeStatus(o['status']),
+    errorCode: normalizeErrorCode(o['errorCode']),
+    errorMessage: readString(o, 'errorMessage'),
+    userId: readString(o, 'userId'),
+    shopId: readString(o, 'shopId'),
+    createdAt: readString(o, 'createdAt') ?? new Date().toISOString(),
+  };
 }
 
 function normalizeStatus(raw: unknown): Analysis['status'] {
-  if (raw === 'pending') return 'pending';
-  if (raw === 'running' || raw === 'in_progress') return 'running';
-  if (raw === 'done' || raw === 'completed') return 'done';
-  if (raw === 'failed') return 'failed';
+  if (raw === 'pending' || raw === 'running' || raw === 'done' || raw === 'failed') {
+    return raw;
+  }
   return 'pending';
 }
 
 function normalizeErrorCode(raw: unknown): Analysis['errorCode'] {
-  if (raw === 'SITE_UNREACHABLE') return 'SITE_UNREACHABLE';
-  if (raw === 'UNANALYZABLE') return 'UNANALYZABLE';
-  if (raw === 'UNKNOWN_SECTOR') return 'UNKNOWN_SECTOR';
-  if (raw === 'INTERNAL_ERROR') return 'INTERNAL_ERROR';
+  if (
+    raw === 'SITE_UNREACHABLE' ||
+    raw === 'UNANALYZABLE' ||
+    raw === 'UNKNOWN_SECTOR' ||
+    raw === 'INTERNAL_ERROR'
+  ) {
+    return raw;
+  }
   return null;
+}
+
+function requireAnalysis(parsed: unknown): Analysis {
+  const analysis = normalizeAnalysis(parsed);
+  if (!analysis) {
+    throw new Error("Réponse serveur invalide : impossible de lire l'analyse (JSON inattendu).");
+  }
+  return analysis;
 }
 
 // ---------------------------------------------------------------------------
@@ -98,12 +92,7 @@ export async function createAnalysis(url: string): Promise<Analysis> {
     headers: await guestOrAuthHeaders(),
     body: JSON.stringify(body),
   });
-
-  const analysis = normalizeAnalysis(parsed);
-  if (!analysis) {
-    throw new Error("Réponse serveur invalide : impossible de lire l'analyse (JSON inattendu).");
-  }
-  return analysis;
+  return requireAnalysis(parsed);
 }
 
 /**
@@ -117,12 +106,7 @@ export async function getAnalysis(id: string): Promise<Analysis> {
     method: 'GET',
     headers: await guestOrAuthHeadersNoBody(),
   });
-
-  const analysis = normalizeAnalysis(parsed);
-  if (!analysis) {
-    throw new Error("Réponse serveur invalide : impossible de lire l'analyse (JSON inattendu).");
-  }
-  return analysis;
+  return requireAnalysis(parsed);
 }
 
 /**
@@ -142,8 +126,8 @@ export async function listAnalyses(): Promise<Analysis[]> {
 
   const out: Analysis[] = [];
   for (const item of parsed) {
-    const a = normalizeAnalysis(item);
-    if (a) out.push(a);
+    const analysis = normalizeAnalysis(item);
+    if (analysis) out.push(analysis);
   }
   return out;
 }

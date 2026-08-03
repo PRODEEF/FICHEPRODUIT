@@ -2,6 +2,7 @@ import { Injectable, InternalServerErrorException, Logger } from "@nestjs/common
 import { SupabaseService } from "../../core/supabase/supabase.service";
 import type { Database, Json } from "../../core/supabase/database.types";
 import { parseCategoryTree } from "./dto/shop-category-tree.schema";
+import { mergeShopBrands, mergeShopCategoryTrees } from "./shop-catalog-merge";
 import type { IShopRepository } from "./shop.repository.interface";
 import type { CreateShop, Shop, UpdateShop, UpsertShopFromAnalysis } from "./types/shop.types";
 import type { ShopCategoryNode } from "./types/shop-category.types";
@@ -140,13 +141,17 @@ export class ShopRepository implements IShopRepository {
     const prev = existing.data as ShopRow | null;
 
     if (prev) {
+      // Même URL : fusionne marques et catégories détectées avec l’existant.
+      const prevEntity = this.toEntity(prev);
       const { data: updated, error } = await client
         .from("shops")
         .update({
           name: data.name,
           cms: data.cms,
-          brands: data.brands,
-          category_tree: categoryTreeToJson(data.categoryTree),
+          brands: mergeShopBrands(prevEntity.brands, data.brands),
+          category_tree: categoryTreeToJson(
+            mergeShopCategoryTrees(prevEntity.categoryTree, data.categoryTree),
+          ),
         })
         .eq("id", prev.id)
         .select()

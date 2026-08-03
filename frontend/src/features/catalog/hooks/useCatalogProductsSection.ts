@@ -30,7 +30,10 @@ export function useCatalogProductsSection({
 }: UseCatalogProductsSectionOptions) {
   const [removedIds, setRemovedIds] = useState<Set<string>>(() => new Set());
 
-  const allProducts = products.filter((p) => !removedIds.has(p.id));
+  const allProducts = useMemo(
+    () => products.filter((p) => !removedIds.has(p.id)),
+    [products, removedIds],
+  );
 
   const {
     filters,
@@ -55,8 +58,10 @@ export function useCatalogProductsSection({
     if (shouldRelaxSectorFilterForBrand(canonicalExternalBrand, filters.sector, 0, allProducts)) {
       setFilter('sector', '');
     }
-    setFilter('brand', canonicalExternalBrand);
-  }, [canonicalExternalBrand, allProducts, filters.sector, setFilter]);
+    if (filters.brand !== canonicalExternalBrand) {
+      setFilter('brand', canonicalExternalBrand);
+    }
+  }, [canonicalExternalBrand, allProducts, filters.sector, filters.brand, setFilter]);
 
   const handleBrandChange = useCallback(
     (brand: string) => {

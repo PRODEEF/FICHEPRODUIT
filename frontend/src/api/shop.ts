@@ -1,78 +1,72 @@
 /**
  * Client API — magasin connecté (`/api/shop`).
+ *
+ * Routes NestJS :
+ *   GET   /api/shop          (auth optionnelle — cookie invité + shopId query)
+ *   PATCH /api/shop          (auth requise)
  */
 
-import type { Shop, PatchMyShopBody, CmsType, ShopCategoryNode } from './types/api.types';
+import type { CmsType, PatchMyShopBody, Shop, ShopCategoryNode } from '@types-api';
+
 import { getApiBaseUrl } from './apiBase';
-import { apiFetch, authHeaders, guestOrAuthHeadersNoBody, extractErrorMessage } from './apiAuth';
+import { apiFetch, ApiHttpError, authHeaders, guestOrAuthHeadersNoBody } from './apiAuth';
+import { asRecord, readString, readStringArray } from './parseJsonFields';
+
+// ---------------------------------------------------------------------------
+// Normalisation JSON → Shop
+// ---------------------------------------------------------------------------
 
 function normalizeCms(raw: unknown): CmsType {
   if (raw === 'prestashop' || raw === 'shopify' || raw === 'woocommerce') {
     return raw;
   }
-  if (raw === 'autre' || raw === 'other') {
-    return 'autre';
-  }
-  if (raw === 'inconnu' || raw === 'unknown') {
-    return 'inconnu';
-  }
+  if (raw === 'autre' || raw === 'other') return 'autre';
+  if (raw === 'inconnu' || raw === 'unknown') return 'inconnu';
   return 'inconnu';
 }
 
 function normalizeCategoryNode(raw: unknown): ShopCategoryNode | null {
-  if (typeof raw !== 'object' || raw === null) return null;
-  const o = raw as Record<string, unknown>;
-  const id = typeof o['id'] === 'string' ? o['id'].trim() : '';
-  const name = typeof o['name'] === 'string' ? o['name'].trim() : '';
+  const o = asRecord(raw);
+  if (!o) return null;
+
+  const id = readString(o, 'id')?.trim() ?? '';
+  const name = readString(o, 'name')?.trim() ?? '';
   if (!id || !name) return null;
+
   const childrenRaw = Array.isArray(o['children']) ? o['children'] : [];
   const children = childrenRaw
     .map(normalizeCategoryNode)
-    .filter((n): n is ShopCategoryNode => n !== null);
+    .filter((node): node is ShopCategoryNode => node !== null);
+
   return { id, name, children };
 }
 
 function normalizeCategoryTree(raw: unknown): ShopCategoryNode[] {
   if (!Array.isArray(raw)) return [];
-  return raw.map(normalizeCategoryNode).filter((n): n is ShopCategoryNode => n !== null);
+  return raw.map(normalizeCategoryNode).filter((node): node is ShopCategoryNode => node !== null);
 }
 
+/**
+ * Normalise un objet brut venant du réseau en `Shop`
+ * Retourne null si `id` ou `name` est manquant.
+ */
 export function normalizeShop(raw: unknown): Shop | null {
-  if (typeof raw !== 'object' || raw === null) return null;
-  const o = raw as Record<string, unknown>;
+  const o = asRecord(raw);
+  if (!o) return null;
 
-  const id = typeof o['id'] === 'string' ? o['id'] : null;
-  const name = typeof o['name'] === 'string' ? o['name'] : null;
-  const url = typeof o['url'] === 'string' ? o['url'] : '';
+  const id = readString(o, 'id');
+  const name = readString(o, 'name');
   if (!id || !name) return null;
 
-  const sector = typeof o['sector'] === 'string' && o['sector'].trim() ? o['sector'].trim() : null;
-  const rawOwner =
-    typeof o['ownerId'] === 'string'
-      ? o['ownerId']
-      : typeof o['owner_id'] === 'string'
-        ? o['owner_id']
-        : null;
+  const url = readString(o, 'url') ?? '';
+  const sectorRaw = readString(o, 'sector')?.trim();
+  const sector = sectorRaw && sectorRaw.length > 0 ? sectorRaw : 'Autres';
+
+  const rawOwner = readString(o, 'ownerId');
   const ownerId = rawOwner?.trim() ? rawOwner : '';
-  const createdAt =
-    typeof o['createdAt'] === 'string'
-      ? o['createdAt']
-      : typeof o['created_at'] === 'string'
-        ? o['created_at']
-        : new Date().toISOString();
-  const updatedAt =
-    typeof o['updatedAt'] === 'string'
-      ? o['updatedAt']
-      : typeof o['updated_at'] === 'string'
-        ? o['updated_at']
-        : createdAt;
 
-  const brands = Array.isArray(o['brands'])
-    ? (o['brands'] as unknown[]).filter((x): x is string => typeof x === 'string')
-    : [];
-
-  const categoryTreeRaw = o['categoryTree'] ?? o['category_tree'];
-  const categoryTree = normalizeCategoryTree(categoryTreeRaw);
+  const createdAt = readString(o, 'createdAt') ?? new Date().toISOString();
+  const updatedAt = readString(o, 'updatedAt') ?? createdAt;
 
   return {
     id,
@@ -80,13 +74,17 @@ export function normalizeShop(raw: unknown): Shop | null {
     url,
     cms: normalizeCms(o['cms']),
     sector,
-    brands,
-    categoryTree,
+    brands: readStringArray(o['brands']),
+    categoryTree: normalizeCategoryTree(o['categoryTree']),
     ownerId,
     createdAt,
     updatedAt,
   };
 }
+
+// ---------------------------------------------------------------------------
+// API calls
+// ---------------------------------------------------------------------------
 
 /**
  * Récupère le magasin : compte connecté (`GET /api/shop`) ou invité avec `shopId` en query.
@@ -94,54 +92,28 @@ export function normalizeShop(raw: unknown): Shop | null {
  *
  * @param shopIdForGuest - Obligatoire sans JWT : UUID de la boutique (`analysis.shopId`).
  * @returns `null` si aucun magasin (404), sans lever d'erreur.
- * @throws {Error} 401, 500 ou réseau.
+ * @throws {ApiHttpError} 401, 403, 500 ou réseau.
  */
 export async function getMyShop(shopIdForGuest?: string): Promise<Shop | null> {
-  const base = getApiBaseUrl();
-  const qs =
-    shopIdForGuest && shopIdForGuest.trim().length > 0
-      ? `?shopId=${encodeURIComponent(shopIdForGuest.trim())}`
-      : '';
-  const url = `${base}/api/shop${qs}`;
-  const res = await fetch(url, {
-    method: 'GET',
-    headers: await guestOrAuthHeadersNoBody(),
-    credentials: 'include',
-  });
+  const guestId = shopIdForGuest?.trim();
+  const qs = guestId && guestId.length > 0 ? `?shopId=${encodeURIComponent(guestId)}` : '';
 
-  if (res.status === 404) {
-    return null;
+  try {
+    const { parsed } = await apiFetch(`${getApiBaseUrl()}/api/shop${qs}`, {
+      method: 'GET',
+      headers: await guestOrAuthHeadersNoBody(),
+    });
+    return normalizeShop(parsed);
+  } catch (err) {
+    if (err instanceof ApiHttpError && err.status === 404) return null;
+    throw err;
   }
-
-  const text = await res.text();
-  let parsed: unknown = null;
-  if (text.length > 0) {
-    try {
-      parsed = JSON.parse(text);
-    } catch {
-      if (!res.ok) {
-        throw new Error(`Réponse non-JSON du serveur (${res.status}).`);
-      }
-    }
-  }
-
-  if (!res.ok) {
-    if (res.status === 401) {
-      throw new Error('Session expirée ou non autorisée. Reconnecte-toi.');
-    }
-    if (res.status === 403) {
-      throw new Error('Accès refusé.');
-    }
-    throw new Error(extractErrorMessage(parsed, `Erreur serveur (${res.status}).`));
-  }
-
-  return normalizeShop(parsed);
 }
 
 /**
  * Met à jour le magasin (PATCH partiel).
  *
- * @throws {Error} 400, 401, 404 ou réseau.
+ * @throws {ApiHttpError} 400, 401, 404 ou réseau.
  */
 export async function patchMyShop(body: PatchMyShopBody): Promise<Shop> {
   const payload: PatchMyShopBody = { ...body };
@@ -152,7 +124,6 @@ export async function patchMyShop(body: PatchMyShopBody): Promise<Shop> {
     method: 'PATCH',
     headers: await authHeaders(),
     body: JSON.stringify(payload),
-    credentials: 'include',
   });
 
   const shop = normalizeShop(parsed);

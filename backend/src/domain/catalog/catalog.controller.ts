@@ -69,6 +69,26 @@ export class CatalogController {
     return this.catalogService.listCatalogProductsByShopBrandsForGuest(shopId, sessionId);
   }
 
+  @Get("brands-by-sector/:sector")
+  @UseGuards(OptionalJwtGuard)
+  @ApiBearerAuth("bearerAuth")
+  @ApiParam({
+    name: "sector",
+    description: "Label secteur boutique (ex. Glisse, Vélo).",
+  })
+  @ApiOperation({
+    summary: "Marques catalogue distinctes pour un secteur",
+    description:
+      "Retourne jusqu’à 50 marques distinctes présentes dans le catalogue pour le secteur donné (suggestions magasin).",
+  })
+  @ApiOkResponse({
+    schema: { type: "array", items: { type: "string" } },
+    description: "Liste de noms de marques triée alphabétiquement",
+  })
+  listBrandsBySector(@Param("sector") sector: string): Promise<string[]> {
+    return this.catalogService.listBrandsBySector(decodeURIComponent(sector));
+  }
+
   @Get(":id")
   @UseGuards(OptionalJwtGuard)
   @ApiBearerAuth("bearerAuth")

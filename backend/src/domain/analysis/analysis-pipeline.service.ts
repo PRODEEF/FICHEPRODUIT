@@ -6,6 +6,7 @@ import { SiteCategoryExtractorService } from "../../core/scraper/site-category-e
 import { ShopService } from "../shop/shop.service";
 import { ANALYSIS_REPOSITORY, type IAnalysisRepository } from "./analysis.repository.interface";
 import type { Analysis } from "./analysis.types";
+import { toUserFacingSiteUnreachableMessage } from "./analysis-user-messages";
 
 @Injectable()
 export class AnalysisPipelineService {
@@ -48,7 +49,7 @@ export class AnalysisPipelineService {
           {
             status: "failed",
             errorCode: "SITE_UNREACHABLE",
-            errorMessage: scrapeResult.error,
+            errorMessage: toUserFacingSiteUnreachableMessage(scrapeResult.error),
           },
           accessToken,
           analysis.sessionId,

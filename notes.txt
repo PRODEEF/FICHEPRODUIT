@@ -1,0 +1,13 @@
+
+Compte:
+- Mail non modifiable => détails, si je m'ennuie
+- Pas de validation du compte par mail => remettre la validation du mail -> mode "bloqué" tant que pas validé
+- Pas moyen de supprimer son compte => à ajouter
+- on ne reçoit pas les mails sur outlook
+
+Ajouter CGU, politique de confidentialité et autres accessible partout dans l'app (ex: footer) => à finir de compléter
+
+- filtres par année ne fonctionne pas ??
+
+BUG:
+créer compte avec url -> modal puis catalog puis re analyse
