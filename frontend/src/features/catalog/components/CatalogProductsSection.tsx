@@ -52,7 +52,7 @@ export function CatalogProductsSection({
 
       <p className="mb-4 text-sm text-text-secondary">
         {hasShopBrands
-          ? 'Voici les fiches produits disponibles correspondant aux marques de votre boutique.'
+          ? 'Voici les fiches correspondant aux marques de votre boutique. Le secteur de votre magasin est appliqué par défaut\u00a0; choisissez «\u00a0Tous\u00a0» dans le filtre Secteur pour voir aussi les fiches hors-secteur.'
           : 'Voici des exemples issus du catalogue global (toutes marques disponibles).'}
       </p>
 
@@ -78,6 +78,7 @@ export function CatalogProductsSection({
           <ProductResultsToolbar
             isConnected={isConnected}
             totalCount={section.displayProducts.length}
+            loadedCount={section.allProducts.length}
             selectedCount={section.selectedInViewCount}
             onDelete={section.deleteSelected}
             onExport={() => {

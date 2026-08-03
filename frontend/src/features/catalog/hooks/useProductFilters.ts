@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import type { CatalogProduct } from '@types-api';
+import { catalogSectorsMatch } from '@shared/lib/shopSectors';
 
 import type { CatalogProductPayloadMetadata, ProductFilter } from '../types';
 import {
@@ -15,6 +16,7 @@ import {
   findOptionCaseInsensitive,
   optionIncludedCaseInsensitive,
 } from '../lib/catalogFilterOptions';
+import { uniqueSortedCaseInsensitive } from '../lib/productUtils';
 
 interface UseProductFiltersResult {
   filters: ProductFilter;
@@ -26,10 +28,6 @@ interface UseProductFiltersResult {
   categoryOptions: string[];
   subCategoryOptions: string[];
   yearOptions: string[];
-}
-
-function matchesSector(product: CatalogProduct, sector: string): boolean {
-  return product.sector.trim().toLowerCase() === sector.trim().toLowerCase();
 }
 
 function pruneDependentFilters(
@@ -107,8 +105,11 @@ export function useProductFilters(
         if (key === 'sector' && value !== prev.sector) {
           next.category = '';
           next.subCategory = '';
-          next.brand = '';
           next.year = '';
+          // Conserver la marque quand on passe à « Tous » (ex. chip hors-secteur).
+          if (typeof value === 'string' && value.trim()) {
+            next.brand = '';
+          }
         } else if (key === 'category' && value !== prev.category) {
           next.subCategory = '';
           next.brand = '';
@@ -162,6 +163,12 @@ export function useProductFilters(
     return fromScope.filter((b) => shopLower.has(b.toLowerCase()));
   }, [products, parentFilters, shopBrands]);
 
+  /** Marques présentes dans le chargement (tous secteurs) — pour ne pas prune une marque hors-secteur. */
+  const brandsPresentInProducts = useMemo(
+    () => uniqueSortedCaseInsensitive(products.map((p) => p.brand).filter(Boolean)),
+    [products],
+  );
+
   const yearOptions = useMemo(
     () => buildYearOptions(products, parentFilters),
     [products, parentFilters],
@@ -179,11 +186,11 @@ export function useProductFilters(
         {
           categoryOptions,
           subCategoryOptions,
-          brandOptions,
+          brandOptions: brandsPresentInProducts,
           yearOptions,
         },
       ),
-    [filters, categoryOptions, subCategoryOptions, brandOptions, yearOptions],
+    [filters, categoryOptions, subCategoryOptions, brandsPresentInProducts, yearOptions],
   );
 
   if (
@@ -198,7 +205,7 @@ export function useProductFilters(
   const filteredProducts = useMemo(() => {
     const q = filters.search.trim().toLowerCase();
     return products.filter((p) => {
-      if (filters.sector && !matchesSector(p, filters.sector)) return false;
+      if (filters.sector && !catalogSectorsMatch(p.sector, filters.sector)) return false;
       if (filters.category && p.category !== filters.category) return false;
       if (filters.subCategory && p.subCategory !== filters.subCategory) return false;
       if (filters.brand && p.brand.toLowerCase() !== filters.brand.toLowerCase()) return false;

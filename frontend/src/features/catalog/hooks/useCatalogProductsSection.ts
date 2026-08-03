@@ -5,6 +5,7 @@ import type { CatalogProduct } from '@types-api';
 import { useCatalogProductExport } from './useCatalogProductExport';
 import type { CatalogProductPayloadMetadata, ProductFilter } from '../types';
 import { findOptionCaseInsensitive } from '../lib/catalogFilterOptions';
+import { shouldRelaxSectorFilterForBrand } from '../lib/shouldRelaxSectorFilterForBrand';
 import { useProductFilters } from './useProductFilters';
 import { useProductSelection } from './useProductSelection';
 
@@ -51,15 +52,21 @@ export function useCatalogProductsSection({
 
   useEffect(() => {
     if (canonicalExternalBrand === undefined) return;
+    if (shouldRelaxSectorFilterForBrand(canonicalExternalBrand, filters.sector, 0, allProducts)) {
+      setFilter('sector', '');
+    }
     setFilter('brand', canonicalExternalBrand);
-  }, [canonicalExternalBrand, setFilter]);
+  }, [canonicalExternalBrand, allProducts, filters.sector, setFilter]);
 
   const handleBrandChange = useCallback(
     (brand: string) => {
+      if (shouldRelaxSectorFilterForBrand(brand, filters.sector, 0, allProducts)) {
+        setFilter('sector', '');
+      }
       setFilter('brand', brand);
       onBrandFilterChange?.(brand);
     },
-    [setFilter, onBrandFilterChange],
+    [allProducts, filters.sector, setFilter, onBrandFilterChange],
   );
 
   const handleResetFilters = useCallback(() => {
@@ -75,6 +82,24 @@ export function useCatalogProductsSection({
     canonicalExternalBrand !== undefined && canonicalExternalBrand !== filters.brand
       ? { ...filters, brand: canonicalExternalBrand }
       : filters;
+
+  /**
+   * Si une marque est active et qu'aucun produit n'est visible alors que des fiches
+   * de cette marque existent hors-secteur, passer le secteur à « Tous ».
+   */
+  useEffect(() => {
+    if (
+      !shouldRelaxSectorFilterForBrand(
+        effectiveFilters.brand,
+        filters.sector,
+        filteredProducts.length,
+        allProducts,
+      )
+    ) {
+      return;
+    }
+    setFilter('sector', '');
+  }, [allProducts, effectiveFilters.brand, filteredProducts.length, filters.sector, setFilter]);
 
   const displayProducts = filteredProducts;
 

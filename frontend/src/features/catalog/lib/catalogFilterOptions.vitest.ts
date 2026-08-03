@@ -121,6 +121,21 @@ describe('buildBrandOptions', () => {
     });
     expect(options).not.toContain('GardenPro');
   });
+
+  it('déduplique les marques qui ne diffèrent que par la casse', () => {
+    const withCasingVariants = [
+      product({ id: 'a', brand: 'F-One', sector: 'Glisse', category: 'Voiles' }),
+      product({ id: 'b', brand: 'F-ONE', sector: 'Glisse', category: 'Voiles' }),
+      product({ id: 'c', brand: 'Duotone', sector: 'Glisse', category: 'Voiles' }),
+    ];
+    const options = buildBrandOptions(withCasingVariants, {
+      sector: 'Glisse',
+      category: '',
+      subCategory: '',
+      brand: '',
+    });
+    expect(options).toEqual(['Duotone', 'F-One']);
+  });
 });
 
 describe('buildYearOptions', () => {
@@ -144,6 +159,27 @@ describe('comparaison secteur insensible à la casse', () => {
       brand: '',
     });
     expect(options).toEqual(['Planches', 'Voiles']);
+  });
+
+  it('filtre le scope sur le secteur Autres', () => {
+    const withAutres = [
+      ...sampleProducts,
+      product({
+        id: '4',
+        brand: 'MiscCo',
+        sector: 'Autres',
+        category: 'Divers',
+        subCategory: 'X',
+        year: 2022,
+      }),
+    ];
+    const options = buildCategoryOptions(withAutres, {
+      sector: 'Autres',
+      category: '',
+      subCategory: '',
+      brand: '',
+    });
+    expect(options).toEqual(['Divers']);
   });
 });
 
