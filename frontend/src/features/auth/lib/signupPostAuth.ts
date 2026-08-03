@@ -39,10 +39,12 @@ export async function handleSignupWithActiveSession({
   const claimed = await claimGuestSessionIfPresent(accessToken);
 
   const repo = createSupabaseUserRepository(supabase);
+  // Session immédiate : l'analyse (ou le claim) couvre ce parcours — ne pas laisser le
+  // drapeau pour `useSignupAutoAnalyze` après navigation vers /catalog.
   await repo.updateProfile(userId, {
     username: normalizedUsername,
     website_url: websiteUrl === '' ? null : websiteUrl,
-    pending_auto_analyze: claimed ? false : websiteUrl !== '',
+    pending_auto_analyze: false,
   });
   await patchMyShop({ sector });
   await refreshProfile();
@@ -53,6 +55,9 @@ export async function handleSignupWithActiveSession({
   }
 
   if (websiteUrl) {
+    // Défensif : purger avant l'analyse pour éviter un second déclenchement sur /catalog.
+    await clearPendingAutoAnalyzeForUser(userId);
+    await refreshProfile();
     const outcome = await runAnalysis(websiteUrl);
     await clearPendingAutoAnalyzeForUser(userId);
     if (outcome === 'error_alert') return 'analysis_error';

@@ -9,10 +9,10 @@ interface UseSignupAutoAnalyzeParams {
 
 /**
  * Lance une analyse automatique après inscription lorsque le profil porte encore le drapeau
- * `pending_auto_analyze`, puis purge ce drapeau côté API.
+ * `pending_auto_analyze` (parcours confirmation e-mail différée), puis purge ce drapeau.
  */
 export function useSignupAutoAnalyze({ runAnalysis }: UseSignupAutoAnalyzeParams) {
-  const { user, profile, profileLoading, loading: authLoading } = useAuth();
+  const { user, profile, profileLoading, loading: authLoading, refreshProfile } = useAuth();
   const signupAutoTriggeredRef = useRef(false);
 
   useEffect(() => {
@@ -33,11 +33,10 @@ export function useSignupAutoAnalyze({ runAnalysis }: UseSignupAutoAnalyzeParams
     }
 
     void (async () => {
-      try {
-        await runAnalysis(rawUrl);
-      } finally {
-        await clearPendingAutoAnalyzeForUser(user.id);
-      }
+      // Purger + synchroniser AuthContext avant l'analyse pour éviter un re-déclenchement au remount.
+      await clearPendingAutoAnalyzeForUser(user.id);
+      await refreshProfile();
+      await runAnalysis(rawUrl);
     })();
-  }, [authLoading, profileLoading, user, profile, runAnalysis]);
+  }, [authLoading, profileLoading, user, profile, runAnalysis, refreshProfile]);
 }
