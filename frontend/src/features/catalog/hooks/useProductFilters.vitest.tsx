@@ -39,7 +39,7 @@ const products: CatalogProduct[] = [
     id: '3',
     name: 'Aile Gamma',
     brand: 'Nike',
-    sector: 'Autre',
+    sector: 'Autres',
     category: 'Kitesurf',
     year: 2024,
   }),
@@ -86,7 +86,7 @@ describe('useProductFilters', () => {
 
     act(() => {
       result.current.setFilter('search', 'aile');
-      result.current.setFilter('sector', 'Autre');
+      result.current.setFilter('sector', 'Autres');
     });
 
     act(() => {
@@ -96,5 +96,54 @@ describe('useProductFilters', () => {
     expect(result.current.filters.search).toBe('');
     expect(result.current.filters.sector).toBe('Glisse');
     expect(result.current.hasActiveFilters).toBe(false);
+  });
+
+  it('filtre les produits du secteur Autres', () => {
+    const { result } = renderHook(() => useProductFilters(products, null, undefined, 'Glisse'));
+
+    act(() => {
+      result.current.setFilter('sector', 'Autres');
+    });
+
+    expect(result.current.filteredProducts.map((p) => p.id)).toEqual(['3']);
+  });
+
+  it('affiche les produits hors-secteur quand le secteur est Tous', () => {
+    const { result } = renderHook(() => useProductFilters(products, null, undefined, 'Glisse'));
+
+    act(() => {
+      result.current.setFilter('sector', '');
+    });
+
+    expect(result.current.filteredProducts.map((p) => p.id)).toEqual(['1', '2', '3']);
+  });
+
+  it('conserve la marque quand on passe le secteur à Tous', () => {
+    const { result } = renderHook(() => useProductFilters(products, null, undefined, 'Glisse'));
+
+    act(() => {
+      result.current.setFilter('brand', 'Nike');
+    });
+
+    act(() => {
+      result.current.setFilter('sector', '');
+    });
+
+    expect(result.current.filters.brand).toBe('Nike');
+    expect(result.current.filteredProducts.map((p) => p.id)).toEqual(['1', '3']);
+  });
+
+  it('efface la marque quand on change vers un autre secteur non vide', () => {
+    const { result } = renderHook(() => useProductFilters(products, null, undefined, 'Glisse'));
+
+    act(() => {
+      result.current.setFilter('brand', 'Nike');
+    });
+
+    act(() => {
+      result.current.setFilter('sector', 'Vélo');
+    });
+
+    expect(result.current.filters.brand).toBe('');
   });
 });
