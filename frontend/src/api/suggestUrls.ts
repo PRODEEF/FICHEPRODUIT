@@ -5,13 +5,12 @@
  *
  * Prend un hint textuel ("Décathlon", "shop kitesurf bordelais") et retourne
  * une liste d'URLs de sites e-commerce candidates.
- *
- * Pas de normalisation complexe ici : la réponse est simple.
  */
 
-import { getApiBaseUrl } from './apiBase';
-import { getSupabaseSessionAuthHeaders } from './nestHttpClient';
-import type { SuggestUrlsBody, SuggestUrlsResponse } from './types/api.types';
+import type { SuggestUrlsBody, SuggestUrlsResponse } from '@types-api';
+
+import { getSupabaseSessionAuthHeaders, NestHttpError, requestNestJson } from './nestHttpClient';
+import { asRecord, readStringArray } from './parseJsonFields';
 
 /**
  * Demande des suggestions d'URLs pour une saisie libre.
@@ -23,27 +22,21 @@ import type { SuggestUrlsBody, SuggestUrlsResponse } from './types/api.types';
 export async function fetchSuggestUrls(q: string): Promise<string[]> {
   const body: SuggestUrlsBody = { q: q.trim() };
 
-  const res = await fetch(`${getApiBaseUrl()}/api/suggest-urls`, {
-    method: 'POST',
-    headers: await getSupabaseSessionAuthHeaders(),
-    body: JSON.stringify(body),
-  });
+  try {
+    const data = await requestNestJson<SuggestUrlsResponse>({
+      method: 'POST',
+      path: '/suggest-urls',
+      body,
+      authHeaders: getSupabaseSessionAuthHeaders,
+    });
 
-  if (!res.ok) {
-    throw new Error(`Suggest request failed: ${res.status}`);
+    const o = asRecord(data);
+    if (!o) return [];
+    return readStringArray(o['urls']);
+  } catch (err) {
+    if (err instanceof NestHttpError) {
+      throw new Error(`Suggest request failed: ${err.status}`, { cause: err });
+    }
+    throw err;
   }
-
-  const data: unknown = await res.json();
-
-  // Normalisation défensive : on attend { urls: string[] }
-  if (
-    data !== null &&
-    typeof data === 'object' &&
-    'urls' in data &&
-    Array.isArray((data as SuggestUrlsResponse).urls)
-  ) {
-    return (data as SuggestUrlsResponse).urls.filter((u) => typeof u === 'string');
-  }
-
-  return [];
 }

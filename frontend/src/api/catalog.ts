@@ -1,6 +1,23 @@
-import type { CatalogProduct } from './types/api.types';
+/**
+ * Client API — Catalogue produits
+ *
+ * Routes NestJS :
+ *   GET  /api/catalog/products/by-shop-brands/:shopId
+ *   POST /api/catalog/products/search
+ *   GET  /api/catalog/products/brands-by-sector/:sector
+ */
+
+import type { CatalogProduct } from '@types-api';
+
 import { getApiBaseUrl } from './apiBase';
 import { apiFetch, guestOrAuthHeaders, guestOrAuthHeadersNoBody } from './apiAuth';
+import {
+  asRecord,
+  readNumber,
+  readString,
+  readStringArray,
+  readStringRecord,
+} from './parseJsonFields';
 
 export interface CatalogSearchCriteria {
   sector?: string;
@@ -15,34 +32,19 @@ export interface CatalogSearchCriteria {
   limit?: number;
 }
 
+/**
+ * Normalise un produit catalogue (contrat Nest — `CatalogProductResponseDto`).
+ */
 function normalizeCatalogProduct(raw: unknown): CatalogProduct | null {
-  if (typeof raw !== 'object' || raw === null) return null;
-  const o = raw as Record<string, unknown>;
-  const id = typeof o['id'] === 'string' ? o['id'] : null;
-  const name = typeof o['name'] === 'string' ? o['name'] : null;
-  const brand = typeof o['brand'] === 'string' ? o['brand'] : null;
-  const sector = typeof o['sector'] === 'string' ? o['sector'] : null;
-  const category = typeof o['category'] === 'string' ? o['category'] : null;
-  if (!id || !name || !brand || !sector || !category) return null;
+  const o = asRecord(raw);
+  if (!o) return null;
 
-  const subCategory = typeof o['subCategory'] === 'string' ? o['subCategory'] : null;
-  const year = typeof o['year'] === 'number' ? o['year'] : 0;
-  const price = typeof o['price'] === 'number' ? o['price'] : 0;
-  const description = typeof o['description'] === 'string' ? o['description'] : '';
-  const detailedDescription =
-    typeof o['detailedDescription'] === 'string' ? o['detailedDescription'] : '';
-  const images = Array.isArray(o['images'])
-    ? (o['images'] as unknown[]).filter((x): x is string => typeof x === 'string')
-    : [];
-  const url = typeof o['url'] === 'string' ? o['url'] : '';
-  const attributes =
-    typeof o['attributes'] === 'object' && o['attributes'] !== null
-      ? Object.fromEntries(
-          Object.entries(o['attributes'] as Record<string, unknown>).filter(
-            (entry): entry is [string, string] => typeof entry[1] === 'string',
-          ),
-        )
-      : {};
+  const id = readString(o, 'id');
+  const name = readString(o, 'name');
+  const brand = readString(o, 'brand');
+  const sector = readString(o, 'sector');
+  const category = readString(o, 'category');
+  if (!id || !name || !brand || !sector || !category) return null;
 
   return {
     id,
@@ -50,14 +52,14 @@ function normalizeCatalogProduct(raw: unknown): CatalogProduct | null {
     brand,
     sector,
     category,
-    subCategory,
-    year,
-    price,
-    description,
-    detailedDescription,
-    images,
-    url,
-    attributes,
+    subCategory: readString(o, 'subCategory'),
+    year: readNumber(o, 'year') ?? 0,
+    price: readNumber(o, 'price') ?? 0,
+    description: readString(o, 'description') ?? '',
+    detailedDescription: readString(o, 'detailedDescription') ?? '',
+    images: readStringArray(o['images']),
+    url: readString(o, 'url') ?? '',
+    attributes: readStringRecord(o['attributes']),
   };
 }
 
@@ -114,5 +116,5 @@ export async function fetchBrandsBySector(sector: string): Promise<string[]> {
   if (!Array.isArray(parsed)) {
     throw new Error('Réponse serveur invalide : liste de marques attendue.');
   }
-  return (parsed as unknown[]).filter((item): item is string => typeof item === 'string');
+  return readStringArray(parsed);
 }

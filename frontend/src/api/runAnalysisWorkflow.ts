@@ -10,7 +10,8 @@
 import { toUserFacingAnalysisError } from '@shared/lib/analysisErrorMessage';
 import { sleep } from '@shared/lib/sleep';
 
-import type { Analysis } from './types/api.types';
+import type { Analysis } from '@types-api';
+
 import { createAnalysis, getAnalysis } from './analysis';
 
 const POLL_INTERVAL_MS = 800;
