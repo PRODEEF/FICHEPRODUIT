@@ -46,7 +46,7 @@ export function normalizeShop(raw: unknown): Shop | null {
   const url = typeof o['url'] === 'string' ? o['url'] : '';
   if (!id || !name) return null;
 
-  const sector = typeof o['sector'] === 'string' && o['sector'].trim() ? o['sector'].trim() : null;
+  const sector = typeof o['sector'] === 'string' && o['sector'].trim() ? o['sector'].trim() : 'Autres';
   const rawOwner =
     typeof o['ownerId'] === 'string'
       ? o['ownerId']
