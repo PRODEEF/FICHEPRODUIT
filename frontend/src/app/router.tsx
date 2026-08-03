@@ -52,6 +52,18 @@ const About = lazy(async () => {
   const m = await import('../features/marketing/pages/About');
   return { default: m.About };
 });
+const TermsOfService = lazy(async () => {
+  const m = await import('../features/marketing/pages/TermsOfService');
+  return { default: m.TermsOfService };
+});
+const PrivacyPolicy = lazy(async () => {
+  const m = await import('../features/marketing/pages/PrivacyPolicy');
+  return { default: m.PrivacyPolicy };
+});
+const LegalNotice = lazy(async () => {
+  const m = await import('../features/marketing/pages/LegalNotice');
+  return { default: m.LegalNotice };
+});
 const BillingSuccess = lazy(async () => {
   const m = await import('../features/billing/pages/BillingSuccess');
   return { default: m.BillingSuccess };
@@ -76,6 +88,9 @@ export const appRouteElements = (
     <Route path="/billing/cancel" element={<BillingCancel />} />
     <Route path="/demo" element={<DemoRequest />} />
     <Route path="/about" element={<About />} />
+    <Route path="/cgu" element={<TermsOfService />} />
+    <Route path="/confidentialite" element={<PrivacyPolicy />} />
+    <Route path="/mentions-legales" element={<LegalNotice />} />
 
     <Route element={<RequireAuthRoute />}>
       <Route path="/catalog" element={<Catalog />} />

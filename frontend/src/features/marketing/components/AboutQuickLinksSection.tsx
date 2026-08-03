@@ -1,4 +1,4 @@
-import { motion } from 'motion/react';
+﻿import { motion } from 'motion/react';
 
 import { cardReveal, titleReveal } from '@lib/motionVariants';
 import { useScrollReveal } from '@shared/hooks/useScrollReveal';
@@ -21,8 +21,8 @@ export function AboutQuickLinksSection() {
         Envie d&apos;aller plus loin ?
       </motion.h2>
       <motion.p variants={titleReveal} className="mb-8 text-text-secondary">
-        Découvrez ficheproduct en action ou commencez gratuitement.
-        {/* Découvrez ficheproduct en action ou commencez avec 3 crédits offerts. */}
+        Découvrez Fiche Produit en action ou commencez gratuitement.
+        {/* Découvrez Fiche Produit en action ou commencez avec 3 crédits offerts. */}
       </motion.p>
       <motion.div
         variants={titleReveal}

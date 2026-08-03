@@ -1,9 +1,9 @@
-import { describe, expect, it } from 'vitest';
+﻿import { describe, expect, it } from 'vitest';
 
 import { computeSavingsSimulation } from './pricingSimulator';
 
 describe('computeSavingsSimulation', () => {
-  it('calcule coût manuel, ficheproduct et économies (250 fiches, 30 min, 10 €/fiche)', () => {
+  it('calcule coût manuel, Fiche Produit et économies (250 fiches, 30 min, 10 €/fiche)', () => {
     // Manuel : 250 × 30 min / 60 × 20 €/h = 2500 €
     const result = computeSavingsSimulation({
       annualSheets: 250,

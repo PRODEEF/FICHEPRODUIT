@@ -1,9 +1,9 @@
 import { cn } from '@shared/lib/cn';
 import { SHOP_SECTOR_LABELS, type ShopSectorLabel } from '@shared/lib/shopSectors';
-import { universes } from '@shared/lib/universes';
+import { shopSectorUiList } from '@shared/lib/shopSectorUi';
 import { Card } from '@shared/ui';
 
-interface UniverseSelectorProps {
+interface SectorSelectorProps {
   sector: ShopSectorLabel;
   onSelectSector: (sector: ShopSectorLabel) => void;
   /** Affiche le secteur en lecture seule (utilisateur connecté). */
@@ -12,14 +12,14 @@ interface UniverseSelectorProps {
   loading?: boolean;
 }
 
-const universeBySector = new Map(universes.map((universe) => [universe.label, universe]));
+const sectorUiByLabel = new Map(shopSectorUiList.map((item) => [item.label, item]));
 
-function UniverseSelectorLoading() {
+function SectorSelectorLoading() {
   return (
     <div
       className="flex justify-center py-2"
       aria-busy="true"
-      aria-label="Chargement de l'univers produit"
+      aria-label="Chargement du secteur produit"
     >
       <div
         className="h-8 w-8 animate-spin rounded-full border-2 border-purple-200 border-t-purple-600 motion-reduce:animate-none"
@@ -29,16 +29,16 @@ function UniverseSelectorLoading() {
   );
 }
 
-function UniverseSelectorReadOnly({ sector }: { sector: ShopSectorLabel }) {
-  const universe = universeBySector.get(sector);
-  const SectorIcon = universe?.icon;
+function SectorSelectorReadOnly({ sector }: { sector: ShopSectorLabel }) {
+  const sectorUi = sectorUiByLabel.get(sector);
+  const SectorIcon = sectorUi?.icon;
 
   return (
     <section className="mx-auto mb-10 max-w-4xl px-3 sm:px-4">
       <Card className="p-6 sm:p-8">
         <div
           className="flex flex-wrap items-center justify-center gap-2 sm:gap-3"
-          aria-label={`Univers produit : ${sector}`}
+          aria-label={`Secteur produit : ${sector}`}
         >
           <p className="text-sm text-text-muted">Votre secteur produit :</p>
           <span
@@ -57,18 +57,18 @@ function UniverseSelectorReadOnly({ sector }: { sector: ShopSectorLabel }) {
   );
 }
 
-export function UniverseSelector({
+export function SectorSelector({
   sector,
   onSelectSector,
   readOnly = false,
   loading = false,
-}: UniverseSelectorProps) {
+}: SectorSelectorProps) {
   if (loading) {
-    return <UniverseSelectorLoading />;
+    return <SectorSelectorLoading />;
   }
 
   if (readOnly) {
-    return <UniverseSelectorReadOnly sector={sector} />;
+    return <SectorSelectorReadOnly sector={sector} />;
   }
 
   return (
@@ -82,8 +82,8 @@ export function UniverseSelector({
         >
           {SHOP_SECTOR_LABELS.map((sectorLabel) => {
             const isSelected = sector === sectorLabel;
-            const universe = universeBySector.get(sectorLabel);
-            const SectorIcon = universe?.icon;
+            const sectorUi = sectorUiByLabel.get(sectorLabel);
+            const SectorIcon = sectorUi?.icon;
 
             return (
               <button

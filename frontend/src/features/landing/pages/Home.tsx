@@ -10,6 +10,7 @@ import { useAuth } from '@shared/hooks/useAuth';
 import { useUrlSearch } from '@shared/hooks/useUrlSearch';
 import { FinalCTA } from '@shared/components/FinalCTA';
 import { useSiteAnalysis } from '@shared/hooks/useSiteAnalysis';
+import { HomeFooter } from '@shared/layout/HomeFooter';
 
 import { ExpertiseGrid } from '../components/ExpertiseGrid';
 import { HowItWorks } from '../components/HowItWorks';
@@ -132,6 +133,7 @@ export function Home() {
         <Testimonials />
         <ExpertiseGrid />
         <FinalCTA />
+        <HomeFooter />
       </div>
     </>
   );

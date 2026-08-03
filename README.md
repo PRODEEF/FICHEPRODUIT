@@ -1,4 +1,4 @@
-# ficheprod
+﻿# ficheprod
 
 **Génère tes fiches produits grâce à l’IA** en quelques secondes. MVP compatible PrestaShop et Shopify.
 
@@ -75,4 +75,4 @@ Le frontend est une SPA Vite : build classique (`npm run build` dans `frontend/`
 
 ---
 
-© 2026 ficheproduct — BETA
+© 2026 Fiche Produit — BETA

@@ -7,7 +7,7 @@ import { useScrollReveal } from '@shared/hooks/useScrollReveal';
 const points = [
   {
     badge: 'Positionnement',
-    title: 'Adapté à votre univers',
+    title: 'Adapté à votre secteur',
     description:
       'Pas une IA générique — les descriptions sonnent comme un vrai rédacteur de votre niche.',
   },
@@ -41,7 +41,7 @@ export function SellingPoints() {
         animate={titleInView ? 'visible' : 'hidden'}
         className="text-3xl font-extrabold text-gray-900 mb-16 text-center"
       >
-        Pourquoi ficheproduct fait la différence
+        Pourquoi Fiche Produit fait la différence
       </motion.h2>
       <div className="space-y-14 max-w-5xl mx-auto">
         {points.map((point, index) => (
@@ -100,7 +100,7 @@ export function SellingPoints() {
                       <div className="flex items-center gap-2 mb-2">
                         <span className="w-2 h-2 rounded-full bg-emerald-400" />
                         <span className="text-xs font-semibold text-emerald-600 uppercase tracking-wider">
-                          ficheproduct
+                          Fiche Produit
                         </span>
                       </div>
                       <p className="text-gray-700 text-sm leading-relaxed">
