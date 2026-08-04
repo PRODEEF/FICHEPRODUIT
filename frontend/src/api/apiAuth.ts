@@ -11,6 +11,8 @@
 import { getOrCreateGuestSessionId } from '@lib/analysis/guestSessionStorage';
 import { getSupabaseClient } from '@shared/supabase';
 
+import { ApiError, fetchOrNetworkError } from './apiError';
+
 type ApiHeaders = Record<string, string>;
 
 function omitContentType(headers: ApiHeaders): ApiHeaders {
@@ -73,35 +75,18 @@ export async function guestOrAuthHeadersNoBody(): Promise<ApiHeaders> {
   return omitContentType(h);
 }
 
-/** Erreur HTTP renvoyée par {@link apiFetch} lorsque `response.ok` est faux. */
-export class ApiHttpError extends Error {
-  readonly status: number;
-
-  constructor(message: string, status: number) {
-    super(message);
-    this.name = 'ApiHttpError';
-    this.status = status;
-  }
-}
-
-export function extractErrorMessage(parsed: unknown, fallback: string): string {
-  if (typeof parsed === 'object' && parsed !== null) {
-    const o = parsed as Record<string, unknown>;
-    if (typeof o['message'] === 'string' && o['message'].trim()) return o['message'].trim();
-
-    if (Array.isArray(o['message']) && typeof o['message'][0] === 'string') return o['message'][0];
-  }
-  return fallback;
-}
-
 /**
  * Wrapper fetch avec `credentials: 'include'` pour les cookies invité.
+ * @throws {ApiError} si `!res.ok`
+ * @throws {NetworkError} si échec réseau
+ * @throws {DOMException} AbortError si la requête est annulée
  */
 export async function apiFetch(
   url: string,
   init: RequestInit,
 ): Promise<{ res: Response; parsed: unknown }> {
-  const res = await fetch(url, { ...init, credentials: 'include' });
+  const method = init.method ?? 'GET';
+  const res = await fetchOrNetworkError(url, { ...init, credentials: 'include' });
   const text = await res.text();
 
   let parsed: unknown = null;
@@ -109,24 +94,14 @@ export async function apiFetch(
     try {
       parsed = JSON.parse(text);
     } catch {
-      if (!res.ok)
-        throw new ApiHttpError(`Réponse non-JSON du serveur (${res.status}).`, res.status);
+      if (!res.ok) {
+        throw ApiError.from(res.status, text, { url, method });
+      }
     }
   }
 
   if (!res.ok) {
-    const status = res.status;
-
-    if (status === 401)
-      throw new ApiHttpError(
-        extractErrorMessage(parsed, 'Session expirée ou non autorisée. Reconnecte-toi.'),
-        401,
-      );
-    if (status === 403) throw new ApiHttpError(extractErrorMessage(parsed, 'Accès refusé.'), 403);
-    if (status === 404)
-      throw new ApiHttpError(extractErrorMessage(parsed, 'Ressource introuvable.'), 404);
-
-    throw new ApiHttpError(extractErrorMessage(parsed, `Erreur serveur (${status}).`), status);
+    throw ApiError.from(res.status, parsed, { url, method });
   }
 
   return { res, parsed };

@@ -3,6 +3,7 @@ import { FastifyReply } from "fastify";
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
+  ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
@@ -11,6 +12,7 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from "@nestjs/swagger";
+import { EmailVerifiedGuard } from "../../core/auth/guards/email-verified.guard";
 import { JwtGuard } from "../../core/auth/guards/jwt.guard";
 import { CurrentUser } from "../../core/auth/decorators/current-user.decorator";
 import type { AuthenticatedUser } from "../../core/auth/types/jwt-payload.types";
@@ -28,7 +30,8 @@ import { PrestashopExportService } from "./prestashop/prestashop-export.service"
  */
 @ApiTags("Export")
 @ApiBearerAuth("bearerAuth")
-@UseGuards(JwtGuard)
+@ApiForbiddenResponse({ description: "E-mail non confirmé" })
+@UseGuards(JwtGuard, EmailVerifiedGuard)
 @Controller("api/export")
 export class ExportController {
   constructor(private readonly prestashopExportService: PrestashopExportService) {}

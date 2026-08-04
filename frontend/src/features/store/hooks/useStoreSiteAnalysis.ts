@@ -2,8 +2,9 @@ import { useCallback, useRef, useState } from 'react';
 
 import { useSiteAnalysis } from '@shared/hooks/useSiteAnalysis';
 
+import type { Shop } from '@types-api';
+
 import { shopUrlsEquivalent } from '../lib/shopUrlCompare';
-import type { Shop } from '../types';
 
 interface UseStoreSiteAnalysisOptions {
   shop: Shop | null;

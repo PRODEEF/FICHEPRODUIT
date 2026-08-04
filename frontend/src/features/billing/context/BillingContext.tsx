@@ -9,7 +9,7 @@ import {
 } from 'react';
 
 import { fetchBillingMe, type BillingSummary } from '@api/billing';
-import { NestHttpError } from '@api/nestHttpClient';
+import { apiErrorMessage } from '@lib/apiErrorMessage';
 import { useAuth } from '@shared/hooks/useAuth';
 
 import type { BillingContextValue } from '../types';
@@ -35,13 +35,7 @@ export function BillingProvider({ children }: { children: ReactNode }) {
       const data = await fetchBillingMe();
       setSummary(data);
     } catch (err) {
-      const message =
-        err instanceof NestHttpError
-          ? err.message
-          : err instanceof Error
-            ? err.message
-            : 'Impossible de charger le solde crédits';
-      setError(message);
+      setError(apiErrorMessage(err, 'Impossible de charger le solde crédits'));
       setSummary(null);
     } finally {
       setLoading(false);

@@ -16,23 +16,8 @@ vi.mock('./apiBase', () => ({
   getApiBaseUrl: () => 'http://api.test',
 }));
 
-import { NestHttpError, messageFromNestErrorBody, requestNestJson } from './nestHttpClient';
-
-describe('messageFromNestErrorBody', () => {
-  it('retourne le fallback si le corps est vide', () => {
-    expect(messageFromNestErrorBody(null, 'fallback')).toBe('fallback');
-  });
-
-  it('extrait un message string', () => {
-    expect(messageFromNestErrorBody({ message: 'Erreur métier' }, 'fallback')).toBe(
-      'Erreur métier',
-    );
-  });
-
-  it('extrait le premier message d’un tableau', () => {
-    expect(messageFromNestErrorBody({ message: ['A', 'B'] }, 'fallback')).toBe('A');
-  });
-});
+import { isApiError } from './apiError';
+import { requestNestJson } from './nestHttpClient';
 
 describe('requestNestJson', () => {
   const fetchMock = vi.fn<typeof fetch>();
@@ -70,7 +55,7 @@ describe('requestNestJson', () => {
     );
   });
 
-  it('lève NestHttpError quand la réponse n’est pas ok', async () => {
+  it('lève ApiError quand la réponse n’est pas ok', async () => {
     fetchMock.mockResolvedValue(
       new Response(JSON.stringify({ message: 'Interdit' }), {
         status: 403,
@@ -85,7 +70,7 @@ describe('requestNestJson', () => {
         body: { name: 'x' },
       }),
     ).rejects.toSatisfy((err: unknown) => {
-      return err instanceof NestHttpError && err.status === 403 && err.message === 'Interdit';
+      return isApiError(err) && err.status === 403 && err.message === 'Interdit';
     });
   });
 });

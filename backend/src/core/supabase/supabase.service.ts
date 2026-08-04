@@ -51,4 +51,17 @@ export class SupabaseService {
     if (error || !user) return null;
     return user;
   }
+
+  /**
+   * Vérifie qu'un couple e-mail / mot de passe est valide, sans persister de session.
+   * Un client anon éphémère est instancié à chaque appel pour éviter de polluer le client
+   * partagé. Utilisé notamment avant les opérations sensibles (suppression de compte).
+   */
+  async verifyEmailPassword(email: string, password: string): Promise<boolean> {
+    const client = createClient<Database>(this.url, this.anonKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    const { error } = await client.auth.signInWithPassword({ email, password });
+    return !error;
+  }
 }

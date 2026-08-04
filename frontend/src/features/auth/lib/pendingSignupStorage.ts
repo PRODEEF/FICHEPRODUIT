@@ -38,6 +38,15 @@ function readPendingSignup(): PendingSignupPayload | null {
   return pendingSignupMemory;
 }
 
+/**
+ * Retourne l’e-mail de l’inscription en attente sans effacer la mémoire.
+ * Utile pour pré-remplir la page `/verify-email` lorsqu’aucune session n’est ouverte.
+ */
+export function peekPendingSignupEmail(): string | null {
+  const email = pendingSignupMemory?.email?.trim();
+  return email && email.length > 0 ? email : null;
+}
+
 function clearPendingSignupMemory(): void {
   pendingSignupMemory = null;
 }

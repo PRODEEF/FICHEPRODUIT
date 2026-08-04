@@ -1,22 +1,45 @@
 import { ServiceUnavailableException } from "@nestjs/common";
 import type { ConfigService } from "@nestjs/config";
+import Stripe from "stripe";
 
 import { StripeService } from "./stripe.service";
 
 const checkoutCreateMock = jest.fn();
 const customersCreateMock = jest.fn();
+const customersUpdateMock = jest.fn();
 const subscriptionsRetrieveMock = jest.fn();
+const subscriptionsCancelMock = jest.fn();
 const constructEventMock = jest.fn();
 
-jest.mock("stripe", () => ({
-  __esModule: true,
-  default: jest.fn().mockImplementation(() => ({
-    customers: { create: customersCreateMock },
+jest.mock("stripe", () => {
+  // Défini dans la factory : jest.mock est hoisté avant toute déclaration du module.
+  class FakeStripeError extends Error {
+    code?: string;
+    constructor(message: string, code?: string) {
+      super(message);
+      this.code = code;
+    }
+  }
+
+  const stripeMock = jest.fn().mockImplementation(() => ({
+    customers: { create: customersCreateMock, update: customersUpdateMock },
     checkout: { sessions: { create: checkoutCreateMock } },
-    subscriptions: { retrieve: subscriptionsRetrieveMock },
+    subscriptions: { retrieve: subscriptionsRetrieveMock, cancel: subscriptionsCancelMock },
     webhooks: { constructEvent: constructEventMock },
-  })),
-}));
+  }));
+  // Réplique la surface `Stripe.errors.StripeError` utilisée par `instanceof` dans le service.
+  Object.assign(stripeMock, { errors: { StripeError: FakeStripeError } });
+  return {
+    __esModule: true,
+    default: stripeMock,
+  };
+});
+
+// Récupère la classe fournie par la factory pour instancier des erreurs Stripe factices.
+const FakeStripeError = Stripe.errors.StripeError as unknown as new (
+  message: string,
+  code?: string,
+) => Error & { code?: string };
 
 describe("StripeService", () => {
   const configMock = {
@@ -38,8 +61,10 @@ describe("StripeService", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     customersCreateMock.mockResolvedValue({ id: "cus_new" });
+    customersUpdateMock.mockResolvedValue({ id: "cus_1" });
     checkoutCreateMock.mockResolvedValue({ url: "https://checkout.stripe.test/cs_1" });
     subscriptionsRetrieveMock.mockResolvedValue({ id: "sub_1", status: "active" });
+    subscriptionsCancelMock.mockResolvedValue({ id: "sub_1", status: "canceled" });
     constructEventMock.mockReturnValue({ type: "checkout.session.completed" });
   });
 
@@ -134,5 +159,41 @@ describe("StripeService", () => {
 
     expect(event.type).toBe("checkout.session.completed");
     expect(constructEventMock).toHaveBeenCalled();
+  });
+
+  it("annule immédiatement un abonnement Stripe", async () => {
+    await service.cancelSubscription("sub_1");
+
+    expect(subscriptionsCancelMock).toHaveBeenCalledWith("sub_1");
+  });
+
+  it("ignore silencieusement une erreur `resource_missing` lors de l'annulation", async () => {
+    subscriptionsCancelMock.mockRejectedValue(
+      new FakeStripeError("No such subscription: sub_gone", "resource_missing"),
+    );
+
+    await expect(service.cancelSubscription("sub_gone")).resolves.toBeUndefined();
+  });
+
+  it("propage ServiceUnavailableException si Stripe échoue à annuler l'abonnement", async () => {
+    subscriptionsCancelMock.mockRejectedValue(
+      new FakeStripeError("Stripe unreachable", "api_connection_error"),
+    );
+
+    await expect(service.cancelSubscription("sub_1")).rejects.toThrow(ServiceUnavailableException);
+  });
+
+  it("anonymise le client Stripe (email, name, phone effacés + metadata deleted_at)", async () => {
+    await service.anonymizeCustomer("cus_1");
+
+    expect(customersUpdateMock).toHaveBeenCalledWith(
+      "cus_1",
+      expect.objectContaining({
+        email: "",
+        name: "",
+        phone: "",
+        metadata: expect.objectContaining({ deleted_at: expect.any(String) }),
+      }),
+    );
   });
 });

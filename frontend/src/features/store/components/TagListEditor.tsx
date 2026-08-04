@@ -1,5 +1,6 @@
 import { useId, useState, type KeyboardEvent, type ReactNode } from 'react';
 
+import { apiErrorMessage } from '@lib/apiErrorMessage';
 import { Button, InputField, Modal, Tag } from '@shared/ui';
 
 import { SHOP_TAG_MAX_LENGTH, shopTagSchema } from '../lib/shopSchemas';
@@ -52,7 +53,7 @@ export function TagListEditor({
       await onAdd(parsed.data);
       setInput('');
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Impossible d’ajouter.');
+      setError(apiErrorMessage(e, 'Impossible d’ajouter.'));
     } finally {
       setBusy(false);
     }
@@ -73,7 +74,7 @@ export function TagListEditor({
       await onRemove(tagToConfirm);
       setTagToConfirm(null);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Impossible de supprimer.');
+      setError(apiErrorMessage(e, 'Impossible de supprimer.'));
     } finally {
       setBusy(false);
     }

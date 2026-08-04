@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 
 import { ErrorState, LoadingState } from './CatalogSectionStates';
 import { ShopSummarySection } from './ShopSummarySection';
-import type { Shop } from '../../store/types';
+import type { Shop } from '@types-api';
 
 export interface CatalogPageLayoutProps {
   topBanner?: ReactNode;
@@ -40,9 +40,9 @@ export function CatalogPageLayout({
         {afterHeader}
 
         <div className="mb-6 flex flex-col gap-4">
-          {shopLoading ? (
+          {shopLoading && shop === null ? (
             <LoadingState label="Chargement de votre boutique…" />
-          ) : shopError !== null || shop === null ? (
+          ) : shop === null ? (
             <ErrorState
               message={shopError ?? 'Une erreur est survenue lors du chargement de votre boutique'}
             />
@@ -56,9 +56,9 @@ export function CatalogPageLayout({
         </div>
 
         <div className="flex flex-col gap-4">
-          {shop === null ? null : productsLoading ? (
+          {productsLoading && productsSection === null ? (
             <LoadingState label="Chargement des fiches…" />
-          ) : productsError ? (
+          ) : productsError && productsSection === null ? (
             <ErrorState message={productsError} />
           ) : (
             productsSection

@@ -1,6 +1,8 @@
 import {
   Controller,
+  Delete,
   Get,
+  HttpCode,
   Patch,
   Post,
   Req,
@@ -14,6 +16,7 @@ import {
   ApiBearerAuth,
   ApiBadRequestResponse,
   ApiCreatedResponse,
+  ApiNoContentResponse,
   ApiOkResponse,
   ApiOperation,
   ApiTags,
@@ -24,6 +27,7 @@ import { JwtGuard } from "../../core/auth/guards/jwt.guard";
 import { CurrentUser } from "../../core/auth/decorators/current-user.decorator";
 import { clearGuestSessionCookie, resolveClaimGuestSessionId } from "../../core/http/guest-session";
 import type { AuthenticatedUser } from "../../core/auth/types/jwt-payload.types";
+import { DeleteAccountDto } from "./dto/delete-account.dto";
 import { UpdateUserProfileDto } from "./dto/update-user-profile.dto";
 import { UserMeResponseDto } from "./dto/user-response.dto";
 import { UserService } from "./user.service";
@@ -89,5 +93,27 @@ export class UserController {
     const secure = this.config.get<string>("nodeEnv") === "production";
     clearGuestSessionCookie(reply, secure);
     return result;
+  }
+
+  @Delete("me")
+  @HttpCode(204)
+  @UseGuards(JwtGuard)
+  @ApiBearerAuth("bearerAuth")
+  @ApiOperation({
+    summary: "Supprimer définitivement le compte connecté",
+    description:
+      "Suppression conforme RGPD art. 17 : annulation de l'abonnement Stripe, archivage " +
+      "sans PII des factures, anonymisation du client Stripe, purge du journal de crédits " +
+      "et suppression du compte Supabase Auth (cascade sur les tables reliées). " +
+      "Le mot de passe courant est requis pour confirmer l'action.",
+  })
+  @ApiNoContentResponse({ description: "Compte supprimé" })
+  @ApiBadRequestResponse({ description: "Corps invalide (validation Zod)" })
+  @ApiUnauthorizedResponse({ description: "JWT manquant ou mot de passe incorrect" })
+  async deleteMe(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() body: DeleteAccountDto,
+  ): Promise<void> {
+    await this.userService.deleteMe(user, body.password);
   }
 }

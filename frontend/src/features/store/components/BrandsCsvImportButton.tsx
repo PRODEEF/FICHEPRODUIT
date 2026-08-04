@@ -1,5 +1,6 @@
 import { useId, useRef, useState, type ChangeEvent } from 'react';
 
+import { apiErrorMessage } from '@lib/apiErrorMessage';
 import { Button } from '@shared/ui';
 
 import { mergeBrands, parsePrestashopBrandsCsv } from '../lib/parse-prestashop-brands-csv';
@@ -91,7 +92,7 @@ export function BrandsCsvImportButton({
         }),
       );
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Impossible d’importer le fichier CSV.');
+      setError(apiErrorMessage(e, 'Impossible d’importer le fichier CSV.'));
     } finally {
       setBusy(false);
     }

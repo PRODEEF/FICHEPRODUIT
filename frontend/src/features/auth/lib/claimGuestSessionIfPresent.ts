@@ -1,4 +1,4 @@
-import { ApiHttpError } from '@api/apiAuth';
+import { isApiError } from '@api/apiError';
 import { claimGuestSession } from '@api/user';
 import { clearGuestSessionId } from '@lib/analysis/guestSessionStorage';
 
@@ -10,6 +10,7 @@ import { clearGuestSessionId } from '@lib/analysis/guestSessionStorage';
  *
  * @returns `true` si le claim a réussi, `false` si aucun cookie de session invité
  *          n'était présent (400) ou si la ressource est introuvable (404).
+ * @throws Relance toute autre erreur (`ApiError` 401/5xx, `NetworkError`, etc.).
  */
 export async function claimGuestSessionIfPresent(accessToken: string): Promise<boolean> {
   try {
@@ -17,7 +18,8 @@ export async function claimGuestSessionIfPresent(accessToken: string): Promise<b
     clearGuestSessionId();
     return true;
   } catch (e) {
-    if (e instanceof ApiHttpError && (e.status === 400 || e.status === 404)) return false;
-    return false;
+    // Absence de session invité = cas nominal, pas une erreur pour l'appelant.
+    if (isApiError(e) && (e.status === 400 || e.status === 404)) return false;
+    throw e;
   }
 }

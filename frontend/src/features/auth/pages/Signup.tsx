@@ -184,6 +184,10 @@ export function Signup() {
         });
         signupPostAuthRef.current = false;
         setVerifyEmailSent(true);
+        if (shouldRunSignupAnalysis) {
+          setSignupUrlAnalysisActive(false);
+        }
+        void navigate('/verify-email', { replace: true });
         return;
       }
 

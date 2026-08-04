@@ -15,6 +15,7 @@ import {
   ApiBadRequestResponse,
   ApiBearerAuth,
   ApiCreatedResponse,
+  ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
@@ -23,6 +24,7 @@ import {
   ApiUnauthorizedResponse,
 } from "@nestjs/swagger";
 import type { FastifyReply, FastifyRequest } from "fastify";
+import { EmailVerifiedGuard } from "../../core/auth/guards/email-verified.guard";
 import { OptionalJwtGuard } from "../../core/auth/guards/optional-jwt.guard";
 import { JwtGuard } from "../../core/auth/guards/jwt.guard";
 import { CurrentUser } from "../../core/auth/decorators/current-user.decorator";
@@ -71,7 +73,7 @@ export class AnalysisController {
   }
 
   @Get()
-  @UseGuards(JwtGuard)
+  @UseGuards(JwtGuard, EmailVerifiedGuard)
   @ApiBearerAuth("bearerAuth")
   @ApiOperation({ summary: "Lister les analyses de l'utilisateur connecté" })
   @ApiOkResponse({
@@ -79,6 +81,7 @@ export class AnalysisController {
     type: [AnalysisResponseDto],
   })
   @ApiUnauthorizedResponse({ description: "JWT manquant ou invalide" })
+  @ApiForbiddenResponse({ description: "E-mail non confirmé" })
   listForUser(@CurrentUser() user: AuthenticatedUser) {
     return this.service.listForUser(user);
   }

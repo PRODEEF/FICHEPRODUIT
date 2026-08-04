@@ -121,12 +121,18 @@ export const changePasswordSchema = z
     path: ['newPassword'],
   });
 
+/** Confirmation avant suppression : on demande seulement le mot de passe actuel. */
+export const deleteAccountSchema = z.object({
+  password: z.string().min(1, 'Indiquez votre mot de passe.'),
+});
+
 export type LoginInput = z.input<typeof loginSchema>;
 export type SignupInput = z.input<typeof signupSchema>;
 export type ProfileInput = z.input<typeof profileSchema>;
 export type ForgotPasswordInput = z.input<typeof forgotPasswordSchema>;
 export type ResetPasswordInput = z.input<typeof resetPasswordSchema>;
 export type ChangePasswordInput = z.input<typeof changePasswordSchema>;
+export type DeleteAccountInput = z.input<typeof deleteAccountSchema>;
 
 export type LoginPayload = z.output<typeof loginSchema>;
 export type SignupPayload = z.output<typeof signupSchema>;
@@ -134,3 +140,4 @@ export type ProfilePayload = z.output<typeof profileSchema>;
 export type ForgotPasswordPayload = z.output<typeof forgotPasswordSchema>;
 export type ResetPasswordPayload = z.output<typeof resetPasswordSchema>;
 export type ChangePasswordPayload = z.output<typeof changePasswordSchema>;
+export type DeleteAccountPayload = z.output<typeof deleteAccountSchema>;

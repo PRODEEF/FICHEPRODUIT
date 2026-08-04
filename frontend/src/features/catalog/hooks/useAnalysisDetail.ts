@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import { getAnalysis } from '@api/analysis';
-import { ApiHttpError } from '@api/apiAuth';
+import { isAbortError, isApiError } from '@api/apiError';
+import { apiErrorMessage } from '@lib/apiErrorMessage';
 import { getMyShop } from '@api/shop';
 import type { Analysis, CatalogProduct, Shop } from '@types-api';
 import { getAnalysisDetailCache, setAnalysisDetailCache } from '@lib/analysis/analysisStorage';
@@ -113,10 +114,11 @@ export function useAnalysisDetail(
         setAnalysisDetailCache(cacheUserId, analysisId, { analysis: a, shop: nextShop });
         setError(null);
       } catch (e) {
+        if (isAbortError(e)) return;
         if (!isStale()) {
-          const message = e instanceof Error ? e.message : 'Erreur de chargement.';
+          const message = apiErrorMessage(e, 'Erreur de chargement.');
           const lowered = message.toLowerCase();
-          const http404 = e instanceof ApiHttpError && e.status === 404;
+          const http404 = isApiError(e) && e.status === 404;
           setAnalysisNotFound(
             http404 || lowered.includes('introuvable') || lowered.includes('not found'),
           );

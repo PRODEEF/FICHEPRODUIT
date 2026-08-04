@@ -55,20 +55,19 @@ export function MyStore() {
     }
   }, [loading, shop, error, navigate]);
 
-  if (loading) {
+  if (loading && !shop) {
     return <LoadingState />;
   }
 
-  if (error) {
-    return (
-      <div className="relative z-[1] w-full px-12 pb-12 pt-9">
-        <h1 className="m-0 text-[1.75rem] font-extrabold text-text-primary">Mon magasin</h1>
-        <p className="mt-4 text-sm text-red-600">{error}</p>
-      </div>
-    );
-  }
-
   if (!shop) {
+    if (error) {
+      return (
+        <div className="relative z-[1] w-full px-12 pb-12 pt-9">
+          <h1 className="m-0 text-[1.75rem] font-extrabold text-text-primary">Mon magasin</h1>
+          <p className="mt-4 text-sm text-red-600">{error}</p>
+        </div>
+      );
+    }
     return null;
   }
 

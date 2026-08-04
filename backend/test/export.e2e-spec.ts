@@ -22,6 +22,7 @@ class E2eJwtStub implements CanActivate {
       id: "550e8400-e29b-41d4-a716-446655440099",
       email: "e2e@test.com",
       accessToken: "e2e-token",
+      emailConfirmedAt: "2026-08-01T10:00:00Z",
     };
     return true;
   }

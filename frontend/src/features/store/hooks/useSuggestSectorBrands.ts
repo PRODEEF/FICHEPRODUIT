@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
 
 import { fetchBrandsBySector } from '@api/catalog';
+import { apiErrorMessage } from '@lib/apiErrorMessage';
 
 interface UseSuggestSectorBrandsOptions {
   sector: string;
@@ -28,8 +29,7 @@ export function useSuggestSectorBrands({ sector, existingBrands }: UseSuggestSec
       const existingLower = new Set(existingBrands.map((b) => b.toLocaleLowerCase()));
       setSuggestions(brands.filter((b) => !existingLower.has(b.toLocaleLowerCase())));
     } catch (e) {
-      const message =
-        e instanceof Error ? e.message : 'Impossible de charger les suggestions de marques.';
+      const message = apiErrorMessage(e, 'Impossible de charger les suggestions de marques.');
       setError(message);
       toast.error(message);
     } finally {

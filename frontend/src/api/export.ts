@@ -17,9 +17,11 @@ import type {
   PrestashopExportParams,
 } from '@types-api';
 
+import { apiErrorMessage } from '@lib/apiErrorMessage';
+
+import { ApiError, fetchOrNetworkError, isAbortError } from './apiError';
 import { getApiBaseUrl } from './apiBase';
-import { authHeaders, extractErrorMessage } from './apiAuth';
-import { formatExportClientError } from './exportLimits';
+import { authHeaders } from './apiAuth';
 import { getSupabaseSessionAuthHeaders, requestNestJson } from './nestHttpClient';
 
 /**
@@ -39,7 +41,8 @@ export async function fetchCategoryExportPreview(
       authHeaders: getSupabaseSessionAuthHeaders,
     });
   } catch (err) {
-    throw new Error(formatExportClientError(err, 'Impossible de prévisualiser les catégories.'), {
+    if (isAbortError(err)) throw err;
+    throw new Error(apiErrorMessage(err, 'Impossible de prévisualiser les catégories.'), {
       cause: err,
     });
   }
@@ -62,8 +65,10 @@ export async function downloadPrestashopExportCsv(params: PrestashopExportParams
       : {}),
   };
 
+  const url = `${getApiBaseUrl()}/api/export/prestashop`;
+
   try {
-    const res = await fetch(`${getApiBaseUrl()}/api/export/prestashop`, {
+    const res = await fetchOrNetworkError(url, {
       method: 'POST',
       headers: await authHeaders(),
       credentials: 'include',
@@ -71,7 +76,7 @@ export async function downloadPrestashopExportCsv(params: PrestashopExportParams
     });
 
     if (!res.ok) {
-      throw await exportHttpError(res);
+      throw await exportHttpError(res, url);
     }
 
     const blob = await res.blob();
@@ -82,7 +87,8 @@ export async function downloadPrestashopExportCsv(params: PrestashopExportParams
     );
     triggerDownload(blob, filename);
   } catch (err) {
-    throw new Error(formatExportClientError(err, 'Impossible de générer l’export.'), {
+    if (isAbortError(err)) throw err;
+    throw new Error(apiErrorMessage(err, 'Impossible de générer l’export.'), {
       cause: err,
     });
   }
@@ -92,22 +98,18 @@ export function serializeCategoryOverrides(overrides: CategoryExportOverride[]):
   return JSON.stringify(overrides);
 }
 
-async function exportHttpError(res: Response): Promise<Error> {
+async function exportHttpError(res: Response, url: string): Promise<ApiError> {
   let parsed: unknown = null;
   const text = await res.text().catch(() => '');
   if (text) {
     try {
       parsed = JSON.parse(text) as unknown;
     } catch {
-      // Corps non JSON — on garde le fallback ci-dessous.
+      parsed = text;
     }
   }
 
-  if (res.status === 401) {
-    return new Error('Session expirée ou non autorisée. Reconnecte-toi.');
-  }
-
-  return new Error(extractErrorMessage(parsed, `Impossible de générer l'export (${res.status}).`));
+  return ApiError.from(res.status, parsed, { url, method: 'POST' });
 }
 
 /** Extrait le nom de fichier depuis `Content-Disposition`, sinon `fallback`. */

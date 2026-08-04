@@ -18,7 +18,12 @@ export class OptionalJwtGuard implements CanActivate {
     // Token invalide/expiré : on ignore et on laisse passer en anonyme (parcours invité)
     if (!user) return true;
 
-    req.user = { id: user.id, email: user.email ?? "", accessToken: token };
+    req.user = {
+      id: user.id,
+      email: user.email ?? "",
+      accessToken: token,
+      emailConfirmedAt: user.email_confirmed_at ?? null,
+    };
     return true;
   }
 }
