@@ -1,4 +1,5 @@
 import { NotFoundException } from "@nestjs/common";
+import { CATALOG_SEARCH_MAX_LIMIT } from "./catalog.constants";
 import { CatalogService } from "./catalog.service";
 import type { ICatalogRepository } from "./catalog.repository.interface";
 import type { ShopService } from "../shop/shop.service";
@@ -49,13 +50,14 @@ describe("CatalogService", () => {
     jest.clearAllMocks();
   });
 
-  it("listCatalogProductsByShopBrands returns [] when shop has no brands", async () => {
+  it("listCatalogProductsByShopBrands returns global catalog when shop has no brands", async () => {
     shopServiceMock.getForUser.mockResolvedValue(sampleShop([]));
+    catalogRepoMock.search.mockResolvedValue([]);
 
     const out = await service.listCatalogProductsByShopBrands(shopId, user);
 
     expect(out).toEqual([]);
-    expect(catalogRepoMock.search).not.toHaveBeenCalled();
+    expect(catalogRepoMock.search).toHaveBeenCalledWith({ limit: CATALOG_SEARCH_MAX_LIMIT });
   });
 
   it("listCatalogProductsByShopBrands searches by brands only with max limit", async () => {
@@ -66,7 +68,7 @@ describe("CatalogService", () => {
 
     expect(catalogRepoMock.search).toHaveBeenCalledWith({
       brands: ["BrandX", "BrandY"],
-      limit: 1000,
+      limit: CATALOG_SEARCH_MAX_LIMIT,
     });
   });
 
@@ -79,17 +81,18 @@ describe("CatalogService", () => {
     expect(catalogRepoMock.search).not.toHaveBeenCalled();
   });
 
-  it("listCatalogProductsByShopBrandsForGuest returns [] when guest shop has no brands", async () => {
+  it("listCatalogProductsByShopBrandsForGuest returns global catalog when guest shop has no brands", async () => {
     shopServiceMock.getForGuest.mockResolvedValue({
       ...sampleShop([]),
       ownerId: null,
       sessionId: "s",
     });
+    catalogRepoMock.search.mockResolvedValue([]);
 
     const out = await service.listCatalogProductsByShopBrandsForGuest(shopId, "s");
 
     expect(out).toEqual([]);
-    expect(catalogRepoMock.search).not.toHaveBeenCalled();
+    expect(catalogRepoMock.search).toHaveBeenCalledWith({ limit: CATALOG_SEARCH_MAX_LIMIT });
   });
 
   it("listCatalogProductsByShopBrandsForGuest searches by brands with max limit", async () => {
@@ -104,7 +107,7 @@ describe("CatalogService", () => {
 
     expect(catalogRepoMock.search).toHaveBeenCalledWith({
       brands: ["G"],
-      limit: 1000,
+      limit: CATALOG_SEARCH_MAX_LIMIT,
     });
   });
 

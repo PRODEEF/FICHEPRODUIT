@@ -15,10 +15,10 @@ describe('resolveDefaultShopSector', () => {
 });
 
 describe('createCatalogDefaultFilters', () => {
-  it('préremplit le secteur et vide les autres critères', () => {
-    expect(createCatalogDefaultFilters('Glisse')).toEqual({
+  it('ne préremplit aucun critère (secteur = Tous)', () => {
+    expect(createCatalogDefaultFilters()).toEqual({
       search: '',
-      sector: 'Glisse',
+      sector: '',
       category: '',
       subCategory: '',
       brand: '',

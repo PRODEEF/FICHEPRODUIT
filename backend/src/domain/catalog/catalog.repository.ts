@@ -1,6 +1,7 @@
 import { Injectable, InternalServerErrorException, Logger } from "@nestjs/common";
 import { SupabaseService } from "../../core/supabase/supabase.service";
 import type { Database, Json } from "../../core/supabase/database.types";
+import { CATALOG_SEARCH_MAX_LIMIT } from "./catalog.constants";
 import type { ICatalogRepository } from "./catalog.repository.interface";
 import type { CatalogProduct, CatalogSearchCriteria } from "./types/catalog.types";
 
@@ -18,8 +19,8 @@ export const CATALOG_FIND_BY_IDS_BATCH_SIZE = 100;
 @Injectable()
 export class CatalogRepository implements ICatalogRepository {
   private readonly logger = new Logger(CatalogRepository.name);
-  private static readonly DEFAULT_LIMIT = 500;
-  private static readonly MAX_LIMIT = 1000;
+  private static readonly DEFAULT_LIMIT = CATALOG_SEARCH_MAX_LIMIT;
+  private static readonly MAX_LIMIT = CATALOG_SEARCH_MAX_LIMIT;
 
   constructor(private readonly supabase: SupabaseService) {}
 

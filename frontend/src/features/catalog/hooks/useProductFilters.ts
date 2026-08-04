@@ -1,13 +1,10 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import type { CatalogProduct } from '@types-api';
 import { catalogSectorsMatch } from '@shared/lib/shopSectors';
 
 import type { CatalogProductPayloadMetadata, ProductFilter } from '../types';
-import {
-  createCatalogDefaultFilters,
-  resolveDefaultShopSector,
-} from '../lib/catalogFilterDefaults';
+import { createCatalogDefaultFilters } from '../lib/catalogFilterDefaults';
 import {
   buildBrandOptions,
   buildCategoryOptions,
@@ -69,33 +66,8 @@ export function useProductFilters(
   products: CatalogProduct[],
   _productPayload: CatalogProductPayloadMetadata | null,
   shopBrands?: string[],
-  defaultShopSector?: string | null,
 ): UseProductFiltersResult {
-  const defaultSector = useMemo(
-    () => resolveDefaultShopSector(defaultShopSector),
-    [defaultShopSector],
-  );
-
-  const [filters, setFilters] = useState<ProductFilter>(() =>
-    createCatalogDefaultFilters(defaultSector),
-  );
-
-  const previousDefaultSectorRef = useRef(defaultSector);
-
-  useEffect(() => {
-    const previousDefault = previousDefaultSectorRef.current;
-    if (defaultSector === previousDefault) {
-      return;
-    }
-    previousDefaultSectorRef.current = defaultSector;
-
-    setFilters((prev) => {
-      if (prev.sector !== previousDefault) {
-        return prev;
-      }
-      return createCatalogDefaultFilters(defaultSector);
-    });
-  }, [defaultSector]);
+  const [filters, setFilters] = useState<ProductFilter>(() => createCatalogDefaultFilters());
 
   const setFilter = useCallback(
     <K extends keyof ProductFilter>(key: K, value: ProductFilter[K]) => {
@@ -132,8 +104,8 @@ export function useProductFilters(
   );
 
   const resetFilters = useCallback(() => {
-    setFilters(createCatalogDefaultFilters(defaultSector));
-  }, [defaultSector]);
+    setFilters(createCatalogDefaultFilters());
+  }, []);
 
   const parentFilters = useMemo(
     () => ({
@@ -225,17 +197,18 @@ export function useProductFilters(
     });
   }, [products, filters]);
 
-  const hasActiveFilters = useMemo(() => {
-    const sectorDiffersFromDefault = filters.sector !== defaultSector;
-    return Boolean(
-      filters.search.trim() ||
-      sectorDiffersFromDefault ||
-      filters.category ||
-      filters.subCategory ||
-      filters.brand ||
-      filters.year,
-    );
-  }, [filters, defaultSector]);
+  const hasActiveFilters = useMemo(
+    () =>
+      Boolean(
+        filters.search.trim() ||
+        filters.sector ||
+        filters.category ||
+        filters.subCategory ||
+        filters.brand ||
+        filters.year,
+      ),
+    [filters],
+  );
 
   return {
     filters,

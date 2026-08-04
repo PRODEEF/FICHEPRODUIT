@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 
 import type { CatalogProduct, Shop } from '@types-api';
-import { fetchCatalogProductsByShopBrands } from '@api/catalog';
+import { searchCatalogProducts } from '@api/catalog';
+import { CATALOG_SEARCH_MAX_LIMIT } from '@api/catalogLimits';
 import { apiErrorMessage } from '@lib/apiErrorMessage';
 
 import type { CatalogProductPayloadMetadata } from '../types';
@@ -15,7 +16,7 @@ interface UseCatalogProductsByIdsResult {
 }
 
 /**
- * Charge les produits catalogue associés à la boutique.
+ * Charge les produits catalogue associés à la boutique (catalogue complet).
  * L'accès invité est géré par le cookie httpOnly `ficheproduct_guest_session`.
  */
 export function useCatalogProductsByIds(
@@ -44,7 +45,7 @@ export function useCatalogProductsByIds(
       setError(null);
 
       try {
-        const loadedProducts = await fetchCatalogProductsByShopBrands(shop.id);
+        const loadedProducts = await searchCatalogProducts({ limit: CATALOG_SEARCH_MAX_LIMIT });
         if (guard.cancelled) return;
         setProducts(loadedProducts);
         setMetadata(buildCatalogProductMetadata(loadedProducts));

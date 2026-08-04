@@ -44,7 +44,7 @@ export class CatalogController {
     name: "shopId",
     format: "uuid",
     description:
-      "Identifiant UUID de la boutique ; les marques configurées (`shop.brands`) déterminent les produits retournés.",
+      "Identifiant UUID de la boutique ; les marques configurées (`shop.brands`) déterminent les produits retournés. Sans marque, renvoie le catalogue global.",
   })
   @ApiOperation({
     summary: "Produits catalogue pour les marques d’une boutique",
