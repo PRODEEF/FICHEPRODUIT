@@ -89,7 +89,6 @@ export function PublicCatalog() {
             productPayload={productPayload}
             isLoadingProducts={isLoadingProducts}
             shopBrands={shop.brands}
-            defaultShopSector={shop.sector}
             externalBrandFilter={activeBrand}
             onBrandFilterChange={setActiveBrand}
           />

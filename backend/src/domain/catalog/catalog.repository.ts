@@ -1,6 +1,7 @@
 import { Injectable, InternalServerErrorException, Logger } from "@nestjs/common";
 import { SupabaseService } from "../../core/supabase/supabase.service";
 import type { Database, Json } from "../../core/supabase/database.types";
+import { CATALOG_SEARCH_MAX_LIMIT } from "./catalog.constants";
 import type { ICatalogRepository } from "./catalog.repository.interface";
 import type { CatalogProduct, CatalogSearchCriteria } from "./types/catalog.types";
 
@@ -18,8 +19,8 @@ export const CATALOG_FIND_BY_IDS_BATCH_SIZE = 100;
 @Injectable()
 export class CatalogRepository implements ICatalogRepository {
   private readonly logger = new Logger(CatalogRepository.name);
-  private static readonly DEFAULT_LIMIT = 500;
-  private static readonly MAX_LIMIT = 1000;
+  private static readonly DEFAULT_LIMIT = CATALOG_SEARCH_MAX_LIMIT;
+  private static readonly MAX_LIMIT = CATALOG_SEARCH_MAX_LIMIT;
 
   constructor(private readonly supabase: SupabaseService) {}
 
@@ -80,13 +81,16 @@ export class CatalogRepository implements ICatalogRepository {
 
     let query = this.supabase.anon.from("catalog_products").select("*");
     query = this.chainBrandlessFilters(query, criteria);
+    query = this.applyCatalogSort(query);
     const { data, error } = await query.limit(limit);
     if (error) {
       this.logger.error("search(criteria) failed", error);
       throw new InternalServerErrorException("Échec de la recherche produits catalogue");
     }
 
-    return ((data ?? []) as CatalogProductRow[]).map((row) => this.toEntity(row));
+    return ((data ?? []) as CatalogProductRow[])
+      .sort((a, b) => this.compareCatalogProductRows(a, b))
+      .map((row) => this.toEntity(row));
   }
 
   /**
@@ -181,7 +185,31 @@ export class CatalogRepository implements ICatalogRepository {
       }
     }
 
-    return [...byId.values()].slice(0, limit).map((row) => this.toEntity(row));
+    return [...byId.values()]
+      .sort((a, b) => this.compareCatalogProductRows(a, b))
+      .slice(0, limit)
+      .map((row) => this.toEntity(row));
+  }
+
+  /** Tri catalogue : catégorie α → sous-catégorie α → prix décroissant. */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase query builder chain
+  private applyCatalogSort(query: any): any {
+    return query
+      .order("category", { ascending: true })
+      .order("sub_category", { ascending: true, nullsFirst: false })
+      .order("price", { ascending: false });
+  }
+
+  private compareCatalogProductRows(a: CatalogProductRow, b: CatalogProductRow): number {
+    const byCategory = a.category.localeCompare(b.category, "fr", { sensitivity: "base" });
+    if (byCategory !== 0) return byCategory;
+
+    const subA = typeof a.sub_category === "string" ? a.sub_category.trim() : "";
+    const subB = typeof b.sub_category === "string" ? b.sub_category.trim() : "";
+    const bySubCategory = subA.localeCompare(subB, "fr", { sensitivity: "base" });
+    if (bySubCategory !== 0) return bySubCategory;
+
+    return b.price - a.price;
   }
 
   private attributesFromJson(json: Json | null): Record<string, string> {

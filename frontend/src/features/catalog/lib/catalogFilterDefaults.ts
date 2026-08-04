@@ -5,11 +5,11 @@ export function resolveDefaultShopSector(raw: string | null | undefined): string
   return raw?.trim() ?? '';
 }
 
-/** État filtre initial / après réinitialisation (secteur = celui de la boutique si défini). */
-export function createCatalogDefaultFilters(defaultSector: string): ProductFilter {
+/** État filtre initial / après réinitialisation (aucun critère actif). */
+export function createCatalogDefaultFilters(): ProductFilter {
   return {
     search: '',
-    sector: defaultSector,
+    sector: '',
     category: '',
     subCategory: '',
     brand: '',

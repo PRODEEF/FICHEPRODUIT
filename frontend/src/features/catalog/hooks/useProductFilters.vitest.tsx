@@ -26,7 +26,14 @@ function product(overrides: Partial<CatalogProduct>): CatalogProduct {
 }
 
 const products: CatalogProduct[] = [
-  product({ id: '1', name: 'Aile Alpha', brand: 'Nike', category: 'Kitesurf', year: 2024 }),
+  product({
+    id: '1',
+    name: 'Aile Alpha',
+    brand: 'Nike',
+    category: 'Kitesurf',
+    year: 2024,
+    price: 500,
+  }),
   product({
     id: '2',
     name: 'Planche Beta',
@@ -34,6 +41,7 @@ const products: CatalogProduct[] = [
     category: 'Surf',
     subCategory: 'Shortboards',
     year: 2023,
+    price: 300,
   }),
   product({
     id: '3',
@@ -42,19 +50,34 @@ const products: CatalogProduct[] = [
     sector: 'Autres',
     category: 'Kitesurf',
     year: 2024,
+    price: 800,
   }),
 ];
 
 describe('useProductFilters', () => {
-  it('filtre par secteur par défaut du magasin', () => {
-    const { result } = renderHook(() => useProductFilters(products, null, undefined, 'Glisse'));
+  it('propose toutes les marques du shop dans le filtre marque', () => {
+    const shopBrands = ['Nike', 'Adidas', 'NeilPryde', 'Fanatic', 'Starboard'];
+    const { result } = renderHook(() => useProductFilters(products, null, shopBrands));
 
-    expect(result.current.filters.sector).toBe('Glisse');
-    expect(result.current.filteredProducts.map((p) => p.id)).toEqual(['1', '2']);
+    expect(result.current.brandOptions).toEqual([
+      'Adidas',
+      'Fanatic',
+      'NeilPryde',
+      'Nike',
+      'Starboard',
+    ]);
+  });
+
+  it('n’applique pas de filtre secteur par défaut', () => {
+    const { result } = renderHook(() => useProductFilters(products, null, ['Nike']));
+
+    expect(result.current.filters.sector).toBe('');
+    expect(result.current.filteredProducts.map((p) => p.id)).toEqual(['3', '1', '2']);
+    expect(result.current.hasActiveFilters).toBe(false);
   });
 
   it('filtre par recherche texte', () => {
-    const { result } = renderHook(() => useProductFilters(products, null, undefined, 'Glisse'));
+    const { result } = renderHook(() => useProductFilters(products, null));
 
     act(() => {
       result.current.setFilter('search', 'planche');
@@ -64,8 +87,8 @@ describe('useProductFilters', () => {
     expect(result.current.hasActiveFilters).toBe(true);
   });
 
-  it('réinitialise les filtres dépendants quand la catégorie change', () => {
-    const { result } = renderHook(() => useProductFilters(products, null, undefined, 'Glisse'));
+  it('conserve les filtres dépendants quand la catégorie change', () => {
+    const { result } = renderHook(() => useProductFilters(products, null));
 
     act(() => {
       result.current.setFilter('category', 'Kitesurf');
@@ -77,12 +100,12 @@ describe('useProductFilters', () => {
     });
 
     expect(result.current.filters.category).toBe('Surf');
-    expect(result.current.filters.brand).toBe('');
-    expect(result.current.filters.subCategory).toBe('');
+    expect(result.current.filters.brand).toBe('Nike');
+    expect(result.current.filteredProducts).toHaveLength(0);
   });
 
-  it('resetFilters restaure le secteur par défaut', () => {
-    const { result } = renderHook(() => useProductFilters(products, null, undefined, 'Glisse'));
+  it('resetFilters vide tous les critères', () => {
+    const { result } = renderHook(() => useProductFilters(products, null));
 
     act(() => {
       result.current.setFilter('search', 'aile');
@@ -94,12 +117,12 @@ describe('useProductFilters', () => {
     });
 
     expect(result.current.filters.search).toBe('');
-    expect(result.current.filters.sector).toBe('Glisse');
+    expect(result.current.filters.sector).toBe('');
     expect(result.current.hasActiveFilters).toBe(false);
   });
 
   it('filtre les produits du secteur Autres', () => {
-    const { result } = renderHook(() => useProductFilters(products, null, undefined, 'Glisse'));
+    const { result } = renderHook(() => useProductFilters(products, null));
 
     act(() => {
       result.current.setFilter('sector', 'Autres');
@@ -108,18 +131,8 @@ describe('useProductFilters', () => {
     expect(result.current.filteredProducts.map((p) => p.id)).toEqual(['3']);
   });
 
-  it('affiche les produits hors-secteur quand le secteur est Tous', () => {
-    const { result } = renderHook(() => useProductFilters(products, null, undefined, 'Glisse'));
-
-    act(() => {
-      result.current.setFilter('sector', '');
-    });
-
-    expect(result.current.filteredProducts.map((p) => p.id)).toEqual(['1', '2', '3']);
-  });
-
   it('conserve la marque quand on passe le secteur à Tous', () => {
-    const { result } = renderHook(() => useProductFilters(products, null, undefined, 'Glisse'));
+    const { result } = renderHook(() => useProductFilters(products, null));
 
     act(() => {
       result.current.setFilter('brand', 'Nike');
@@ -130,11 +143,11 @@ describe('useProductFilters', () => {
     });
 
     expect(result.current.filters.brand).toBe('Nike');
-    expect(result.current.filteredProducts.map((p) => p.id)).toEqual(['1', '3']);
+    expect(result.current.filteredProducts.map((p) => p.id)).toEqual(['3', '1']);
   });
 
-  it('efface la marque quand on change vers un autre secteur non vide', () => {
-    const { result } = renderHook(() => useProductFilters(products, null, undefined, 'Glisse'));
+  it('conserve la marque quand on change vers un autre secteur non vide', () => {
+    const { result } = renderHook(() => useProductFilters(products, null));
 
     act(() => {
       result.current.setFilter('brand', 'Nike');
@@ -144,6 +157,34 @@ describe('useProductFilters', () => {
       result.current.setFilter('sector', 'Vélo');
     });
 
-    expect(result.current.filters.brand).toBe('');
+    expect(result.current.filters.brand).toBe('Nike');
+    expect(result.current.filteredProducts).toHaveLength(0);
+  });
+
+  it('conserve le secteur quand marque + secteur ne donnent aucun résultat', () => {
+    const { result } = renderHook(() => useProductFilters(products, null));
+
+    act(() => {
+      result.current.setFilter('sector', 'Vélo');
+      result.current.setFilter('brand', 'Nike');
+    });
+
+    expect(result.current.filters.sector).toBe('Vélo');
+    expect(result.current.filters.brand).toBe('Nike');
+    expect(result.current.filteredProducts).toHaveLength(0);
+  });
+
+  it('combine catégorie et marque sans effacer les filtres', () => {
+    const { result } = renderHook(() => useProductFilters(products, null));
+
+    act(() => {
+      result.current.setFilter('sector', 'Glisse');
+      result.current.setFilter('category', 'Kitesurf');
+      result.current.setFilter('brand', 'Adidas');
+    });
+
+    expect(result.current.filters.brand).toBe('Adidas');
+    expect(result.current.filters.category).toBe('Kitesurf');
+    expect(result.current.filteredProducts).toHaveLength(0);
   });
 });

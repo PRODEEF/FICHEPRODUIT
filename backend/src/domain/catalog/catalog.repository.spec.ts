@@ -95,4 +95,81 @@ describe("CatalogRepository", () => {
     expect(products[0]?.id).toBe(ids[0]);
     expect(products.at(-1)?.id).toBe(ids.at(-1));
   });
+
+  it("search trie par catégorie, sous-catégorie puis prix décroissant", async () => {
+    const rows = [
+      {
+        id: "1",
+        name: "Surf board",
+        brand: "Brand",
+        sector: "Glisse",
+        category: "Surf",
+        sub_category: "Shortboards",
+        year: 2024,
+        price: 200,
+        description: "Desc",
+        detailed_description: "",
+        images: [],
+        url: "https://x.com",
+        attributes: {},
+      },
+      {
+        id: "2",
+        name: "Kite board",
+        brand: "Brand",
+        sector: "Glisse",
+        category: "Kitesurf",
+        sub_category: "Planches",
+        year: 2024,
+        price: 300,
+        description: "Desc",
+        detailed_description: "",
+        images: [],
+        url: "https://x.com",
+        attributes: {},
+      },
+      {
+        id: "3",
+        name: "Kite wing cheap",
+        brand: "Brand",
+        sector: "Glisse",
+        category: "Kitesurf",
+        sub_category: "Ailes",
+        year: 2024,
+        price: 500,
+        description: "Desc",
+        detailed_description: "",
+        images: [],
+        url: "https://x.com",
+        attributes: {},
+      },
+      {
+        id: "4",
+        name: "Kite wing premium",
+        brand: "Brand",
+        sector: "Glisse",
+        category: "Kitesurf",
+        sub_category: "Ailes",
+        year: 2024,
+        price: 800,
+        description: "Desc",
+        detailed_description: "",
+        images: [],
+        url: "https://x.com",
+        attributes: {},
+      },
+    ];
+
+    anonClient.limit.mockResolvedValueOnce({ data: rows, error: null });
+
+    const products = await repository.search({});
+
+    expect(products.map((p) => p.id)).toEqual(["4", "3", "2", "1"]);
+    expect(anonClient.order).toHaveBeenCalledWith("category", { ascending: true });
+    expect(anonClient.order).toHaveBeenCalledWith("sub_category", {
+      ascending: true,
+      nullsFirst: false,
+    });
+    expect(anonClient.order).toHaveBeenCalledWith("price", { ascending: false });
+  });
 });

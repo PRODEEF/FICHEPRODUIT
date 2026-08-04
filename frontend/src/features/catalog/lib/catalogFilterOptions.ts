@@ -15,6 +15,24 @@ function matchesBrand(product: CatalogProduct, brand: string): boolean {
   return product.brand.toLowerCase() === brand.toLowerCase();
 }
 
+/**
+ * Limite les produits aux marques du magasin.
+ * Si le magasin n'a aucune marque configurée, conserve l'ensemble du catalogue.
+ */
+export function filterProductsByShopBrands(
+  products: CatalogProduct[],
+  shopBrands?: string[],
+): CatalogProduct[] {
+  if (shopBrands === undefined) return products;
+  const normalized = shopBrands.map((b) => b.trim()).filter(Boolean);
+  if (normalized.length === 0) return products;
+  const shopLower = new Set(normalized.map((b) => b.toLowerCase()));
+  return products.filter((p) => {
+    const brand = p.brand.trim();
+    return brand.length > 0 && shopLower.has(brand.toLowerCase());
+  });
+}
+
 /** Retrouve une option dont la valeur correspond sans tenir compte de la casse. */
 export function findOptionCaseInsensitive(options: string[], value: string): string | undefined {
   const needle = value.trim().toLowerCase();

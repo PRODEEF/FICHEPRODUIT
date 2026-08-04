@@ -4,8 +4,7 @@ import type { CatalogProduct } from '@types-api';
 
 import { useCatalogProductExport } from './useCatalogProductExport';
 import type { CatalogProductPayloadMetadata, ProductFilter } from '../types';
-import { findOptionCaseInsensitive } from '../lib/catalogFilterOptions';
-import { shouldRelaxSectorFilterForBrand } from '../lib/shouldRelaxSectorFilterForBrand';
+import { findOptionCaseInsensitive, filterProductsByShopBrands } from '../lib/catalogFilterOptions';
 import { useProductFilters } from './useProductFilters';
 import { useProductSelection } from './useProductSelection';
 
@@ -14,7 +13,6 @@ interface UseCatalogProductsSectionOptions {
   productPayload: CatalogProductPayloadMetadata | null;
   shopId?: string | null | undefined;
   shopBrands?: string[] | undefined;
-  defaultShopSector?: string | null | undefined;
   externalBrandFilter?: string | undefined;
   onBrandFilterChange?: ((brand: string) => void) | undefined;
 }
@@ -24,16 +22,15 @@ export function useCatalogProductsSection({
   productPayload,
   shopId,
   shopBrands,
-  defaultShopSector,
   externalBrandFilter,
   onBrandFilterChange,
 }: UseCatalogProductsSectionOptions) {
   const [removedIds, setRemovedIds] = useState<Set<string>>(() => new Set());
 
-  const allProducts = useMemo(
-    () => products.filter((p) => !removedIds.has(p.id)),
-    [products, removedIds],
-  );
+  const allProducts = useMemo(() => {
+    const scoped = filterProductsByShopBrands(products, shopBrands);
+    return scoped.filter((p) => !removedIds.has(p.id));
+  }, [products, shopBrands, removedIds]);
 
   const {
     filters,
@@ -45,7 +42,7 @@ export function useCatalogProductsSection({
     categoryOptions,
     subCategoryOptions,
     yearOptions,
-  } = useProductFilters(allProducts, productPayload, shopBrands, defaultShopSector);
+  } = useProductFilters(allProducts, productPayload, shopBrands);
 
   const canonicalExternalBrand = useMemo(() => {
     if (externalBrandFilter === undefined) return undefined;
@@ -55,23 +52,17 @@ export function useCatalogProductsSection({
 
   useEffect(() => {
     if (canonicalExternalBrand === undefined) return;
-    if (shouldRelaxSectorFilterForBrand(canonicalExternalBrand, filters.sector, 0, allProducts)) {
-      setFilter('sector', '');
-    }
     if (filters.brand !== canonicalExternalBrand) {
       setFilter('brand', canonicalExternalBrand);
     }
-  }, [canonicalExternalBrand, allProducts, filters.sector, filters.brand, setFilter]);
+  }, [canonicalExternalBrand, filters.brand, setFilter]);
 
   const handleBrandChange = useCallback(
     (brand: string) => {
-      if (shouldRelaxSectorFilterForBrand(brand, filters.sector, 0, allProducts)) {
-        setFilter('sector', '');
-      }
       setFilter('brand', brand);
       onBrandFilterChange?.(brand);
     },
-    [allProducts, filters.sector, setFilter, onBrandFilterChange],
+    [setFilter, onBrandFilterChange],
   );
 
   const handleResetFilters = useCallback(() => {
@@ -87,24 +78,6 @@ export function useCatalogProductsSection({
     canonicalExternalBrand !== undefined && canonicalExternalBrand !== filters.brand
       ? { ...filters, brand: canonicalExternalBrand }
       : filters;
-
-  /**
-   * Si une marque est active et qu'aucun produit n'est visible alors que des fiches
-   * de cette marque existent hors-secteur, passer le secteur à « Tous ».
-   */
-  useEffect(() => {
-    if (
-      !shouldRelaxSectorFilterForBrand(
-        effectiveFilters.brand,
-        filters.sector,
-        filteredProducts.length,
-        allProducts,
-      )
-    ) {
-      return;
-    }
-    setFilter('sector', '');
-  }, [allProducts, effectiveFilters.brand, filteredProducts.length, filters.sector, setFilter]);
 
   const displayProducts = filteredProducts;
 

@@ -43,8 +43,8 @@ export function ShopSummarySection({ shop, activeBrand, onBrandClick }: ShopSumm
     return (
       <div className="flex flex-col gap-1 rounded-xl border border-border bg-white px-5 py-3 shadow-sm">
         <p className="text-sm text-text-secondary">
-          Aucun magasin enregistré pour l’instant. Configure ton magasin pour lier des marques et
-          filtrer les exemples de fiches produits.
+          Aucun magasin enregistré pour l’instant. Vous pouvez parcourir le catalogue global
+          ci-dessous ; configurez votre magasin pour lier vos marques et personnaliser les exemples.
         </p>
         <p className="text-sm">
           <TextLink to="/store">Configurer mon magasin</TextLink>

@@ -1,15 +1,13 @@
 import { Inject, Injectable, NotFoundException } from "@nestjs/common";
 import type { AuthenticatedUser } from "../../core/auth/types/jwt-payload.types";
 import { ShopService } from "../shop/shop.service";
+import { CATALOG_SEARCH_MAX_LIMIT } from "./catalog.constants";
 import {
   CATALOG_REPOSITORY,
   type CatalogSearchCriteria,
   type ICatalogRepository,
 } from "./catalog.repository.interface";
 import type { CatalogProduct } from "./types/catalog.types";
-
-/** Upper bound aligned with {@link CatalogRepository} MAX_LIMIT for shop-brand listings. */
-const SHOP_BRANDS_CATALOG_LIMIT = 1000;
 /** Plafond de suggestions de marques par secteur. */
 const BRANDS_BY_SECTOR_LIMIT = 50;
 
@@ -53,8 +51,8 @@ export class CatalogService {
   /**
    * Lists catalog products whose `brand` is in the given shop's `brands` array.
    * Does not filter by sector or category — only by shop brands.
+   * When the shop has no brands, returns the global catalog (same as search without criteria).
    *
-   * @returns Empty array when the shop has no brands configured.
    * @throws NotFoundException When the shop does not exist or is not owned by `user`.
    */
   async listCatalogProductsByShopBrands(
@@ -63,12 +61,12 @@ export class CatalogService {
   ): Promise<CatalogProduct[]> {
     const shop = await this.shopService.getForUser(shopId, user);
     if (shop.brands.length === 0) {
-      return [];
+      return this.search({ limit: CATALOG_SEARCH_MAX_LIMIT });
     }
 
     return this.search({
       brands: shop.brands,
-      limit: SHOP_BRANDS_CATALOG_LIMIT,
+      limit: CATALOG_SEARCH_MAX_LIMIT,
     });
   }
 
@@ -82,12 +80,12 @@ export class CatalogService {
   ): Promise<CatalogProduct[]> {
     const shop = await this.shopService.getForGuest(shopId, sessionId);
     if (shop.brands.length === 0) {
-      return [];
+      return this.search({ limit: CATALOG_SEARCH_MAX_LIMIT });
     }
 
     return this.search({
       brands: shop.brands,
-      limit: SHOP_BRANDS_CATALOG_LIMIT,
+      limit: CATALOG_SEARCH_MAX_LIMIT,
     });
   }
 

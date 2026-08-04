@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import type { CatalogProduct, Shop } from '@types-api';
-import { fetchCatalogProductsByShopBrands, searchCatalogProducts } from '@api/catalog';
+import { searchCatalogProducts } from '@api/catalog';
+import { CATALOG_SEARCH_MAX_LIMIT } from '@api/catalogLimits';
 import { apiErrorMessage } from '@lib/apiErrorMessage';
 import { useAuth } from '@shared/hooks/useAuth';
 
@@ -28,8 +29,8 @@ export interface UseCatalogProductsResult {
 }
 
 /**
- * Charge les exemples catalogue sur `/catalog` : par marques du magasin si possible, sinon
- * recherche large (`POST /api/catalog/products/search` sans marques), sans exiger d’analyse.
+ * Charge les exemples catalogue sur `/catalog` via recherche large
+ * (`POST /api/catalog/products/search`), sans exiger d’analyse.
  * Conserve les produits en cache module pour éviter un flash au remount (stale-while-revalidate).
  */
 export function useCatalogProducts({
@@ -96,11 +97,7 @@ export function useCatalogProducts({
       setError(null);
 
       try {
-        const hasShopBrands = brandsSignature.length > 0;
-        const loaded =
-          hasShopBrands && shopId
-            ? await fetchCatalogProductsByShopBrands(shopId)
-            : await searchCatalogProducts({ limit: 500 });
+        const loaded = await searchCatalogProducts({ limit: CATALOG_SEARCH_MAX_LIMIT });
         if (guard.cancelled) return;
         const nextMetadata = buildCatalogProductMetadata(loaded);
         setProducts(loaded);

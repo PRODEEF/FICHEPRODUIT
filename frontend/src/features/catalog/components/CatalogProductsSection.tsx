@@ -1,4 +1,7 @@
+import { RefreshCcw } from 'lucide-react';
+
 import type { CatalogProduct } from '@types-api';
+import { Button } from '@shared/ui';
 
 import type { CatalogProductPayloadMetadata } from '../types';
 import { useCatalogProductsSection } from '../hooks/useCatalogProductsSection';
@@ -15,7 +18,6 @@ export interface CatalogProductsSectionProps {
   productPayload: CatalogProductPayloadMetadata | null;
   isLoadingProducts: boolean;
   shopBrands?: string[] | undefined;
-  defaultShopSector?: string | null | undefined;
   externalBrandFilter?: string | undefined;
   onBrandFilterChange?: ((brand: string) => void) | undefined;
 }
@@ -28,18 +30,14 @@ export function CatalogProductsSection({
   productPayload,
   isLoadingProducts,
   shopBrands,
-  defaultShopSector,
   externalBrandFilter,
   onBrandFilterChange,
 }: CatalogProductsSectionProps) {
-  const hasShopBrands = Boolean(shopBrands?.some((brand) => brand.trim()));
-
   const section = useCatalogProductsSection({
     products,
     productPayload,
     shopId,
     shopBrands,
-    defaultShopSector,
     externalBrandFilter,
     onBrandFilterChange,
   });
@@ -51,9 +49,7 @@ export function CatalogProductsSection({
       </h2>
 
       <p className="mb-4 text-sm text-text-secondary">
-        {hasShopBrands
-          ? 'Voici les fiches correspondant aux marques de votre boutique.'
-          : 'Voici des exemples issus du catalogue global (toutes marques disponibles).'}
+        Parcourez l’ensemble du catalogue et filtrez par secteur, marque ou catégorie.
       </p>
 
       <div className="flex flex-col gap-4">
@@ -97,9 +93,21 @@ export function CatalogProductsSection({
             Aucun exemple disponible pour le moment. Configurez vos marques ou réessayez plus tard.
           </p>
         ) : section.hasEffectiveFilters && section.displayProducts.length === 0 ? (
-          <p className="my-4 text-text-secondary">
-            Aucune fiche ne correspond à cette marque ou à ces filtres.
-          </p>
+          <div className="my-8 flex flex-col items-center gap-4 py-6 text-center">
+            <p className="text-text-secondary">Aucun article ne correspond à vos filtres.</p>
+            {section.canResetFilters ? (
+              <Button
+                type="button"
+                variant="primary"
+                size="sm"
+                className="inline-flex items-center gap-2"
+                onClick={section.handleResetFilters}
+              >
+                <RefreshCcw className="h-4 w-4" aria-hidden />
+                Réinitialiser les filtres
+              </Button>
+            ) : null}
+          </div>
         ) : (
           <ProductTable
             shopName={shopName}

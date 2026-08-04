@@ -1,6 +1,8 @@
 import { createZodDto } from "nestjs-zod";
 import { z } from "zod";
 
+import { CATALOG_SEARCH_MAX_LIMIT } from "../catalog.constants";
+
 export const catalogSearchSchema = z.object({
   sector: z.string().trim().min(1).optional().describe("Filtre secteur : valeur exacte"),
   brands: z
@@ -32,7 +34,7 @@ export const catalogSearchSchema = z.object({
     .number()
     .int()
     .min(1)
-    .max(1000)
+    .max(CATALOG_SEARCH_MAX_LIMIT)
     .optional()
     .describe("Nombre maximal de lignes retournées (valeur par défaut côté serveur si omis)"),
 });
