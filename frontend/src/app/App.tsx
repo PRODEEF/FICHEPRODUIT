@@ -1,5 +1,6 @@
 import { Suspense, useEffect, useState } from 'react';
 import { BrowserRouter, Outlet, Route, Routes, useLocation, useNavigate } from 'react-router';
+
 import { Toaster } from 'sonner';
 
 import { useAuth } from '@shared/hooks/useAuth';
@@ -57,7 +58,6 @@ function AppHeader({ drawerOpen, onDrawerToggle }: AppHeaderProps) {
 }
 
 function AppShellLayout({ userEmail }: { userEmail: string | null }) {
-  const location = useLocation();
   const [drawerOpen, setDrawerOpen] = useState(true);
   const drawerExpanded = drawerOpen && Boolean(userEmail);
 
@@ -82,7 +82,8 @@ function AppShellLayout({ userEmail }: { userEmail: string | null }) {
           drawerExpanded ? 'ml-[260px]' : 'ml-0'
         }`}
       >
-        <Suspense key={location.key} fallback={<RouteFallback />}>
+        {/* Pas de key sur Suspense : location.key forçait un remount + flash « Chargement… » à chaque nav. */}
+        <Suspense fallback={<RouteFallback />}>
           <Outlet />
         </Suspense>
       </main>

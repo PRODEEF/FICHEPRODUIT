@@ -33,3 +33,9 @@ export function setCatalogProductsCache(key: string, entry: CatalogProductsCache
   cache.set(key, entry);
   lastCacheKey = key;
 }
+
+/** Vide le cache (ex. déconnexion / changement d’utilisateur). */
+export function clearCatalogProductsCache(): void {
+  cache.clear();
+  lastCacheKey = null;
+}

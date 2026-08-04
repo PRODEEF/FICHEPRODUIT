@@ -2,11 +2,13 @@ import { useEffect, useMemo, useState } from 'react';
 
 import type { CatalogProduct, Shop } from '@types-api';
 import { fetchCatalogProductsByShopBrands, searchCatalogProducts } from '@api/catalog';
+import { useAuth } from '@shared/hooks/useAuth';
 
 import type { CatalogProductPayloadMetadata } from '../types';
 import { buildCatalogProductMetadata } from '../lib/catalogProductMetadata';
 import {
   buildCatalogProductsCacheKey,
+  clearCatalogProductsCache,
   getCatalogProductsCache,
   getLastCatalogProductsCache,
   setCatalogProductsCache,
@@ -33,6 +35,9 @@ export function useCatalogProducts({
   shop,
   shopLoading,
 }: UseCatalogProductsParams): UseCatalogProductsResult {
+  const { user } = useAuth();
+  const userId = user?.id;
+
   const shopId = shop?.id;
   const brandsSignature = useMemo(
     () =>
@@ -55,6 +60,18 @@ export function useCatalogProducts({
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (userId) return;
+    clearCatalogProductsCache();
+    // Différé pour respecter react-hooks/set-state-in-effect.
+    queueMicrotask(() => {
+      setProducts(null);
+      setMetadata(null);
+      setLoading(false);
+      setError(null);
+    });
+  }, [userId]);
 
   useEffect(() => {
     const guard = { cancelled: false };
