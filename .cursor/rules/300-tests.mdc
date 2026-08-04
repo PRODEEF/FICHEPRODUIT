@@ -1,0 +1,166 @@
+---
+description: Règles tests — obligations, conventions Jest/Vitest, couverture minimale
+globs:
+  [
+    "backend/src/**/*.spec.ts",
+    "backend/test/**/*.ts",
+    "frontend/src/**/*.vitest.ts",
+    "frontend/src/**/*.vitest.tsx",
+  ]
+alwaysApply: false
+---
+
+# Règles tests — Jest (backend) + Vitest (frontend)
+
+## Principe fondamental
+
+> **Pas de PR sans tests.** Toute nouvelle logique (service, repository, fonction lib, hook complexe)
+> doit être accompagnée de ses tests dans le même commit.
+
+## Ce qui DOIT être testé
+
+### Backend (Jest — `*.spec.ts`)
+
+| Fichier créé/modifié      | Test requis                                                  |
+| ------------------------- | ------------------------------------------------------------ |
+| `*.service.ts`            | `*.service.spec.ts` — cas nominal + cas d'erreur             |
+| `*.repository.ts`         | `*.repository.spec.ts` — mock Supabase, cas nominal + erreur |
+| Nouvelle feature complète | `test/*.e2e-spec.ts` — au moins le happy path HTTP           |
+
+### Frontend (Vitest — `*.vitest.ts`)
+
+| Fichier créé/modifié         | Test requis                                     |
+| ---------------------------- | ----------------------------------------------- |
+| `lib/*.ts` (fonctions pures) | `lib/*.vitest.ts` — tous les cas de la fonction |
+| Hook complexe avec logique   | `hooks/*.vitest.ts` — comportement attendu      |
+
+Les composants React simples (affichage pur) **n'ont pas besoin de tests**.
+
+## Conventions de nommage des tests
+
+```typescript
+// ✅ Format attendu pour les describe/it
+describe('NomDuService', () => {
+  describe('méthodeTestée', () => {
+    it('retourne X quand Y', () => { ... });
+    it('lève une NotFoundException si la ressource est introuvable', () => { ... });
+    it('propage l\'erreur Supabase en BadRequestException', () => { ... });
+  });
+});
+```
+
+- `describe` de niveau 1 : nom de la classe ou du module testé
+- `describe` de niveau 2 (optionnel) : nom de la méthode testée
+- `it` : phrase qui décrit le comportement testé (pas le nom de la méthode)
+- ❌ `it('fonctionne')`, `it('test 1')` — descriptions vides ou sans valeur
+
+## Structure type — test de Service (Jest)
+
+```typescript
+import { NotFoundException } from "@nestjs/common";
+import { MonService } from "./mon.service";
+import type { IMonRepository } from "./mon.repository.interface";
+
+describe("MonService", () => {
+  // Mock complet de l'interface du repository
+  const repoMock: jest.Mocked<IMonRepository> = {
+    findById: jest.fn(),
+    findAll: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+  };
+
+  const service = new MonService(repoMock);
+
+  beforeEach(() => jest.clearAllMocks()); // ← toujours présent
+
+  describe("getById", () => {
+    it("retourne la ressource si elle existe", async () => {
+      const mockData = { id: "uuid-1", name: "Test" };
+      repoMock.findById.mockResolvedValue(mockData);
+
+      const result = await service.getById("uuid-1", "token");
+
+      expect(repoMock.findById).toHaveBeenCalledWith("uuid-1", "token");
+      expect(result).toMatchObject({ id: "uuid-1" });
+    });
+
+    it("lève NotFoundException si la ressource est introuvable", async () => {
+      repoMock.findById.mockResolvedValue(null);
+
+      await expect(service.getById("inexistant", "token")).rejects.toThrow(NotFoundException);
+    });
+  });
+});
+```
+
+## Structure type — test de fonction pure (Vitest)
+
+```typescript
+import { describe, it, expect } from "vitest";
+import { maFonction } from "./maFonction";
+
+describe("maFonction", () => {
+  it("transforme correctement une entrée valide", () => {
+    expect(maFonction("input valide")).toBe("résultat attendu");
+  });
+
+  it("retourne null pour une entrée vide", () => {
+    expect(maFonction("")).toBeNull();
+  });
+
+  it("gère les caractères spéciaux sans planter", () => {
+    expect(() => maFonction("!@#$%")).not.toThrow();
+  });
+});
+```
+
+## Règles sur les mocks
+
+```typescript
+// ✅ Mock de fetch global — toujours restaurer
+const fetchSpy = jest.spyOn(global, "fetch");
+afterEach(() => fetchSpy.mockRestore()); // ou dans afterAll
+
+// ✅ Mock d'un module — scope limité au fichier de test
+vi.mock("@api/shop", () => ({
+  patchMyShop: vi.fn(),
+}));
+
+// ❌ Interdit — mock trop large qui masque les vrais comportements
+jest.mock("../../core/supabase/supabase.service");
+```
+
+- ✅ Toujours `clearAllMocks()` ou `resetAllMocks()` dans `beforeEach`
+- ✅ Restaurer les spies (`mockRestore`) dans `afterEach` ou `afterAll`
+- ❌ Ne jamais mocker un module entier sauf si c'est l'infrastructure externe (Supabase, OpenAI, fetch)
+- ✅ Préférer mocker l'**interface du repository** plutôt que SupabaseService directement
+
+## Cas d'erreur obligatoires
+
+Pour chaque test de Service ou de fonction async, les cas suivants doivent être couverts :
+
+1. **Ressource introuvable** → `NotFoundException` ou retour `null`
+2. **Accès refusé** → `ForbiddenException` ou erreur métier
+3. **Erreur externe** (Supabase, OpenAI en échec) → comportement de fallback ou erreur propagée
+4. **Input invalide** → rejet propre (pas de crash)
+
+## Ce qu'on ne teste PAS
+
+- ❌ Le framework lui-même (pas besoin de tester que NestJS route correctement)
+- ❌ Les composants React purement d'affichage (trop fragiles, trop peu de valeur)
+- ❌ Les DTOs Zod (le schéma est la spec, pas besoin de le re-tester)
+- ❌ Les fichiers de configuration (`configuration.ts`, `tsconfig.json`)
+
+## CI — les tests doivent passer en local avant tout push
+
+```bash
+# Backend
+cd backend && npm test
+
+# Frontend
+cd frontend && npm run test
+
+# Ces deux commandes doivent sortir en code 0 avant de pousser une branche
+```

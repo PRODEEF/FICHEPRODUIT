@@ -1,0 +1,157 @@
+---
+description: Guide pour les contributeurs non-techniques — ce qu'il faut faire et ne pas faire
+globs: ["**/*"]
+alwaysApply: true
+---
+
+# Guide contributeur — ficheproduit
+
+> Ce fichier s'adresse à **toute personne qui contribue au projet sans background technique**.
+> Cursor va t'aider à écrire le code, mais ces règles sont les garde-fous à respecter absolument.
+
+> Pour les conventions techniques (TypeScript, imports, commits, logs) → voir [000-general.mdc](000-general.mdc).
+> Pour les guides agent détaillés (skills) → voir [.cursor/skills/README.md](../skills/README.md) et [.cursor/skills/onboarding/SKILL.md](../skills/onboarding/SKILL.md).
+> **Plan avant code** → [.cursor/rules/410-plan-before-code.mdc](410-plan-before-code.mdc).
+> **Base Supabase / migrations** → [.cursor/rules/120-supabase.mdc](120-supabase.mdc).
+> Ce guide se concentre sur le **workflow** et les pièges à éviter.
+
+---
+
+## Avant de coder quoi que ce soit
+
+### 1. Crée une branche dédiée — jamais coder sur `main`
+
+```bash
+# Dans le terminal Cursor (ou le terminal intégré)
+git checkout main
+git pull
+git checkout -b feat/ma-nouvelle-fonctionnalite
+```
+
+Nomme ta branche en décrivant ce que tu fais :
+
+- `feat/ajouter-export-pdf`
+- `fix/corriger-affichage-prix`
+- `chore/nettoyer-commentaires`
+
+### 2. Décris clairement ta demande à Cursor
+
+Plus ta demande est précise, moins Cursor fera d'erreurs. Au lieu de :
+
+> "Ajoute un bouton"
+
+Dis plutôt :
+
+> "Dans la page Catalog (`frontend/src/features/catalog/pages/Catalog.tsx`), ajoute un bouton 'Exporter' en haut à droite qui appelle la fonction `exportCatalog` du hook `useCatalogExport`"
+
+### 3. Planifie avant de coder (mode Plan)
+
+Pour toute tâche **non triviale** (nouvelle feature, plusieurs fichiers, endpoint API, doute sur l'approche) :
+
+1. Passe en **mode Plan** dans le sélecteur de mode du chat Cursor.
+2. Décris ta tâche — Cursor propose un plan **sans modifier le code**.
+3. Relis, pose des questions, ajuste si besoin.
+4. Dis **« OK, implémente »** ou repasse en **mode Agent** une fois le plan validé.
+
+Rule détaillée : [410-plan-before-code.mdc](410-plan-before-code.mdc) · Guide : [onboarding/SKILL.md](../skills/onboarding/SKILL.md)
+
+---
+
+## Les 5 choses à ne JAMAIS faire
+
+### ❌ 1. Ne jamais coller de clé API dans le code
+
+Si tu vois quelque chose comme `sk-proj-...`, `eyJ...`, `tvly-...` dans un fichier `.ts` ou `.tsx` — c'est une clé secrète. Elle ne doit **jamais** être dans le code.
+
+Les clés vont uniquement dans le fichier `.env` à la racine du projet (backend ou frontend), qui est ignoré par Git.
+
+### ❌ 2. Ne jamais modifier les fichiers dans `backend/src/core/`
+
+Ce dossier contient l'infrastructure critique du projet (authentification, base de données, configuration). Une modification ici peut tout casser.
+
+Si tu penses qu'il faut y toucher, demande d'abord.
+
+### ❌ 3. Ne jamais pusher directement sur `main`
+
+La branche `main` est protégée. Toutes les modifications passent par une **Pull Request** qui sera relue avant d'être intégrée.
+
+### ❌ 4. Ne jamais supprimer un fichier de test (`*.spec.ts` ou `*.vitest.ts`)
+
+Ces fichiers vérifient que le code fonctionne. Si Cursor te propose de les supprimer, refuse.
+
+### ❌ 5. Ne jamais ignorer une erreur de lint ou de build
+
+Si le terminal affiche des erreurs en rouge, ne pas committer quand même. Demande à Cursor de corriger les erreurs d'abord.
+
+---
+
+## Quand Cursor génère du code — ce qu'il faut vérifier
+
+Après que Cursor a généré ou modifié du code, vérifie ces points avant de committer :
+
+**✅ Le code ne contient pas de secrets** — pas de clés, tokens, mots de passe en dur
+
+**✅ Les tests passent** — dans le terminal :
+
+```bash
+cd backend && npm test      # pour les fichiers backend
+cd frontend && npm run test # pour les fichiers frontend
+```
+
+**✅ Le lint passe** — dans le terminal :
+
+```bash
+cd backend && npm run lint
+cd frontend && npm run lint
+```
+
+**✅ Cursor n'a pas supprimé des fichiers de test** — vérifie dans l'onglet Git de Cursor
+
+---
+
+## Comment créer une Pull Request
+
+Une fois ton code prêt et les tests au vert :
+
+1. Dans Cursor, ouvre le panneau Git (icône branche en bas à gauche)
+2. Stage tes fichiers modifiés
+3. Écris un message de commit clair :
+
+   ```markdown
+   feat: ajouter le bouton d'export sur la page catalogue
+   fix: corriger l'affichage du prix pour les produits sans TVA
+   ```
+
+4. Commit et push
+5. Va sur GitHub → tu verras une bannière "Compare & pull request" → clique dessus
+6. Remplis le template de PR (description de ce que ça fait, comment tester)
+7. Assigne la PR pour relecture
+
+---
+
+## Structure du projet en deux mots
+
+```markdown
+frontend/ → ce que l'utilisateur voit (React, pages, composants)
+backend/ → le serveur, la base de données, l'IA (NestJS)
+```
+
+**Frontend** : si tu veux modifier une page ou un composant, cherche dans `frontend/src/features/<nom-de-la-feature>/`
+
+**Backend** : si tu veux ajouter ou modifier une API, cherche dans `backend/src/domain/<nom>` ou `backend/src/feature/<nom>`
+
+**Ne jamais toucher** : `backend/src/core/` (infrastructure), `*.spec.ts` et `*.vitest.ts` (tests)
+
+**Skills Cursor** (guides pour l'agent) : dossier `.cursor/skills/` — commencer par `onboarding/SKILL.md` si tu es nouveau.
+
+---
+
+## En cas de doute
+
+Si tu ne sais pas si quelque chose est correct ou risqué :
+
+1. Demande à Cursor : "Est-ce que cette modification est safe ? Quels risques ça comporte ?"
+2. Crée quand même ta PR — la relecture est là pour ça
+3. Décris dans la PR ce que tu n'es pas sûr(e) de
+
+Mieux vaut une PR avec une question que du code cassé sur `main`.

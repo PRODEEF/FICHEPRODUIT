@@ -1,5 +1,4 @@
 .DS_Store
-.cursor/
 .cursor/mcp.json
 .cursor/settings.json
 node_modules/
@@ -10,7 +9,6 @@ npm-debug.log*
 dist/
 backend/logs/
 
-frontend-test/
 .env*
 !.env.example
 !**/.env.example
