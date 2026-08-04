@@ -10,10 +10,8 @@ import {
   buildCategoryOptions,
   buildSubCategoryOptions,
   buildYearOptions,
-  findOptionCaseInsensitive,
-  optionIncludedCaseInsensitive,
 } from '../lib/catalogFilterOptions';
-import { uniqueSortedCaseInsensitive } from '../lib/productUtils';
+import { sortCatalogProducts } from '../lib/sortCatalogProducts';
 
 interface UseProductFiltersResult {
   filters: ProductFilter;
@@ -25,41 +23,6 @@ interface UseProductFiltersResult {
   categoryOptions: string[];
   subCategoryOptions: string[];
   yearOptions: string[];
-}
-
-function pruneDependentFilters(
-  prev: Pick<ProductFilter, 'category' | 'subCategory' | 'brand' | 'year'>,
-  options: {
-    categoryOptions: string[];
-    subCategoryOptions: string[];
-    brandOptions: string[];
-    yearOptions: string[];
-  },
-): Pick<ProductFilter, 'category' | 'subCategory' | 'brand' | 'year'> {
-  let { category, subCategory, brand, year } = prev;
-  const { categoryOptions, subCategoryOptions, brandOptions, yearOptions } = options;
-
-  if (category && !categoryOptions.includes(category)) {
-    category = '';
-    subCategory = '';
-    brand = '';
-    year = '';
-  } else if (subCategory && !subCategoryOptions.includes(subCategory)) {
-    subCategory = '';
-    brand = '';
-    year = '';
-  } else if (brand && !optionIncludedCaseInsensitive(brandOptions, brand)) {
-    brand = '';
-    year = '';
-  } else if (brand) {
-    brand = findOptionCaseInsensitive(brandOptions, brand) ?? brand;
-  }
-
-  if (year && !yearOptions.includes(year)) {
-    year = '';
-  }
-
-  return { category, subCategory, brand, year };
 }
 
 export function useProductFilters(
@@ -75,29 +38,7 @@ export function useProductFilters(
         if (prev[key] === value) {
           return prev;
         }
-
-        const next = { ...prev, [key]: value };
-
-        if (key === 'sector' && value !== prev.sector) {
-          next.category = '';
-          next.subCategory = '';
-          next.year = '';
-          // Conserver la marque quand on passe à « Tous » (ex. chip hors-secteur).
-          if (typeof value === 'string' && value.trim()) {
-            next.brand = '';
-          }
-        } else if (key === 'category' && value !== prev.category) {
-          next.subCategory = '';
-          next.brand = '';
-          next.year = '';
-        } else if (key === 'subCategory' && value !== prev.subCategory) {
-          next.brand = '';
-          next.year = '';
-        } else if (key === 'brand' && value !== prev.brand) {
-          next.year = '';
-        }
-
-        return next;
+        return { ...prev, [key]: value };
       });
     },
     [],
@@ -139,48 +80,14 @@ export function useProductFilters(
     return fromScope.filter((b) => shopLower.has(b.toLowerCase()));
   }, [products, parentFilters, shopBrands]);
 
-  /** Marques présentes dans le chargement (tous secteurs) — pour ne pas prune une marque hors-secteur. */
-  const brandsPresentInProducts = useMemo(
-    () => uniqueSortedCaseInsensitive(products.map((p) => p.brand).filter(Boolean)),
-    [products],
-  );
-
   const yearOptions = useMemo(
     () => buildYearOptions(products, parentFilters),
     [products, parentFilters],
   );
 
-  const prunedDependentFilters = useMemo(
-    () =>
-      pruneDependentFilters(
-        {
-          category: filters.category,
-          subCategory: filters.subCategory,
-          brand: filters.brand,
-          year: filters.year,
-        },
-        {
-          categoryOptions,
-          subCategoryOptions,
-          brandOptions: brandsPresentInProducts,
-          yearOptions,
-        },
-      ),
-    [filters, categoryOptions, subCategoryOptions, brandsPresentInProducts, yearOptions],
-  );
-
-  if (
-    prunedDependentFilters.category !== filters.category ||
-    prunedDependentFilters.subCategory !== filters.subCategory ||
-    prunedDependentFilters.brand !== filters.brand ||
-    prunedDependentFilters.year !== filters.year
-  ) {
-    setFilters((prev) => ({ ...prev, ...prunedDependentFilters }));
-  }
-
   const filteredProducts = useMemo(() => {
     const q = filters.search.trim().toLowerCase();
-    return products.filter((p) => {
+    const filtered = products.filter((p) => {
       if (filters.sector && !catalogSectorsMatch(p.sector, filters.sector)) return false;
       if (filters.category && p.category !== filters.category) return false;
       if (filters.subCategory && p.subCategory !== filters.subCategory) return false;
@@ -195,6 +102,7 @@ export function useProductFilters(
       }
       return true;
     });
+    return sortCatalogProducts(filtered);
   }, [products, filters]);
 
   const hasActiveFilters = useMemo(
