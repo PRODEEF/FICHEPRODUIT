@@ -1,0 +1,179 @@
+---
+description: Règles backend NestJS — architecture, patterns, Zod, Supabase, tests
+globs: ["backend/src/**/*.ts", "backend/test/**/*.ts"]
+alwaysApply: false
+---
+
+# Règles backend — NestJS + Fastify + Zod + Supabase
+
+## Architecture — le pattern obligatoire
+
+Chaque domaine suit **strictement** cette hiérarchie :
+
+```markdown
+Controller → Service → Repository (via interface)
+↓
+SupabaseService
+```
+
+### Règles de chaque couche
+
+**Controller** (`*.controller.ts`)
+
+- Responsabilité unique : recevoir la requête HTTP, déléguer au Service, retourner la réponse
+- ❌ Jamais de logique métier dans un Controller
+- ❌ Jamais d'accès direct à `SupabaseService` ou à un Repository
+- ✅ Toujours décorer les endpoints avec `@ApiOperation`, `@ApiOkResponse`, `@ApiBearerAuth` (Swagger)
+- ✅ Toujours utiliser un DTO Zod pour le body (`@Body() dto: MonDto`) et typer la réponse de retour
+
+**Service** (`*.service.ts`)
+
+- Responsabilité : logique métier, orchestration
+- ❌ Jamais d'accès direct à `SupabaseService` — passer obligatoirement par le Repository
+- ✅ Injecter le Repository via son token d'interface : `@Inject(MON_REPOSITORY)`
+- ✅ Toujours propager le `accessToken` reçu du Controller vers le Repository (RLS Supabase)
+
+**Repository** (`*.repository.ts` + `*.repository.interface.ts`)
+
+- Responsabilité unique : accès à la base de données via `SupabaseService`
+- ✅ Toujours implémenter l'interface définie dans `*.repository.interface.ts`
+- ✅ Mapper les données Supabase vers les types domaine dans le Repository (pas dans le Service)
+- ❌ Jamais de logique métier dans un Repository — uniquement des opérations CRUD/requêtes
+
+## DTOs et validation Zod
+
+```typescript
+// ✅ Toujours créer un DTO avec createZodDto
+import { createZodDto } from "nestjs-zod";
+import { z } from "zod";
+
+const createShopSchema = z.object({
+  name: z.string().min(1).max(100).describe("Nom de la boutique"),
+  url: z.string().url().describe("URL du site e-commerce"),
+});
+
+export class CreateShopDto extends createZodDto(createShopSchema) {}
+```
+
+- ❌ Jamais de `class-validator` — utiliser exclusivement **Zod** via `nestjs-zod`
+- ✅ Toujours ajouter `.describe()` sur les champs Zod pour la doc Swagger
+- ✅ Les schémas Zod sont définis dans le même fichier que leur DTO, ou dans `dto/*.dto.ts`
+- ✅ Un DTO de réponse (`*ResponseDto`) pour chaque endpoint qui retourne des données
+
+## Authentification et guards
+
+```typescript
+// Endpoint authentifié obligatoire
+@UseGuards(JwtGuard)
+@ApiBearerAuth('bearerAuth')
+
+// Endpoint mixte (connecté OU invité)
+@UseGuards(OptionalJwtGuard)
+@ApiBearerAuth('bearerAuth')
+
+// Accès à l'utilisateur courant
+async myMethod(@CurrentUser() user: AuthUser) { ... }
+```
+
+- ✅ Tout endpoint manipulant des données utilisateur doit utiliser `JwtGuard`
+- ✅ Les endpoints supportant le mode invité (guest) utilisent `OptionalJwtGuard`
+- ✅ Toujours vérifier l'ownership des ressources : un utilisateur ne peut accéder qu'à ses propres données
+- Le `accessToken` (`user.accessToken`) est transmis au Repository pour que la RLS Supabase s'applique
+
+## Configuration
+
+```typescript
+// ✅ Correct — via ConfigService
+constructor(private readonly config: ConfigService) {}
+const apiKey = this.config.getOrThrow<string>('openaiApiKey');
+
+// ❌ Interdit
+const apiKey = process.env.OPENAI_API_KEY;
+```
+
+- Toutes les clés de config sont définies dans `backend/src/core/config/configuration.ts`
+- Utiliser `getOrThrow` si la clé est obligatoire, `get` avec une valeur par défaut sinon
+
+### Ajouter ou modifier une variable d'environnement
+
+Quand une nouvelle clé est nécessaire, **toujours** mettre à jour les fichiers suivants dans le **même commit** :
+
+| Fichier                                    | Rôle                                                                  |
+| ------------------------------------------ | --------------------------------------------------------------------- |
+| `backend/src/core/config/configuration.ts` | Seul endroit autorisé pour lire `process.env` côté backend            |
+| `backend/.env.example`                     | Template local — commentaire + valeur fictive, jamais de secret réel  |
+| `frontend/.env.example`                    | Si la variable est exposée au front → préfixe **`VITE_`** obligatoire |
+| `backend/DEPLOY.md`                        | Si la variable est requise en production / preview Vercel             |
+
+Règles :
+
+- ❌ Jamais `process.env` hors `configuration.ts` (backend)
+- ❌ Jamais de secret dans le code ou dans un commit (`.env` est gitignoré)
+- ❌ Jamais `SUPABASE_SERVICE_ROLE_KEY` côté frontend — uniquement backend
+- ✅ Frontend : variables publiques uniquement (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_API_URL`, etc.)
+- ✅ Nommer en `SCREAMING_SNAKE_CASE` ; documenter le rôle en commentaire dans `.env.example`
+
+Schéma Supabase : rule [120-supabase.mdc](120-supabase.mdc). Plan avant implémentation : [410-plan-before-code.mdc](410-plan-before-code.mdc).
+
+## Module NestJS — structure type
+
+```typescript
+@Module({
+  imports: [AutreModule], // modules dont on dépend
+  controllers: [MonController],
+  providers: [MonService, { provide: MON_REPOSITORY, useClass: MonRepository }],
+  exports: [MonService], // seulement si consommé par un autre module
+})
+export class MonModule {}
+```
+
+- ❌ Ne pas modifier `backend/src/core/` sans validation explicite — c'est l'infrastructure partagée
+- ❌ Ne pas importer `SupabaseModule` dans les modules domaine — il est `@Global()`
+
+## Tests unitaires (Jest)
+
+Chaque `*.service.ts` et `*.repository.ts` **doit** avoir son `*.spec.ts` correspondant.
+
+```typescript
+// ✅ Structure type d'un test de service
+describe('MonService', () => {
+  const repoMock: jest.Mocked<IMonRepository> = {
+    findById: jest.fn(),
+    create: jest.fn(),
+    // ... toutes les méthodes de l'interface
+  };
+
+  const service = new MonService(repoMock);
+
+  beforeEach(() => jest.clearAllMocks());
+
+  it('fait X quand Y', async () => {
+    repoMock.findById.mockResolvedValue({ id: '1', ... });
+    const result = await service.getById('1');
+    expect(result).toMatchObject({ id: '1' });
+  });
+
+  it('lève une NotFoundException si ressource introuvable', async () => {
+    repoMock.findById.mockResolvedValue(null);
+    await expect(service.getById('inexistant')).rejects.toThrow(NotFoundException);
+  });
+});
+```
+
+- ✅ Toujours tester le **cas nominal** ET le **cas d'erreur** (ressource introuvable, accès refusé, erreur réseau)
+- ✅ `jest.clearAllMocks()` dans `beforeEach`
+- ❌ Ne pas mocker `SupabaseService` directement dans les tests de Service — mocker le Repository
+- ✅ Les tests e2e (`*.e2e-spec.ts`) vont dans `backend/test/`
+
+## Gestion des erreurs HTTP
+
+```typescript
+// ✅ Utiliser les exceptions NestJS
+throw new NotFoundException("Boutique introuvable");
+throw new ForbiddenException("Accès refusé");
+throw new BadRequestException("URL invalide");
+throw new UnauthorizedException();
+```
+
+- ❌ Ne jamais retourner `{ error: '...' }` manuellement — laisser le `AllHttpExceptionsFilter` gérer
+- ✅ Les erreurs attendues (ressource inexistante, droits insuffisants) lèvent une exception HTTP appropriée

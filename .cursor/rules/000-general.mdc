@@ -1,0 +1,80 @@
+---
+description: Règles générales du projet ficheproduit — s'appliquent à tous les fichiers
+globs: ["**/*"]
+alwaysApply: true
+---
+
+# Règles générales — ficheproduit
+
+## Langue
+
+- Tout le code (noms de variables, fonctions, fichiers) est en **anglais**
+- Les commentaires, JSDoc et messages d'erreur métier sont en **français**
+- Les commits sont en **français** au format Conventional Commits
+
+## TypeScript — interdictions absolues
+
+- ❌ Jamais de `any` explicite — utiliser `unknown` puis narrow, ou typer précisément
+- ❌ Jamais de `@ts-ignore` sans commentaire qui explique pourquoi et mentionne un ticket
+- ❌ Jamais de `as SomeType` sauf si le type est garanti par le contexte (préférer un type guard)
+- ❌ Jamais de `!` (non-null assertion) sans vérification préalable
+- ✅ Toujours préférer `type` pour les alias, `interface` pour les shapes extensibles
+
+## Secrets et configuration
+
+- ❌ Jamais de clé API, token, URL de base de données ou secret hardcodé dans le code
+- ❌ Jamais d'accès à `process.env` en dehors de `backend/src/core/config/configuration.ts`
+- ✅ Toujours passer par `ConfigService` (backend) ou les variables `VITE_*` (frontend)
+
+## Gestion des erreurs
+
+- ❌ Jamais de `catch` vide : `catch (e) {}`
+- ❌ Jamais d'erreur silencieuse sans au minimum un `logger.warn()`
+- ✅ Dans les blocs `catch`, toujours vérifier `e instanceof Error` avant d'accéder à `.message`
+
+## Console et logs
+
+- ❌ Jamais de `console.log` / `console.error` dans le code de production
+- ✅ Backend : utiliser `new Logger(NomDuService.name)` de NestJS
+- ✅ Frontend : pas de logs en prod (les retirer avant de committer)
+
+## Imports (frontend — voir `frontend/tsconfig.app.json`)
+
+- ✅ Alias configurés : `@api/*`, `@shared/*`, `@lib/*` (→ `shared/lib/`), `@ui` (barrel UI), `@types-api` (types API)
+- ❌ Pas d'alias `@/` dans ce projet — ne pas l'utiliser
+- ❌ Jamais d'import relatif remontant plus de 2 niveaux (`../../..`)
+- ✅ Les imports de types doivent utiliser `import type { ... }` (sauf si Cursor le gère via le linter)
+- ✅ Appels API : skill [frontend-api-client](.cursor/skills/frontend-api-client/SKILL.md)
+
+## Conventions de nommage
+
+- Fichiers : `kebab-case` pour tout sauf les composants React (`PascalCase.tsx`)
+- Variables/fonctions : `camelCase`
+- Types/interfaces/classes : `PascalCase`
+- Constantes exportées : `SCREAMING_SNAKE_CASE`
+- Hooks React : toujours préfixer par `use`
+
+## Git — workflow obligatoire
+
+- ❌ Jamais de push direct sur `main` — toujours passer par une PR
+- Nommage des branches : `feat/<description-courte>`, `fix/<description-courte>`, `chore/<description-courte>`
+- Format des commits (Conventional Commits) :
+
+  ```markdown
+  feat: ajouter l'export PDF
+  fix: corriger le calcul du prix TTC
+  chore: mettre à jour les dépendances
+  refactor: extraire la logique de parsing CSV
+  test: ajouter les tests du ShopService
+  docs: documenter l'endpoint POST /api/analyses
+  ```
+
+- ❌ Jamais de commit message vague : `fix`, `wip`, `test`, `update`, `changes`
+- Un commit = une intention claire et atomique
+
+## Ce qu'on ne fait PAS dans ce projet
+
+- ❌ Pas de classe utilitaire statique `XxxUtils` ou `XxxHelper` — préférer des fonctions exportées
+- ❌ Pas de singleton manuel — NestJS gère l'injection de dépendances
+- ❌ Pas de logique métier dans un Controller ou un composant React — la mettre dans un Service/hook
+- ❌ Pas de migration de base de données dans le code applicatif — Supabase dashboard ou fichiers SQL dédiés

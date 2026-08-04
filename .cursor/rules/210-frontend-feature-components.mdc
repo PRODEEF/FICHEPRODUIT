@@ -1,0 +1,46 @@
+---
+description: >
+  Structure des composants feature — un export par fichier, styles dans lib/, primitives @shared/ui.
+  À consulter pour tout nouveau fichier ou gros refactor dans features/*/components/.
+globs:
+  [
+    "frontend/src/features/**/components/**/*.tsx",
+  ]
+alwaysApply: false
+---
+
+# Composants feature — structure des fichiers
+
+À appliquer pour tout fichier dans `frontend/src/features/<feature>/components/`.
+
+Voir aussi le skill [feature-structure](.cursor/skills/feature-structure/SKILL.md).
+
+## Un composant exporté par fichier
+
+- `components/Foo.tsx` exporte **un seul** composant `Foo`.
+- Les types/props du composant peuvent rester dans le même fichier.
+- Interdit : une `function Bar()` avec du JSX structuré (≈ plus de 15 lignes) ou réutilisée 2+ fois dans le même fichier → créer `Bar.tsx` à côté.
+
+## Pas de logique métier dans le `.tsx`
+
+- Filtrage, validation Zod, appels API, calculs sur les données → `hooks/` ou `lib/`.
+- Le composant reçoit des props et déclenche des callbacks.
+
+## Styles Tailwind
+
+- Pas de blocs `const xxxClassName = cn(...)` de plus de ~3 lignes en tête de composant.
+- Extraire vers `features/<feature>/lib/<feature>ControlStyles.ts` ou vers `@shared/ui` si transversal (2+ features).
+- Tokens projet : `border-soft`, `text-text-primary`, `text-text-muted`, focus purple.
+
+## Imports
+
+1. `react` / `lucide-react`
+2. `@shared/*`, `@api/*`, `@lib/*`
+3. Imports relatifs du feature (`../types`, `../lib/`) — jamais `../../..`
+
+## Checklist avant commit
+
+- [ ] Un seul export de composant dans le fichier
+- [ ] Pas de sous-composant JSX lourd non extrait
+- [ ] Classes répétées déplacées dans `lib/` ou `@shared/ui`
+- [ ] Skill [shared-ui-components](.cursor/skills/shared-ui-components/SKILL.md) consulté pour l’UI

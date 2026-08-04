@@ -1,0 +1,46 @@
+---
+description: Planifier avec le mode Plan Cursor avant toute implémentation non triviale — obligatoire pour les nouveaux devs
+globs: ["**/*"]
+alwaysApply: true
+---
+
+# Plan avant code — FicheProduit
+
+## Pour l'agent Cursor
+
+Avant de **modifier des fichiers** ou **lancer des agents d'implémentation** :
+
+1. **Évalue la tâche** — feature, bug multi-fichiers, refactor, full-stack, ou zone inconnue (`core/`, billing, auth) = **Plan d'abord**.
+2. **Passe en mode Plan** (`SwitchMode` → `plan`) si la tâche n'est pas triviale.
+3. **Produis un plan** : fichiers touchés, skills/rules à suivre, étapes, risques, critères d'acceptation.
+4. **Attends la validation** explicite de l'utilisateur avant d'implémenter.
+5. **Ne devine pas** — une question claire vaut mieux qu'un mauvais plan.
+
+### Exceptions (implémentation directe OK)
+
+- Correction typo ou commentaire isolé
+- Fix one-liner dans un fichier déjà identifié
+- Demande explicite : « implémente directement », « pas besoin de plan »
+- Suite immédiate d'un plan **déjà validé** dans la même conversation
+
+### Contenu minimal d'un plan
+
+- **Quoi** : objectif en une phrase
+- **Où** : chemins de fichiers / modules
+- **Comment** : skills (ex. `nestjs-repository-pattern`, `feature-structure`)
+- **Tests** : commandes `lint` / `test` à lancer
+- **Questions ouvertes** : points à trancher avec l'utilisateur
+
+---
+
+## Pour le contributeur (humain)
+
+Dans le chat Cursor, choisis **Plan** dans le sélecteur de mode (à côté d'Agent / Ask), puis décris ta tâche.
+
+Exemple :
+
+> « Je veux ajouter un filtre par marque sur la page Catalog. Fais un plan avant de coder. »
+
+Relis le plan, pose des questions, puis dis **« OK, implémente »** pour repasser en mode Agent.
+
+Guide complet : [.cursor/skills/onboarding/SKILL.md](../skills/onboarding/SKILL.md)

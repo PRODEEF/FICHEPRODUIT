@@ -1,0 +1,199 @@
+---
+description: Règles frontend React 19 + Vite + Tailwind — structure, composants, hooks, appels API
+globs:
+  [
+    "frontend/src/**/*.ts",
+    "frontend/src/**/*.tsx",
+  ]
+alwaysApply: false
+---
+
+# Règles frontend — React 19 + TypeScript + Vite + Tailwind
+
+## Structure obligatoire des features
+
+Chaque feature dans `frontend/src/features/<nom>/` suit cette structure :
+
+```markdown
+features/
+  mon-domaine/
+    pages/          ← composants de page (routés), orchestrent les composants
+    components/     ← composants UI spécifiques à la feature
+    hooks/          ← logique réutilisable, effets de bord, appels API (si 2+ hooks)
+    lib/            ← fonctions utilitaires pures, schemas Zod (pas de hooks)
+    types.ts        ← types du feature à la racine (pas de dossier types/)
+```
+
+Voir le skill [feature-structure](.cursor/skills/feature-structure/SKILL.md) pour les règles détaillées (hook à plat si seul, pas de barrel index.ts).
+
+- ❌ Ne jamais mélanger la logique dans les pages — extraire dans des hooks
+- ❌ Ne jamais créer de composant directement dans `pages/` s'il peut être réutilisé
+- ✅ Les composants partagés entre features vont dans `frontend/src/shared/`
+
+## Appels API — règle stricte
+
+Voir le skill [frontend-api-client](.cursor/skills/frontend-api-client/SKILL.md).
+
+```typescript
+// ✅ Correct — appel API dans src/api/ puis hook
+// frontend/src/api/shop.ts
+export async function patchMyShop(body: PatchMyShopBody): Promise<Shop> {
+  return requestNestJson<Shop>({
+    method: 'PATCH',
+    path: '/shops/me',
+    body,
+    authHeaders: getSupabaseSessionAuthHeaders,
+  });
+}
+
+// frontend/src/features/store/hooks/useShop.ts
+export function useShop() {
+  const [shop, setShop] = useState<Shop | null>(null);
+  useEffect(() => {
+    void patchMyShop(...).then(setShop);
+  }, []);
+  return { shop };
+}
+```
+
+- ❌ **Jamais** de `fetch()` direct dans un composant React (`.tsx`)
+- ❌ **Jamais** d'import de `apiFetch` ou d'une fonction `src/api/` directement dans un composant
+- ✅ Tous les appels API passent par `src/api/*.ts` puis sont consommés via des hooks dans `hooks/`
+- ✅ Les fonctions dans `src/api/` sont de simples fonctions async, sans état React
+
+## Composants React
+
+```typescript
+// ✅ Toujours typer les props explicitement
+interface MonComposantProps {
+  title: string;
+  onClose: () => void;
+  children?: React.ReactNode;
+}
+
+export function MonComposant({ title, onClose, children }: MonComposantProps) {
+  // ...
+}
+```
+
+- ✅ Toujours des **function components** — jamais de class components
+- ✅ Props typées avec une interface dédiée (jamais `any`, jamais inline non typé)
+- ❌ Pas de `React.FC<Props>` — utiliser la destructuration directe avec typage inline
+- ✅ Les composants UI génériques (Button, Modal, Banner...) vont dans `src/shared/ui/` et sont exportés via `src/shared/ui/index.ts`
+
+## Hooks personnalisés
+
+```typescript
+// ✅ Structure type d'un hook
+export function useMonHook(param: string) {
+  const [data, setData] = useState<MonType | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    // logique...
+  }, [param]);
+
+  return { data, loading, error };
+}
+```
+
+- ✅ Toujours retourner un objet nommé (jamais un tableau sauf pour les hooks de type `useState`)
+- ✅ Toujours exposer `loading` et `error` pour les hooks qui font des appels async
+- ❌ Ne pas mettre de logique de rendu dans un hook
+- ✅ `useCallback` pour les fonctions passées en prop, `useMemo` pour les calculs coûteux — mais **pas partout** (éviter l'over-optimisation prématurée)
+
+## useEffect — règles
+
+```typescript
+// ✅ Toujours préfixer les appels async avec void dans useEffect
+useEffect(() => {
+  void fetchData();
+}, [dependency]);
+
+// ❌ Interdit — async directement dans useEffect
+useEffect(async () => { ... }, []);
+```
+
+- ✅ Les dépendances du `useEffect` doivent être complètes (pas de lint-disable pour exhaustive-deps)
+- ✅ Toujours prévoir un cleanup si l'effet crée un abonnement ou un timer
+
+## Gestion des états async
+
+```typescript
+// ✅ Pattern standard pour les opérations async dans les handlers
+const handleSubmit = async () => {
+  setLoading(true);
+  setError(null);
+  try {
+    await doSomething();
+  } catch (e) {
+    setError(e instanceof Error ? e.message : 'Une erreur est survenue.');
+  } finally {
+    setLoading(false);
+  }
+};
+
+// Dans le JSX — toujours préfixer avec void
+<button onClick={() => void handleSubmit()}>Valider</button>
+```
+
+## Styling — Tailwind
+
+- ✅ Utiliser **Tailwind CSS** pour le styling — pas de CSS inline (`style={{...}}`) sauf pour les valeurs dynamiques impossibles à exprimer en classes
+- ✅ Extraire les combinaisons de classes répétées dans un composant ou une variable `const classes = ...`
+- ❌ Ne pas créer de nouveau fichier `.css` sans raison valable — Tailwind couvre 95% des besoins
+- ✅ Les classes CSS globales existantes dans `src/styles/` sont à respecter pour la cohérence
+
+## Formulaires
+
+Toute validation passe par **Zod** (skill [frontend-validation](.cursor/skills/frontend-validation/SKILL.md)). Deux patterns coexistent selon le cas :
+
+| Cas | Pattern | Exemples |
+|-----|---------|----------|
+| Formulaire auth multi-champs, soumission classique | **react-hook-form** + `zodResolver` | Login, Signup, ResetPassword, Profile |
+| Formulaire simple, mailto, édition inline champ par champ | `safeParse` + `useState` + `parseZodFieldErrors` dans un **hook** | Demo request, ShopInfoSection |
+| Barres de filtres (catalogue, listes) | État via hook dédié — **pas** RHF | `useProductFilters` (voir `211-frontend-form-controls.mdc`) |
+
+- ✅ Schéma Zod dans `<feature>/lib/<feature>Schemas.ts` (ou `authSchemas.ts` pour règles partagées)
+- ✅ `parseZodFieldErrors` depuis `@shared/lib/parseZodErrors` pour le pattern safeParse
+- ❌ Validation manuelle (`if (email.includes...)`, regex à la main)
+- ❌ `useState` pour chaque champ d'un gros formulaire auth — préférer RHF
+
+## Voir aussi (composants feature)
+
+Pour tout nouveau fichier ou gros refactor dans `features/*/components/` :
+
+- [210-frontend-feature-components.mdc](210-frontend-feature-components.mdc) — structure fichier, styles dans `lib/`
+- [211-frontend-form-controls.mdc](211-frontend-form-controls.mdc) — `InputField`, `SelectField`, filtres liste
+
+## Tests Vitest
+
+Les fichiers de test frontend utilisent l'extension `*.vitest.ts` ou `*.vitest.tsx`.
+
+```typescript
+// ✅ Structure type d'un test de hook ou de lib
+import { describe, it, expect, vi } from "vitest";
+
+describe("maFonction", () => {
+  it("retourne X pour Y", () => {
+    expect(maFonction("input")).toBe("expected");
+  });
+
+  it("gère le cas vide", () => {
+    expect(maFonction("")).toBeNull();
+  });
+});
+```
+
+- ✅ Tester en priorité les fonctions dans `lib/` et les hooks complexes
+- ✅ Toujours tester le cas nominal ET au moins un cas d'erreur ou de bord
+- ❌ Ne pas tester le rendu des composants UI simples (trop fragile, peu de valeur)
+- ✅ `vi.clearAllMocks()` dans `beforeEach` si des mocks sont utilisés
+
+## Interdictions spécifiques frontend
+
+- ❌ Jamais de `localStorage` ou `sessionStorage` direct sans passer par une abstraction dans `src/shared/lib/` (ex. `guestSessionStorage.ts`)
+- ❌ Jamais d'import direct de `supabase` dans un composant — passer par `getSupabaseClient()` depuis `@shared/supabase`
+- ❌ Jamais de token JWT hardcodé ou stocké dans une variable globale
+- ❌ Pas de `dangerouslySetInnerHTML` sans validation du contenu

@@ -1,0 +1,50 @@
+---
+description: Schéma Supabase — migrations SQL, RLS, import CSV catalogue, pas de DDL dans le code applicatif
+globs: ["supabase/**/*.sql", "docs/import-catalog-csv.md", "docs/templates/**"]
+alwaysApply: false
+---
+
+# Supabase — schéma et données
+
+> Accès données côté app : skill [nestjs-repository-pattern](.cursor/skills/nestjs-backend/nestjs-repository-pattern/SKILL.md).
+> Import CSV catalogue : skill [catalog-csv-import](.cursor/skills/catalog-csv-import/SKILL.md).
+
+## Où vivent les changements de schéma
+
+| Action                               | Où                                   | Interdit                                |
+| ------------------------------------ | ------------------------------------ | --------------------------------------- |
+| Nouvelle table / colonne / index     | `supabase/migrations/` (fichier SQL) | DDL dans `backend/src/`                 |
+| Données catalogue (import fabricant) | Dashboard Supabase → Import CSV      | Migration SQL de masse                  |
+| Script de maintenance ponctuel       | `supabase/scripts/` (review + doc)   | Exécution silencieuse sans PR           |
+| Lecture/écriture runtime             | Repositories NestJS                  | Client Supabase dans Service/Controller |
+
+## Conventions migrations
+
+- Fichiers numérotés : `202400XX_description.sql` (incrémenter le numéro existant).
+- Une migration = une intention claire (création table, RLS, index, cron…).
+- Commentaire en tête : `-- Migration NNN — description courte`.
+- Tester en local / staging avant prod ; ne pas modifier une migration **déjà mergée** — en créer une nouvelle.
+
+Avant d'écrire une migration : inspecter le schéma actuel (MCP Supabase ou fichiers existants dans `supabase/migrations/`).
+
+## RLS et clients Supabase
+
+- **`.forUser(accessToken)`** : opérations utilisateur — RLS actives (Repositories domaine).
+- **`.admin`** : bypass RLS — uniquement cas système documentés (transfert guest→user, webhooks, maintenance).
+- ❌ Ne jamais utiliser `.admin` pour contourner la RLS au quotidien.
+- ❌ Ne jamais exposer `SUPABASE_SERVICE_ROLE_KEY` au frontend.
+
+## Import CSV `catalog_products`
+
+- Valider avec : `python .cursor/skills/catalog-csv-import/scripts/validate-catalog-csv.py <fichier.csv>`
+- Modèle : `docs/templates/catalog_products_import_template.csv`
+- Doc humaine : `docs/import-catalog-csv.md`
+- Import via **Table Editor → Import CSV** (caster `images` → text[], `attributes` → jsonb).
+- ❌ Pas de `INSERT` massif de catalogue dans une migration SQL.
+
+## Checklist changement schéma
+
+- [ ] Migration SQL dans `supabase/migrations/`
+- [ ] Types / mappers Repository mis à jour si colonnes exposées à l'API
+- [ ] RLS revue si nouvelle table sensible
+- [ ] Pas de secret ni de clé service role dans le SQL committé

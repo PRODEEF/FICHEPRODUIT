@@ -1,0 +1,46 @@
+---
+description: >
+  Champs UI — InputField, SelectField, barres de filtres catalogue. À consulter pour tout input,
+  select ou filtre liste dans features/*/components/ ou shared/ui/.
+globs:
+  [
+    "frontend/src/features/**/components/**/*.tsx",
+    "frontend/src/shared/ui/**/*.tsx",
+  ]
+alwaysApply: false
+---
+
+# Champs UI — input, select, filtres
+
+Voir le skill [shared-ui-components](.cursor/skills/shared-ui-components/SKILL.md).
+
+## Primitives obligatoires
+
+| Besoin | Composant |
+|--------|-----------|
+| Champ texte avec label | `InputField` (`@shared/ui`) |
+| Liste déroulante avec label | `SelectField` (`@shared/ui`) |
+
+- Interdit : `<select className="...">` ad hoc dans une feature si `SelectField` peut couvrir le besoin.
+- Si une variante manque : **étendre** `SelectField` ou `InputField` dans `shared/ui/`, pas copier les classes.
+
+## SelectField — chevron
+
+- `appearance-none` sur le `<select>`.
+- Icône Lucide (`ChevronDown`) en `absolute`, `pointer-events-none`, inset intérieur (ex. `right-[3px]`) — **dans** `SelectField`, pas recopié par feature.
+
+## Alignement visuel
+
+- Même hauteur et tokens que `InputField` : `h-10`, `border-soft`, `text-text-muted` pour les labels, focus purple.
+
+## Barres de filtres (catalogue, listes)
+
+- État des critères dans un **hook** dédié (ex. `useProductFilters`), pas react-hook-form.
+- Ce ne sont **pas** des formulaires de saisie classiques : la règle RHF de `200-frontend.mdc` ne s’applique pas aux filtres liste.
+- Options dynamiques (catégorie, marque…) : calcul dans `lib/`, pas dans le composant présentateur.
+
+## Checklist
+
+- [ ] `InputField` / `SelectField` utilisés
+- [ ] Pas de duplication label + select brute
+- [ ] Styles partagés dans `lib/*ControlStyles.ts` ou `@shared/ui`

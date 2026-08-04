@@ -1,0 +1,3 @@
+name,brand,sector,category,sub_category,year,price,description,detailed_description,images,url,attributes
+"Aile Rebel SLS","Duotone","Glisse","Kitesurf","Ailes kitesurf",2024,1299.50,"Aile freeride performante","<p>Description détaillée HTML</p>","[""https://cdn.example.com/rebel.jpg""]","https://duotonesports.com/fr/products/rebel-sls","{""reference"":""44260-3012"",""taille"":""9m², 10m²"",""condition"":""Neuf""}"
+"Planche Surf Pro","BrandX","Glisse","Surf","Planches",,899.00,"Planche polyvalente","","[]","https://example.com/planche-surf-pro","{""reference"":""BRX-SURF-001""}"
