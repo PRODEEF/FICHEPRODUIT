@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import type { CatalogProduct, Shop } from '@types-api';
 import { fetchCatalogProductsByShopBrands, searchCatalogProducts } from '@api/catalog';
+import { apiErrorMessage } from '@lib/apiErrorMessage';
 import { useAuth } from '@shared/hooks/useAuth';
 
 import type { CatalogProductPayloadMetadata } from '../types';
@@ -112,7 +113,7 @@ export function useCatalogProducts({
           setProducts(null);
           setMetadata(null);
         }
-        setError(e instanceof Error ? e.message : 'Erreur de chargement des produits catalogue.');
+        setError(apiErrorMessage(e, 'Erreur de chargement des produits catalogue.'));
       } finally {
         if (!guard.cancelled) setLoading(false);
       }

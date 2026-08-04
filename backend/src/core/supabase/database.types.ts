@@ -59,6 +59,42 @@ export type Database = {
           },
         ];
       };
+      billing_invoice_archive: {
+        Row: {
+          archived_at: string;
+          credits_amount: number | null;
+          id: string;
+          plan_id: string | null;
+          purchased_at: string;
+          sector: string | null;
+          source: Database["public"]["Enums"]["credit_lot_source"];
+          stripe_checkout_session_id: string | null;
+          stripe_invoice_id: string | null;
+        };
+        Insert: {
+          archived_at?: string;
+          credits_amount?: number | null;
+          id?: string;
+          plan_id?: string | null;
+          purchased_at: string;
+          sector?: string | null;
+          source: Database["public"]["Enums"]["credit_lot_source"];
+          stripe_checkout_session_id?: string | null;
+          stripe_invoice_id?: string | null;
+        };
+        Update: {
+          archived_at?: string;
+          credits_amount?: number | null;
+          id?: string;
+          plan_id?: string | null;
+          purchased_at?: string;
+          sector?: string | null;
+          source?: Database["public"]["Enums"]["credit_lot_source"];
+          stripe_checkout_session_id?: string | null;
+          stripe_invoice_id?: string | null;
+        };
+        Relationships: [];
+      };
       credit_lots: {
         Row: {
           amount_initial: number;

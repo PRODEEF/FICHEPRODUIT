@@ -21,6 +21,7 @@ export class JwtGuard implements CanActivate {
       id: user.id,
       email: user.email ?? "",
       accessToken: token,
+      emailConfirmedAt: user.email_confirmed_at ?? null,
     };
     return true;
   }

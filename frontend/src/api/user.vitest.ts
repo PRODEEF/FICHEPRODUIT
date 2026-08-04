@@ -12,18 +12,10 @@ vi.mock('./apiBase', () => ({
 vi.mock('./apiAuth', () => ({
   apiFetch: mockApiFetch,
   authHeaders: mockAuthHeaders,
-  ApiHttpError: class ApiHttpError extends Error {
-    readonly status: number;
-    constructor(message: string, status: number) {
-      super(message);
-      this.name = 'ApiHttpError';
-      this.status = status;
-    }
-  },
 }));
 
-import { claimGuestSession } from './user';
-import { ApiHttpError } from './apiAuth';
+import { claimGuestSession, deleteAccount } from './user';
+import { ApiError } from './apiError';
 
 describe('claimGuestSession', () => {
   beforeEach(() => {
@@ -59,14 +51,51 @@ describe('claimGuestSession', () => {
   });
 
   it('ignore silencieusement une réponse 404', async () => {
-    mockApiFetch.mockRejectedValue(new ApiHttpError('Ressource introuvable.', 404));
+    mockApiFetch.mockRejectedValue(new ApiError(404, 'Ressource introuvable.'));
 
     await expect(claimGuestSession({ accessToken: 'jwt-test' })).resolves.toBeUndefined();
   });
 
   it('propage les erreurs non-404', async () => {
-    mockApiFetch.mockRejectedValue(new ApiHttpError('Erreur serveur.', 500));
+    mockApiFetch.mockRejectedValue(new ApiError(500, 'Erreur serveur.'));
 
     await expect(claimGuestSession()).rejects.toThrow('Erreur serveur.');
+  });
+});
+
+describe('deleteAccount', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockApiFetch.mockResolvedValue({ res: new Response(null, { status: 204 }), parsed: null });
+    mockAuthHeaders.mockResolvedValue({ 'Content-Type': 'application/json' });
+  });
+
+  it('appelle DELETE /api/users/me avec le mot de passe fourni', async () => {
+    await deleteAccount('super-secret');
+
+    expect(mockAuthHeaders).toHaveBeenCalledWith();
+    expect(mockApiFetch).toHaveBeenCalledWith(
+      'http://api.test/api/users/me',
+      expect.objectContaining({
+        method: 'DELETE',
+        body: JSON.stringify({ password: 'super-secret' }),
+      }),
+    );
+  });
+
+  it('propage une ApiError 401 (mot de passe invalide)', async () => {
+    mockApiFetch.mockRejectedValue(new ApiError(401, 'Mot de passe incorrect.'));
+
+    await expect(deleteAccount('wrong')).rejects.toBeInstanceOf(ApiError);
+    await expect(deleteAccount('wrong')).rejects.toMatchObject({
+      status: 401,
+      message: 'Mot de passe incorrect.',
+    });
+  });
+
+  it('propage les erreurs serveur non gérées', async () => {
+    mockApiFetch.mockRejectedValue(new ApiError(500, 'Erreur serveur.'));
+
+    await expect(deleteAccount('any')).rejects.toThrow('Erreur serveur.');
   });
 });

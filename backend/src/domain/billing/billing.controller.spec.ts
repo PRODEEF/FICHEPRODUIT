@@ -1,12 +1,13 @@
 import { CanActivate } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 
+import { EmailVerifiedGuard } from "../../core/auth/guards/email-verified.guard";
 import { JwtGuard } from "../../core/auth/guards/jwt.guard";
 import { BillingController } from "./billing.controller";
 import { BillingService } from "./billing.service";
 import type { AuthenticatedUser } from "../../core/auth/types/jwt-payload.types";
 
-const jwtGuardMock: CanActivate = { canActivate: () => true };
+const passthroughGuard: CanActivate = { canActivate: () => true };
 
 describe("BillingController", () => {
   let controller: BillingController;
@@ -21,6 +22,7 @@ describe("BillingController", () => {
     id: "user-1",
     email: "user@test.com",
     accessToken: "jwt",
+    emailConfirmedAt: "2026-08-01T10:00:00Z",
   };
 
   beforeEach(async () => {
@@ -30,7 +32,9 @@ describe("BillingController", () => {
       providers: [{ provide: BillingService, useValue: billingServiceMock }],
     })
       .overrideGuard(JwtGuard)
-      .useValue(jwtGuardMock)
+      .useValue(passthroughGuard)
+      .overrideGuard(EmailVerifiedGuard)
+      .useValue(passthroughGuard)
       .compile();
 
     controller = moduleRef.get(BillingController);

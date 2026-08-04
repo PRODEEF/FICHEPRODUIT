@@ -27,13 +27,20 @@ describe("OptionalJwtGuard", () => {
   });
 
   it("peuple req.user si le token est valide", async () => {
-    getUser.mockResolvedValue({ id: "u1", email: "a@b.com" });
+    getUser.mockResolvedValue({
+      id: "u1",
+      email: "a@b.com",
+      email_confirmed_at: "2026-08-01T10:00:00Z",
+    });
     const ctx = createContext("Bearer valid-token");
-    const req = ctx.switchToHttp().getRequest<{ user?: { id: string } }>();
+    const req = ctx
+      .switchToHttp()
+      .getRequest<{ user?: { id: string; emailConfirmedAt: string | null } }>();
 
     await expect(guard.canActivate(ctx)).resolves.toBe(true);
     expect(getUser).toHaveBeenCalledWith("valid-token");
     expect(req.user?.id).toBe("u1");
+    expect(req.user?.emailConfirmedAt).toBe("2026-08-01T10:00:00Z");
   });
 
   it("autorise en anonyme si Bearer présent mais token invalide", async () => {

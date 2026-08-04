@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { isApiError } from '@api/apiError';
+import { apiErrorMessage } from '@lib/apiErrorMessage';
 import { parseAsFullSiteUrl } from '@lib/siteUrl';
 import { SHOP_SECTOR_LABELS } from '@shared/lib/shopSectors';
 
@@ -7,6 +9,8 @@ export const SHOP_TAG_MAX_LENGTH = 64;
 
 export const SHOP_URL_INVALID_MESSAGE =
   'URL invalide. Indiquez une adresse complète (ex. https://monsite.fr).';
+
+export type ShopInfoRowKey = 'name' | 'url';
 
 export const shopTagSchema = z
   .string()
@@ -44,4 +48,15 @@ export function findTagCaseInsensitive(tags: string[], candidate: string): strin
 
 export function shopTagDuplicateMessage(existingTag: string): string {
   return `« ${existingTag} » existe déjà dans la liste.`;
+}
+
+/**
+ * Message utilisateur pour une erreur d’enregistrement d’un champ boutique.
+ * Aligne le 422 URL API sur le même texte que la validation Zod.
+ */
+export function mapShopSaveError(editing: ShopInfoRowKey, error: unknown): string {
+  if (isApiError(error) && error.status === 422 && editing === 'url') {
+    return SHOP_URL_INVALID_MESSAGE;
+  }
+  return apiErrorMessage(error, 'Enregistrement impossible.');
 }

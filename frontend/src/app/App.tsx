@@ -98,7 +98,9 @@ function isPublicAuthRoute(pathname: string): boolean {
     pathname === '/signup' ||
     pathname.endsWith('/signup') ||
     pathname === '/login' ||
-    pathname.endsWith('/login')
+    pathname.endsWith('/login') ||
+    pathname === '/verify-email' ||
+    pathname.endsWith('/verify-email')
   );
 }
 

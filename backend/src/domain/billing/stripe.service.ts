@@ -1,4 +1,4 @@
-import { Injectable, ServiceUnavailableException } from "@nestjs/common";
+import { Injectable, Logger, ServiceUnavailableException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import Stripe from "stripe";
 
@@ -18,6 +18,7 @@ export type CreateBillingCheckoutParams = {
 
 @Injectable()
 export class StripeService {
+  private readonly logger = new Logger(StripeService.name);
   private client: Stripe | null = null;
 
   constructor(private readonly config: ConfigService) {}
@@ -55,6 +56,55 @@ export class StripeService {
 
   async retrieveSubscription(subscriptionId: string): Promise<Stripe.Subscription> {
     return this.getClient().subscriptions.retrieve(subscriptionId);
+  }
+
+  /**
+   * Annule immédiatement un abonnement Stripe. Les erreurs "déjà annulé" (resource_missing
+   * ou statut `canceled`) sont journalisées et ignorées : la suppression de compte doit
+   * pouvoir continuer même si l'abonnement a déjà été résilié côté Stripe.
+   */
+  async cancelSubscription(subscriptionId: string): Promise<void> {
+    try {
+      await this.getClient().subscriptions.cancel(subscriptionId);
+    } catch (error) {
+      if (this.isAlreadyCanceledError(error)) {
+        this.logger.warn(
+          `cancelSubscription(${subscriptionId}) : abonnement déjà annulé côté Stripe`,
+        );
+        return;
+      }
+
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.error(`cancelSubscription(${subscriptionId}) failed : ${message}`);
+      throw new ServiceUnavailableException(
+        "L'annulation de l'abonnement Stripe a échoué. Réessayez plus tard.",
+      );
+    }
+  }
+
+  /**
+   * Anonymise un client Stripe en effaçant les données personnelles (email, nom, téléphone)
+   * et en marquant la métadonnée `deleted_at`. La ligne Stripe reste pour la comptabilité
+   * mais ne contient plus d'informations identifiantes.
+   */
+  async anonymizeCustomer(customerId: string): Promise<void> {
+    await this.getClient().customers.update(customerId, {
+      email: "",
+      name: "",
+      phone: "",
+      metadata: { deleted_at: new Date().toISOString() },
+    });
+  }
+
+  private isAlreadyCanceledError(error: unknown): boolean {
+    if (!(error instanceof Stripe.errors.StripeError)) return false;
+    if (error.code === "resource_missing") return true;
+    const message = error.message.toLowerCase();
+    return (
+      message.includes("no such subscription") ||
+      message.includes("already been canceled") ||
+      message.includes("already canceled")
+    );
   }
 
   /** Crée une session Stripe Checkout pour un forfait pack ou abonnement. */

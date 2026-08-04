@@ -1,8 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
+import { ApiError } from '@api/apiError';
+
 import {
   SHOP_TAG_MAX_LENGTH,
+  SHOP_URL_INVALID_MESSAGE,
   findTagCaseInsensitive,
+  mapShopSaveError,
   shopSectorSchema,
   shopTagSchema,
   shopUrlSchema,
@@ -92,5 +96,27 @@ describe('findTagCaseInsensitive', () => {
 
   it('retourne undefined si absent', () => {
     expect(findTagCaseInsensitive(['Nike'], 'Puma')).toBeUndefined();
+  });
+});
+
+describe('mapShopSaveError', () => {
+  it('retourne le message URL invalide pour une ApiError 422 sur url', () => {
+    const error = new ApiError(422, 'Validation failed');
+    expect(mapShopSaveError('url', error)).toBe(SHOP_URL_INVALID_MESSAGE);
+  });
+
+  it('retourne le message serveur pour une erreur 4xx générique', () => {
+    expect(mapShopSaveError('name', new ApiError(400, 'Serveur indisponible'))).toBe(
+      'Serveur indisponible',
+    );
+  });
+
+  it('retourne un message par défaut pour une erreur inconnue', () => {
+    expect(mapShopSaveError('url', 'boom')).toBe('Enregistrement impossible.');
+  });
+
+  it('ne mappe pas une 422 sur name vers le message URL', () => {
+    const error = new ApiError(422, 'Champ invalide');
+    expect(mapShopSaveError('name', error)).toBe('Champ invalide');
   });
 });

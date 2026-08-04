@@ -2,13 +2,13 @@ import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 import { downloadPrestashopExportCsv, fetchCategoryExportPreview } from '@api/export';
+import { PRESTASHOP_EXPORT_MAX_PRODUCTS } from '@api/exportLimits';
+import { apiErrorMessage } from '@lib/apiErrorMessage';
 import type {
   CategoryExportOverride,
   CategoryExportPreviewPair,
   CategoryExportTreeOption,
 } from '@types-api';
-
-import { formatExportClientError, PRESTASHOP_EXPORT_MAX_PRODUCTS } from '@api/exportLimits';
 
 interface UseCatalogProductExportOptions {
   shopId: string | null | undefined;
@@ -78,9 +78,7 @@ export function useCatalogProductExport({
         setSelections(initial);
       } catch (err) {
         if (controller.signal.aborted) return;
-        setPreviewError(
-          formatExportClientError(err, 'Impossible de prévisualiser les catégories.'),
-        );
+        setPreviewError(apiErrorMessage(err, 'Impossible de prévisualiser les catégories.'));
         setPairs([]);
         setTreeOptions([]);
         setSelections({});
@@ -152,14 +150,14 @@ export function useCatalogProductExport({
         });
         toast.success('Export PrestaShop téléchargé (produits et déclinaisons).');
       } catch (combinationsError) {
-        const message = formatExportClientError(
+        const message = apiErrorMessage(
           combinationsError,
           'Impossible de télécharger les déclinaisons.',
         );
         toast.error(`Produits exportés, mais échec des déclinaisons : ${message}`);
       }
     } catch (productsError) {
-      const message = formatExportClientError(productsError, 'Impossible de générer l’export.');
+      const message = apiErrorMessage(productsError, 'Impossible de générer l’export.');
       toast.error(message);
     } finally {
       setIsExporting(false);

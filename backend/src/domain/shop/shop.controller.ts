@@ -13,6 +13,7 @@ import {
 import {
   ApiBearerAuth,
   ApiBadRequestResponse,
+  ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
@@ -20,6 +21,7 @@ import {
   ApiUnauthorizedResponse,
 } from "@nestjs/swagger";
 import type { FastifyRequest } from "fastify";
+import { EmailVerifiedGuard } from "../../core/auth/guards/email-verified.guard";
 import { JwtGuard } from "../../core/auth/guards/jwt.guard";
 import { OptionalJwtGuard } from "../../core/auth/guards/optional-jwt.guard";
 import { CurrentUser } from "../../core/auth/decorators/current-user.decorator";
@@ -65,12 +67,13 @@ export class ShopController {
   }
 
   @Patch()
-  @UseGuards(JwtGuard)
+  @UseGuards(JwtGuard, EmailVerifiedGuard)
   @ApiBearerAuth("bearerAuth")
   @ApiOperation({ summary: "Mettre à jour le magasin de l'utilisateur connecté" })
   @ApiOkResponse({ description: "Magasin mis à jour", type: ShopResponseDto })
   @ApiNotFoundResponse({ description: "Aucun magasin enregistré pour cet utilisateur" })
   @ApiUnauthorizedResponse({ description: "Jeton manquant ou invalide" })
+  @ApiForbiddenResponse({ description: "E-mail non confirmé" })
   patch(@CurrentUser() user: AuthenticatedUser, @Body() body: UpdateShopDto) {
     return this.shopService.updateMyShop(user.id, body, user.accessToken);
   }

@@ -1,12 +1,11 @@
 import { useId } from 'react';
 
-import type { PatchMyShopBody } from '@types-api';
+import type { PatchMyShopBody, Shop } from '@types-api';
 import { cn } from '@shared/lib/cn';
 import { Button } from '@shared/ui';
 
 import { ShopInfoRow } from './ShopInfoRow';
 import { useShopInfoEdit } from '../hooks/useShopInfoEdit';
-import type { Shop } from '../types';
 
 const INPUT_BASE_CLASS =
   'w-full max-w-md rounded-md border px-2 py-1 text-sm text-gray-900 focus:outline-none focus:ring-2';

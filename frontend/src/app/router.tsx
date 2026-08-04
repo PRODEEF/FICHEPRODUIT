@@ -2,6 +2,7 @@ import { lazy } from 'react';
 import { Route } from 'react-router';
 
 import { RequireAuthRoute } from '../features/auth/components/RequireAuthRoute';
+import { RequireVerifiedEmailRoute } from '../features/auth/components/RequireVerifiedEmailRoute';
 
 const Home = lazy(async () => {
   const m = await import('../features/landing/pages/Home');
@@ -26,6 +27,10 @@ const ForgotPassword = lazy(async () => {
 const ResetPassword = lazy(async () => {
   const m = await import('../features/auth/pages/ResetPassword');
   return { default: m.ResetPassword };
+});
+const VerifyEmail = lazy(async () => {
+  const m = await import('../features/auth/pages/VerifyEmail');
+  return { default: m.VerifyEmail };
 });
 const Catalog = lazy(async () => {
   const m = await import('../features/catalog/pages/Catalog');
@@ -82,6 +87,7 @@ export const appRouteElements = (
     <Route path="/signup" element={<Signup />} />
     <Route path="/forgot-password" element={<ForgotPassword />} />
     <Route path="/auth/reset-password" element={<ResetPassword />} />
+    <Route path="/verify-email" element={<VerifyEmail />} />
     {/* Pricing temporairement désactivé */}
     {/* <Route path="/pricing" element={<Pricing />} /> */}
     <Route path="/billing/success" element={<BillingSuccess />} />
@@ -93,9 +99,11 @@ export const appRouteElements = (
     <Route path="/mentions-legales" element={<LegalNotice />} />
 
     <Route element={<RequireAuthRoute />}>
-      <Route path="/catalog" element={<Catalog />} />
-      <Route path="/profile" element={<Profile />} />
-      <Route path="/store" element={<MyStore />} />
+      <Route element={<RequireVerifiedEmailRoute />}>
+        <Route path="/catalog" element={<Catalog />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/store" element={<MyStore />} />
+      </Route>
     </Route>
   </>
 );

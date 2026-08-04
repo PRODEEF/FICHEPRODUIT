@@ -1,5 +1,6 @@
 import type { User } from '@supabase/supabase-js';
 
+import { apiErrorMessage } from '@lib/apiErrorMessage';
 import { getSupabaseClient } from '@shared/supabase';
 
 import type { ProfilePayload } from './authSchemas';
@@ -38,9 +39,7 @@ export async function saveUserProfile(
       };
     }
   } catch (err) {
-    const message =
-      err instanceof Error && err.message ? err.message : 'Enregistrement impossible. Réessayez.';
-    return { ok: false, message };
+    return { ok: false, message: apiErrorMessage(err, 'Enregistrement impossible. Réessayez.') };
   }
 
   return { ok: true };

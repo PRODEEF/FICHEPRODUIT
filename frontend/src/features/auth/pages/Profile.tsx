@@ -4,6 +4,7 @@ import { Card, InputField } from '@shared/ui';
 // Crédits / facturation temporairement désactivés
 // import { BillingAccountSection } from '../../billing/components/BillingAccountSection';
 import { ChangePasswordForm } from '../components/ChangePasswordForm';
+import { DeleteAccountSection } from '../components/DeleteAccountSection';
 import { ProfileForm } from '../components/ProfileForm';
 
 export function Profile() {
@@ -19,21 +20,23 @@ export function Profile() {
       </header>
 
       <div className="grid gap-8 lg:grid-cols-2 lg:items-start">
-        <Card className="flex flex-col gap-8">
-          <InputField
-            id="profile-email"
-            label="Adresse e-mail"
-            name="email"
-            type="email"
-            autoComplete="email"
-            value={userEmail ?? ''}
-            disabled
-            readOnly
-          />
+        <div className="flex flex-col gap-8">
+          <Card className="flex flex-col gap-8">
+            <InputField
+              id="profile-email"
+              label="Adresse e-mail"
+              name="email"
+              type="email"
+              autoComplete="email"
+              value={userEmail ?? ''}
+              disabled
+            />
+            <ProfileForm />
+            <ChangePasswordForm />
+          </Card>
 
-          <ProfileForm />
-          <ChangePasswordForm />
-        </Card>
+          <DeleteAccountSection />
+        </div>
 
         {/* Crédits / facturation temporairement désactivés */}
         {/* <BillingAccountSection /> */}

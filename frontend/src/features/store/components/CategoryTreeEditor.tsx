@@ -2,6 +2,7 @@ import { useCallback, useId, useState, type KeyboardEvent } from 'react';
 import { Plus } from 'lucide-react';
 
 import type { ShopCategoryNode } from '@types-api';
+import { apiErrorMessage } from '@lib/apiErrorMessage';
 import { Button } from '@shared/ui';
 
 import {
@@ -66,7 +67,7 @@ export function CategoryTreeEditor({ tree, disabled = false, onChange }: Categor
     try {
       await onChange(next);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Impossible d\u2019enregistrer les catégories.');
+      setError(apiErrorMessage(e, 'Impossible d’enregistrer les catégories.'));
       throw e;
     } finally {
       setBusy(false);

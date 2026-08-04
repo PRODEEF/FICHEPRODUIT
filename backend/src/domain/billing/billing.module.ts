@@ -46,6 +46,6 @@ import { USER_ENTITLEMENT_REPOSITORY } from "./repositories/user-entitlement.rep
       useClass: UserEntitlementRepository,
     },
   ],
-  exports: [CreditService],
+  exports: [CreditService, StripeService],
 })
 export class BillingModule {}

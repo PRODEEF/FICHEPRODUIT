@@ -6,6 +6,7 @@ import { AuthContext } from '@shared/auth/auth-context';
 
 import { SupabaseConfigErrorScreen } from './components/SupabaseConfigErrorScreen';
 import { useClaimGuestSessionOnAuth } from './hooks/useClaimGuestSessionOnAuth';
+import { isEmailVerified as computeIsEmailVerified } from './lib/emailVerification';
 import { applyPendingSignupFromStorage } from './lib/pendingSignupStorage';
 import { createSupabaseUserRepository } from './supabaseUserRepository';
 import type { UserProfile } from './types';
@@ -104,6 +105,7 @@ function AuthProviderInner({ children }: { children: ReactNode }) {
   }, []);
 
   const userEmail = user?.email ?? null;
+  const isEmailVerified = computeIsEmailVerified(user);
   const meta = user?.user_metadata;
   const metadataDisplayName =
     typeof meta?.['display_name'] === 'string' ? meta['display_name'] : null;
@@ -119,6 +121,7 @@ function AuthProviderInner({ children }: { children: ReactNode }) {
       session,
       user,
       userEmail,
+      isEmailVerified,
       profile,
       displayLabel,
       profileLoading: Boolean(user) && profileLoading,
@@ -130,6 +133,7 @@ function AuthProviderInner({ children }: { children: ReactNode }) {
       session,
       user,
       userEmail,
+      isEmailVerified,
       profile,
       displayLabel,
       profileLoading,
