@@ -1,6 +1,0 @@
-
-Compte:
-- Mail non modifiable => non prio (déjà en lecture seule sur le profil)
-- Pas de validation du compte par mail => FAIT (mode bloqué + /verify-email) — activer « Confirm email » dans Supabase Dashboard
-- Pas moyen de supprimer son compte => FAIT (DELETE /api/users/me + UI profil)
-- on ne reçoit pas les mails sur outlook => Resend OK (Gmail) — Outlook à valider manuellement (filtre Microsoft)
