@@ -9,19 +9,7 @@ vi.mock('@api/billing', () => ({
   createCheckoutSession: mockCreateCheckoutSession,
 }));
 
-vi.mock('@api/nestHttpClient', () => ({
-  NestHttpError: class NestHttpError extends Error {
-    status: number;
-    body: unknown;
-    constructor(message: string, status: number, body: unknown) {
-      super(message);
-      this.status = status;
-      this.body = body;
-    }
-  },
-}));
-
-import { NestHttpError } from '@api/nestHttpClient';
+import { ApiError } from '@api/apiError';
 
 import { startPlanCheckout } from './checkout';
 
@@ -47,7 +35,7 @@ describe('startPlanCheckout', () => {
   });
 
   it('retourne needsAuth sur HTTP 401', async () => {
-    mockCreateCheckoutSession.mockRejectedValue(new NestHttpError('Non autorisé', 401, null));
+    mockCreateCheckoutSession.mockRejectedValue(new ApiError(401, 'Non autorisé'));
 
     const result = await startPlanCheckout('starter', 'Glisse');
 

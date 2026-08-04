@@ -18,8 +18,12 @@ export function useClaimGuestSessionOnAuth(session: Session | null, authLoading:
     const userId = session.user.id;
 
     void (async () => {
-      const claimed = await claimGuestSessionIfPresent(session.access_token);
-      if (claimed) claimedForUserIdRef.current = userId;
+      try {
+        const claimed = await claimGuestSessionIfPresent(session.access_token);
+        if (claimed) claimedForUserIdRef.current = userId;
+      } catch {
+        // Best-effort : un échec réseau/5xx ne doit pas casser la session en cours.
+      }
     })();
   }, [session, authLoading]);
 

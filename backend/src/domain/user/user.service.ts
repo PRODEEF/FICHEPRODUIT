@@ -3,6 +3,7 @@ import type { AuthenticatedUser } from "../../core/auth/types/jwt-payload.types"
 import { AnalysisService } from "../analysis/analysis.service";
 import { CreditService } from "../billing/credit.service";
 import { ShopService } from "../shop/shop.service";
+import { AccountDeletionService } from "./account-deletion.service";
 import type { UpdateUserProfileDto } from "./dto/update-user-profile.dto";
 import { sanitizeSignupMetadata } from "./signup-metadata.validation";
 import { USER_REPOSITORY, type IUserRepository } from "./user.repository.interface";
@@ -16,6 +17,7 @@ export class UserService {
     private readonly analysisService: AnalysisService,
     private readonly creditService: CreditService,
     private readonly shopService: ShopService,
+    private readonly accountDeletionService: AccountDeletionService,
   ) {}
 
   async getMe(user: AuthenticatedUser) {
@@ -58,6 +60,11 @@ export class UserService {
     await this.shopService.transferGuestShops(sessionId, user.id);
     await this.analysisService.transferGuestAnalyses(sessionId, user.id);
     return this.getMe(user);
+  }
+
+  /** Supprime définitivement le compte du porteur du JWT (RGPD art. 17). */
+  async deleteMe(user: AuthenticatedUser, password: string): Promise<void> {
+    await this.accountDeletionService.deleteAccount(user, password);
   }
 
   /** Corrige en base des métadonnées signup client invalides (URL / pending_auto_analyze). */

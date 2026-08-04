@@ -9,7 +9,7 @@
 
 import type { SuggestUrlsBody, SuggestUrlsResponse } from '@types-api';
 
-import { getSupabaseSessionAuthHeaders, NestHttpError, requestNestJson } from './nestHttpClient';
+import { getSupabaseSessionAuthHeaders, requestNestJson } from './nestHttpClient';
 import { asRecord, readStringArray } from './parseJsonFields';
 
 /**
@@ -17,26 +17,19 @@ import { asRecord, readStringArray } from './parseJsonFields';
  *
  * @param q - Texte saisi par l'utilisateur (nom de marque, description, etc.)
  * @returns Tableau d'URLs (peut être vide si aucun résultat).
- * @throws {Error} si la requête HTTP échoue.
+ * @throws {ApiError} si la requête HTTP échoue.
  */
 export async function fetchSuggestUrls(q: string): Promise<string[]> {
   const body: SuggestUrlsBody = { q: q.trim() };
 
-  try {
-    const data = await requestNestJson<SuggestUrlsResponse>({
-      method: 'POST',
-      path: '/suggest-urls',
-      body,
-      authHeaders: getSupabaseSessionAuthHeaders,
-    });
+  const data = await requestNestJson<SuggestUrlsResponse>({
+    method: 'POST',
+    path: '/suggest-urls',
+    body,
+    authHeaders: getSupabaseSessionAuthHeaders,
+  });
 
-    const o = asRecord(data);
-    if (!o) return [];
-    return readStringArray(o['urls']);
-  } catch (err) {
-    if (err instanceof NestHttpError) {
-      throw new Error(`Suggest request failed: ${err.status}`, { cause: err });
-    }
-    throw err;
-  }
+  const o = asRecord(data);
+  if (!o) return [];
+  return readStringArray(o['urls']);
 }

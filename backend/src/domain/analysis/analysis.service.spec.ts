@@ -16,7 +16,12 @@ describe("AnalysisService", () => {
   };
   const pipeline = { runInBackground: jest.fn() };
 
-  const user = { id: "user-1", email: "a@b.com", accessToken: "tok" };
+  const user = {
+    id: "user-1",
+    email: "a@b.com",
+    accessToken: "tok",
+    emailConfirmedAt: "2026-08-01T10:00:00Z",
+  };
 
   beforeEach(async () => {
     jest.clearAllMocks();

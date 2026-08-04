@@ -7,6 +7,7 @@
  * Remplace `runSiteAnalysisWorkflow.ts` (ancien backend).
  */
 
+import { apiErrorMessage } from '@lib/apiErrorMessage';
 import { toUserFacingAnalysisError } from '@shared/lib/analysisErrorMessage';
 import { sleep } from '@shared/lib/sleep';
 
@@ -40,7 +41,7 @@ export async function runAnalysisWorkflow(
   } catch (e) {
     return {
       ok: false,
-      error: e instanceof Error ? e.message : "Impossible de lancer l'analyse.",
+      error: apiErrorMessage(e, "Impossible de lancer l'analyse."),
     };
   }
 
@@ -55,7 +56,7 @@ export async function runAnalysisWorkflow(
   } catch (e) {
     return {
       ok: false,
-      error: e instanceof Error ? e.message : "Erreur lors du suivi de l'analyse.",
+      error: apiErrorMessage(e, "Erreur lors du suivi de l'analyse."),
       partial: withUserFacingError(current),
     };
   }

@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 
-import type { Shop } from '../types';
+import type { Shop } from '@types-api';
 import { BrandsCsvImportButton } from './BrandsCsvImportButton';
 import { CategoryTreeEditor } from './CategoryTreeEditor';
 import { ShopInfoSection } from './ShopInfoSection';

@@ -1,10 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 
-import type { PatchMyShopBody } from '@types-api';
+import type { PatchMyShopBody, Shop } from '@types-api';
 
-import { SHOP_URL_INVALID_MESSAGE, shopUrlSchema } from '../lib/shopSchemas';
-import { mapShopSaveError, type ShopInfoRowKey } from '../lib/shopSaveErrors';
-import type { Shop } from '../types';
+import {
+  mapShopSaveError,
+  SHOP_URL_INVALID_MESSAGE,
+  shopUrlSchema,
+  type ShopInfoRowKey,
+} from '../lib/shopSchemas';
 
 interface ShopInfoBuffers {
   name: string;

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { listAnalyses } from '@api/analysis';
+import { apiErrorMessage } from '@lib/apiErrorMessage';
 import { pickLatestSiteAnalysisId } from '../lib/latestSiteAnalysis';
 
 export interface UseLatestSiteAnalysisIdOptions {
@@ -53,7 +54,7 @@ export function useLatestSiteAnalysisId(
         setError(null);
       } catch (e) {
         if (!guard.cancelled) {
-          const message = e instanceof Error ? e.message : 'Erreur de chargement.';
+          const message = apiErrorMessage(e, 'Erreur de chargement.');
           setError(message);
           setLatestId(null);
         }

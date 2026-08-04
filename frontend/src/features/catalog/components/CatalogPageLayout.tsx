@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 
 import { ErrorState, LoadingState } from './CatalogSectionStates';
 import { ShopSummarySection } from './ShopSummarySection';
-import type { Shop } from '../../store/types';
+import type { Shop } from '@types-api';
 
 export interface CatalogPageLayoutProps {
   topBanner?: ReactNode;

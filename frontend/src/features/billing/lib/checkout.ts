@@ -1,6 +1,7 @@
+import { isApiError } from '@api/apiError';
 import { createCheckoutSession } from '@api/billing';
-import { NestHttpError } from '@api/nestHttpClient';
 import type { BillingPlanId } from '@api/types/api.types';
+import { apiErrorMessage } from '@lib/apiErrorMessage';
 import type { ShopSectorLabel } from '@shared/lib/shopSectors';
 
 export type CheckoutResult = { ok: true } | { ok: false; message: string; needsAuth?: boolean };
@@ -18,17 +19,16 @@ export async function startPlanCheckout(
     window.location.assign(url);
     return { ok: true };
   } catch (err) {
-    if (err instanceof NestHttpError) {
-      if (err.status === 401) {
-        return {
-          ok: false,
-          needsAuth: true,
-          message: 'Connecte-toi pour acheter des crédits.',
-        };
-      }
-      return { ok: false, message: err.message };
+    if (isApiError(err) && err.status === 401) {
+      return {
+        ok: false,
+        needsAuth: true,
+        message: 'Connecte-toi pour acheter des crédits.',
+      };
     }
-    const message = err instanceof Error ? err.message : 'Le paiement n’a pas pu démarrer.';
-    return { ok: false, message };
+    return {
+      ok: false,
+      message: apiErrorMessage(err, 'Le paiement n’a pas pu démarrer.'),
+    };
   }
 }

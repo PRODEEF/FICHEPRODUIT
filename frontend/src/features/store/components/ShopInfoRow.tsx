@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 
 import { Button } from '@shared/ui';
 
-import type { ShopInfoRowKey } from '../lib/shopSaveErrors';
+import type { ShopInfoRowKey } from '../lib/shopSchemas';
 
 interface ShopInfoRowProps {
   rowKey: ShopInfoRowKey;

@@ -1,9 +1,7 @@
 import { useCallback, useState } from 'react';
 
 import { patchMyShop } from '@api/shop';
-import type { PatchMyShopBody } from '@types-api';
-
-import type { Shop } from '../types';
+import type { PatchMyShopBody, Shop } from '@types-api';
 
 interface UseShopPatchOptions {
   updateShop: (shop: Shop) => void;

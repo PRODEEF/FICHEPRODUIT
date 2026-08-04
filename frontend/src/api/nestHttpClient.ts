@@ -1,42 +1,18 @@
 import { getSupabaseClient } from '@shared/supabase';
 
+import { ApiError, fetchOrNetworkError } from './apiError';
 import { getApiBaseUrl } from './apiBase';
 
 export type NestHttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
-/**
- * Erreur HTTP renvoyée par l’API Nest après lecture du corps (JSON ou vide).
- * Conserve `status` et `body` pour un mapping métier côté appelant.
- */
-export class NestHttpError extends Error {
-  readonly status: number;
-  readonly body: unknown;
-
-  constructor(message: string, status: number, body: unknown) {
-    super(message);
-    this.name = 'NestHttpError';
-    this.status = status;
-    this.body = body;
-  }
-}
-
-export function messageFromNestErrorBody(parsed: unknown, fallback: string): string {
-  if (!parsed || typeof parsed !== 'object' || !('message' in parsed)) {
-    return fallback;
-  }
-  const m = parsed.message;
-  if (typeof m === 'string' && m.trim()) return m.trim();
-  if (Array.isArray(m) && m[0] && typeof m[0] === 'string') return m[0];
-  return fallback;
-}
-
-async function parseResponseJson(res: Response): Promise<unknown> {
+async function parseResponseBody(res: Response): Promise<unknown> {
   const text = await res.text();
   if (!text.length) return null;
   try {
     return JSON.parse(text) as unknown;
   } catch {
-    throw new Error('Réponse du serveur non JSON.');
+    if (!res.ok) return text;
+    throw new Error('Non-JSON response from server.');
   }
 }
 
@@ -52,7 +28,7 @@ function resolveRequestUrl(path: string | undefined, absoluteUrl: string | undef
     const p = path.startsWith('/') ? path : `/${path}`;
     return `${base}/api${p}`;
   }
-  throw new Error('requestNestJson: `path` ou `absoluteUrl` est requis.');
+  throw new Error('requestNestJson: `path` or `absoluteUrl` is required.');
 }
 
 export interface RequestNestJsonOptions {
@@ -71,10 +47,14 @@ export interface RequestNestJsonOptions {
 }
 
 /**
- * Client HTTP unique pour le backend Nest : une requête, parse JSON, lève {@link NestHttpError} si `!res.ok`.
+ * Client HTTP unique pour le backend Nest : une requête, parse JSON, lève {@link ApiError} si `!res.ok`.
+ * @throws {ApiError} si `!res.ok`
+ * @throws {NetworkError} si échec réseau
+ * @throws {DOMException} AbortError si la requête est annulée
  */
 export async function requestNestJson<T>(options: RequestNestJsonOptions): Promise<T> {
   const url = resolveRequestUrl(options.path, options.absoluteUrl);
+  const method = options.method;
 
   const merged: Record<string, string> = {
     ...(options.authHeaders ? await options.authHeaders() : {}),
@@ -93,20 +73,19 @@ export async function requestNestJson<T>(options: RequestNestJsonOptions): Promi
   }
 
   const init: RequestInit = {
-    method: options.method,
+    method,
     headers: merged,
     credentials: 'include',
   };
   if (options.body !== undefined) {
     init.body = JSON.stringify(options.body);
   }
-  const res = await fetch(url, init);
 
-  const parsed = await parseResponseJson(res);
+  const res = await fetchOrNetworkError(url, init);
+  const parsed = await parseResponseBody(res);
 
   if (!res.ok) {
-    const fallback = `HTTP ${res.status}`;
-    throw new NestHttpError(messageFromNestErrorBody(parsed, fallback), res.status, parsed);
+    throw ApiError.from(res.status, parsed, { url, method });
   }
 
   return parsed as T;

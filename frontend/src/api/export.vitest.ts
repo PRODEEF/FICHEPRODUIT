@@ -11,13 +11,6 @@ vi.mock('./apiBase', () => ({
 
 vi.mock('./apiAuth', () => ({
   authHeaders: mockAuthHeaders,
-  extractErrorMessage: (parsed: unknown, fallback: string) => {
-    if (typeof parsed === 'object' && parsed !== null && 'message' in parsed) {
-      const message = parsed.message;
-      if (typeof message === 'string') return message;
-    }
-    return fallback;
-  },
 }));
 
 const { mockRequestNestJson } = vi.hoisted(() => ({

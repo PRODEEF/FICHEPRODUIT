@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { getMyShop } from '@api/shop';
+import { apiErrorMessage } from '@lib/apiErrorMessage';
 import { useAuth } from '@shared/hooks/useAuth';
 
+import type { Shop } from '@types-api';
+
 import { clearShopCache, getShopCache, setShopCache } from '../lib/shopCache';
-import type { Shop } from '../types';
 
 export interface UseShopResult {
   shop: Shop | null;
@@ -59,7 +61,7 @@ export function useShop(): UseShopResult {
       setShop(next);
       setShopCache(userId, next);
     } catch (e) {
-      const message = e instanceof Error ? e.message : 'Erreur de chargement.';
+      const message = apiErrorMessage(e, 'Erreur de chargement.');
       setError(message);
       if (shopRef.current === null) {
         setShop(null);

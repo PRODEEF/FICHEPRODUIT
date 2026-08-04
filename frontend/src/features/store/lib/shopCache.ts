@@ -1,4 +1,4 @@
-import type { Shop } from '../types';
+import type { Shop } from '@types-api';
 
 let cachedUserId: string | null = null;
 let cachedShop: Shop | null = null;

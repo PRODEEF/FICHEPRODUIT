@@ -1,4 +1,5 @@
 import { UserService } from "./user.service";
+import type { AccountDeletionService } from "./account-deletion.service";
 import type { IUserRepository } from "./user.repository.interface";
 import type { AnalysisService } from "../analysis/analysis.service";
 import type { CreditService } from "../billing/credit.service";
@@ -23,11 +24,16 @@ describe("UserService", () => {
     grantSignupCredits: jest.fn().mockResolvedValue(null),
   } as unknown as jest.Mocked<CreditService>;
 
+  const accountDeletionServiceMock = {
+    deleteAccount: jest.fn().mockResolvedValue(undefined),
+  } as unknown as jest.Mocked<AccountDeletionService>;
+
   const service = new UserService(
     userRepoMock,
     analysisServiceMock,
     creditServiceMock,
     shopServiceMock,
+    accountDeletionServiceMock,
   );
 
   beforeEach(() => {
@@ -64,6 +70,7 @@ describe("UserService", () => {
       id: "user-1",
       email: "demo@test.com",
       accessToken: "token",
+      emailConfirmedAt: "2026-08-01T10:00:00Z",
     });
 
     expect(userRepoMock.update).toHaveBeenCalledWith(
@@ -81,6 +88,7 @@ describe("UserService", () => {
         id: "user-1",
         email: "demo@test.com",
         accessToken: "token",
+        emailConfirmedAt: "2026-08-01T10:00:00Z",
       },
       "session-1",
     );
@@ -88,5 +96,18 @@ describe("UserService", () => {
     expect(shopServiceMock.transferGuestShops).toHaveBeenCalledWith("session-1", "user-1");
     expect(analysisServiceMock.transferGuestAnalyses).toHaveBeenCalledWith("session-1", "user-1");
     expect(userRepoMock.ensureRow).toHaveBeenCalledWith("user-1", "token");
+  });
+
+  it("délègue deleteMe à AccountDeletionService", async () => {
+    const user = {
+      id: "user-1",
+      email: "demo@test.com",
+      accessToken: "token",
+      emailConfirmedAt: "2026-08-01T10:00:00Z",
+    };
+
+    await service.deleteMe(user, "hunter2");
+
+    expect(accountDeletionServiceMock.deleteAccount).toHaveBeenCalledWith(user, "hunter2");
   });
 });

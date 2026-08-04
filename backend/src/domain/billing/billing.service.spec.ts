@@ -11,6 +11,7 @@ describe("BillingService", () => {
     id: "user-1",
     email: "user@test.com",
     accessToken: "jwt",
+    emailConfirmedAt: "2026-08-01T10:00:00Z",
   };
 
   const creditServiceMock = {

@@ -14,6 +14,7 @@ const user: AuthenticatedUser = {
   id: "550e8400-e29b-41d4-a716-446655440099",
   email: "u@test.com",
   accessToken: "jwt",
+  emailConfirmedAt: "2026-08-01T10:00:00Z",
 };
 
 const shopId = "550e8400-e29b-41d4-a716-446655440003";

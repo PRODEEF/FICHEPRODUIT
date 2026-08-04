@@ -17,6 +17,7 @@ export function Login() {
   const [searchParams] = useSearchParams();
   const { userEmail, loading: authLoading } = useAuth();
   const [formError, setFormError] = useState<string | null>(null);
+  const [needsEmailConfirmation, setNeedsEmailConfirmation] = useState(false);
 
   const {
     register,
@@ -50,6 +51,7 @@ export function Login() {
 
   const onSubmit = async (data: LoginInput) => {
     setFormError(null);
+    setNeedsEmailConfirmation(false);
     const supabase = getSupabaseClient();
     if (!supabase) {
       setFormError('Configuration Supabase manquante. Vérifiez le fichier .env du frontend.');
@@ -60,6 +62,7 @@ export function Login() {
       const code = authResult.code?.toLowerCase() ?? '';
       if (code === 'email_not_confirmed') {
         setError('email', { message: authResult.message });
+        setNeedsEmailConfirmation(true);
       } else if (code === 'invalid_credentials' || code === 'invalid_grant') {
         setError('password', { message: authResult.message });
       } else {
@@ -109,6 +112,12 @@ export function Login() {
           {formError ? (
             <p className="m-0 text-sm text-red-500" role="alert">
               {formError}
+            </p>
+          ) : null}
+          {needsEmailConfirmation ? (
+            <p className="m-0 text-sm text-text-secondary">
+              Vous n’avez pas reçu l’e-mail ?{' '}
+              <TextLink to="/verify-email">Renvoyer le lien de confirmation</TextLink>
             </p>
           ) : null}
           <Button type="submit" variant="gradient" disabled={isDisabled}>

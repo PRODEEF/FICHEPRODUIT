@@ -7,6 +7,8 @@ export interface AuthContextValue {
   session: Session | null;
   user: User | null;
   userEmail: string | null;
+  /** `true` uniquement lorsque `user.email_confirmed_at` est renseigné par Supabase. */
+  isEmailVerified: boolean;
   profile: UserProfile | null;
   displayLabel: string | null;
   profileLoading: boolean;

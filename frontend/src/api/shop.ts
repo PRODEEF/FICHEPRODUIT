@@ -8,8 +8,9 @@
 
 import type { CmsType, PatchMyShopBody, Shop, ShopCategoryNode } from '@types-api';
 
+import { isApiError } from './apiError';
 import { getApiBaseUrl } from './apiBase';
-import { apiFetch, ApiHttpError, authHeaders, guestOrAuthHeadersNoBody } from './apiAuth';
+import { apiFetch, authHeaders, guestOrAuthHeadersNoBody } from './apiAuth';
 import { asRecord, readString, readStringArray } from './parseJsonFields';
 
 // ---------------------------------------------------------------------------
@@ -92,7 +93,7 @@ export function normalizeShop(raw: unknown): Shop | null {
  *
  * @param shopIdForGuest - Obligatoire sans JWT : UUID de la boutique (`analysis.shopId`).
  * @returns `null` si aucun magasin (404), sans lever d'erreur.
- * @throws {ApiHttpError} 401, 403, 500 ou réseau.
+ * @throws {ApiError} 401, 403, 500 ou réseau.
  */
 export async function getMyShop(shopIdForGuest?: string): Promise<Shop | null> {
   const guestId = shopIdForGuest?.trim();
@@ -105,7 +106,7 @@ export async function getMyShop(shopIdForGuest?: string): Promise<Shop | null> {
     });
     return normalizeShop(parsed);
   } catch (err) {
-    if (err instanceof ApiHttpError && err.status === 404) return null;
+    if (isApiError(err) && err.status === 404) return null;
     throw err;
   }
 }
@@ -113,7 +114,7 @@ export async function getMyShop(shopIdForGuest?: string): Promise<Shop | null> {
 /**
  * Met à jour le magasin (PATCH partiel).
  *
- * @throws {ApiHttpError} 400, 401, 404 ou réseau.
+ * @throws {ApiError} 400, 401, 404 ou réseau.
  */
 export async function patchMyShop(body: PatchMyShopBody): Promise<Shop> {
   const payload: PatchMyShopBody = { ...body };

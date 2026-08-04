@@ -110,7 +110,7 @@ export const PRIVACY_POLICY: LegalDocumentContent = {
       title: '4. Vos droits',
       paragraphs: [
         "Conformément au RGPD, vous disposez des droits suivants sur vos données personnelles : droit d'accès, de rectification, d'effacement, de limitation du traitement, de portabilité et d'opposition.",
-        "Pour exercer vos droits, contactez-nous à yann@prodeef.com. Vous disposez également du droit d'introduire une réclamation auprès de la CNIL (Commission Nationale de l'Informatique et des Libertés).",
+        "Vous pouvez exercer votre droit d'effacement directement depuis votre profil (section « Supprimer mon compte »). Vous pouvez également nous contacter à yann@prodeef.com pour toute autre demande. Vous disposez du droit d'introduire une réclamation auprès de la CNIL (Commission Nationale de l'Informatique et des Libertés).",
       ],
     },
   ],
