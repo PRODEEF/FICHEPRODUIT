@@ -8,6 +8,7 @@ import {
   buildSubCategoryOptions,
   buildYearOptions,
   findOptionCaseInsensitive,
+  filterProductsByShopBrands,
   getProductsForFilterScope,
   optionIncludedCaseInsensitive,
 } from './catalogFilterOptions';
@@ -59,6 +60,26 @@ const sampleProducts = [
 ];
 
 const emptyParents = { sector: '', category: '', subCategory: '', brand: '' };
+
+describe('filterProductsByShopBrands', () => {
+  it('exclut les produits dont la marque n’est pas dans le magasin', () => {
+    const filtered = filterProductsByShopBrands(sampleProducts, ['SurfCo']);
+    expect(filtered.map((p) => p.id)).toEqual(['1', '2']);
+  });
+
+  it('conserve tout le catalogue si le magasin n’a aucune marque', () => {
+    expect(filterProductsByShopBrands(sampleProducts, [])).toEqual(sampleProducts);
+  });
+
+  it('conserve tout le catalogue si shopBrands est undefined', () => {
+    expect(filterProductsByShopBrands(sampleProducts, undefined)).toEqual(sampleProducts);
+  });
+
+  it('compare les marques sans tenir compte de la casse', () => {
+    const withCasing = [product({ id: 'x', brand: 'F-ONE', sector: 'Glisse', category: 'Voiles' })];
+    expect(filterProductsByShopBrands(withCasing, ['f-one']).map((p) => p.id)).toEqual(['x']);
+  });
+});
 
 describe('getProductsForFilterScope', () => {
   it('restreint par secteur pour les options catégorie', () => {

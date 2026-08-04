@@ -4,7 +4,7 @@ import type { CatalogProduct } from '@types-api';
 
 import { useCatalogProductExport } from './useCatalogProductExport';
 import type { CatalogProductPayloadMetadata, ProductFilter } from '../types';
-import { findOptionCaseInsensitive } from '../lib/catalogFilterOptions';
+import { findOptionCaseInsensitive, filterProductsByShopBrands } from '../lib/catalogFilterOptions';
 import { useProductFilters } from './useProductFilters';
 import { useProductSelection } from './useProductSelection';
 
@@ -27,10 +27,10 @@ export function useCatalogProductsSection({
 }: UseCatalogProductsSectionOptions) {
   const [removedIds, setRemovedIds] = useState<Set<string>>(() => new Set());
 
-  const allProducts = useMemo(
-    () => products.filter((p) => !removedIds.has(p.id)),
-    [products, removedIds],
-  );
+  const allProducts = useMemo(() => {
+    const scoped = filterProductsByShopBrands(products, shopBrands);
+    return scoped.filter((p) => !removedIds.has(p.id));
+  }, [products, shopBrands, removedIds]);
 
   const {
     filters,

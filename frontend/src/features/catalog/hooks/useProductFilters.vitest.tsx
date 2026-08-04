@@ -26,7 +26,14 @@ function product(overrides: Partial<CatalogProduct>): CatalogProduct {
 }
 
 const products: CatalogProduct[] = [
-  product({ id: '1', name: 'Aile Alpha', brand: 'Nike', category: 'Kitesurf', year: 2024, price: 500 }),
+  product({
+    id: '1',
+    name: 'Aile Alpha',
+    brand: 'Nike',
+    category: 'Kitesurf',
+    year: 2024,
+    price: 500,
+  }),
   product({
     id: '2',
     name: 'Planche Beta',
@@ -48,6 +55,19 @@ const products: CatalogProduct[] = [
 ];
 
 describe('useProductFilters', () => {
+  it('propose toutes les marques du shop dans le filtre marque', () => {
+    const shopBrands = ['Nike', 'Adidas', 'NeilPryde', 'Fanatic', 'Starboard'];
+    const { result } = renderHook(() => useProductFilters(products, null, shopBrands));
+
+    expect(result.current.brandOptions).toEqual([
+      'Adidas',
+      'Fanatic',
+      'NeilPryde',
+      'Nike',
+      'Starboard',
+    ]);
+  });
+
   it('n’applique pas de filtre secteur par défaut', () => {
     const { result } = renderHook(() => useProductFilters(products, null, ['Nike']));
 

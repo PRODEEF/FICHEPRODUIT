@@ -12,6 +12,7 @@ import {
   buildYearOptions,
 } from '../lib/catalogFilterOptions';
 import { sortCatalogProducts } from '../lib/sortCatalogProducts';
+import { uniqueSortedCaseInsensitive } from '../lib/productUtils';
 
 interface UseProductFiltersResult {
   filters: ProductFilter;
@@ -69,15 +70,13 @@ export function useProductFilters(
   );
 
   const brandOptions = useMemo(() => {
-    const fromScope = buildBrandOptions(products, parentFilters);
-    if (shopBrands === undefined) {
-      return fromScope;
+    if (shopBrands !== undefined) {
+      const fromShop = uniqueSortedCaseInsensitive(shopBrands.map((b) => b.trim()).filter(Boolean));
+      if (fromShop.length > 0) {
+        return fromShop;
+      }
     }
-    const shopLower = new Set(shopBrands.map((b) => b.trim().toLowerCase()).filter(Boolean));
-    if (shopLower.size === 0) {
-      return fromScope;
-    }
-    return fromScope.filter((b) => shopLower.has(b.toLowerCase()));
+    return buildBrandOptions(products, parentFilters);
   }, [products, parentFilters, shopBrands]);
 
   const yearOptions = useMemo(
