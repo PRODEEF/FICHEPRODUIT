@@ -29,7 +29,7 @@
     "@fastify/static": "10.1.2",
     "@nestjs/common": "^11.0.0",
     "@nestjs/config": "^4.0.0",
-    "@nestjs/core": "^11.0.0",
+    "@nestjs/core": "^11.1.28",
     "@nestjs/platform-fastify": "^11.0.0",
     "@nestjs/swagger": "^11.0.0",
     "@supabase/supabase-js": "^2.95.3",
